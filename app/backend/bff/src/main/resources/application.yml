@@ -1,0 +1,28 @@
+# BFF 서비스(게이트웨이) 자체의 포트 설정
+server:
+  port: 8080 # 게이트웨이는 8080 포트에서 실행
+
+spring:
+  application:
+    name: uniplan-bff # 애플리케이션 이름
+
+  cloud:
+    gateway:
+      routes:
+        # 1. 사용자 서비스(uniplan-user)로 가는 라우팅 규칙
+        - id: user-service
+          uri: http://localhost:8081 # 실제 uniplan-user 서비스의 주소
+          predicates:
+            - Path=/api/users/**
+
+        # 2. 강의 목록 서비스(uniplan-catalog)로 가는 라우팅 규칙
+        - id: catalog-service
+          uri: http://localhost:8082 # 실제 uniplan-catalog 서비스의 주소
+          predicates:
+            - Path=/api/courses/**
+
+        # 3. 플래너 서비스(uniplan-planner)로 가는 라우팅 규칙
+        - id: planner-service
+          uri: http://localhost:8083 # 실제 uniplan-planner 서비스의 주소
+          predicates:
+            - Path=/api/plans/**

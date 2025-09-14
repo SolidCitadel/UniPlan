@@ -1,16 +1,32 @@
+# Centralized repo-wide ignores
+
 # Gradle
 .gradle/
 **/.gradle/
 build/
 **/build/
+# Ensure Gradle wrapper stays tracked even if gradle/ is ignored in the future
+!**/gradle/wrapper/gradle-wrapper.jar
 
-# IDE
+# IDEs / tooling
 .idea/
 .vscode/
 *.iml
+*.ipr
+*.iws
 .classpath
 .project
 .settings/
+# STS (Spring Tool Suite)
+.apt_generated
+.factorypath
+.springBeans
+.sts4-cache
+# NetBeans
+nbproject/private/
+nbbuild/
+nbdist/
+.nb-gradle/
 
 # Outputs
 out/
@@ -23,3 +39,18 @@ bin/
 .DS_Store
 Thumbs.db
 
+# Frontend / Node
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.next/
+coverage/
+.turbo/
+.pnpm-store/
+.parcel-cache/
+.eslintcache
+*.tsbuildinfo
+
+# Module-specific
+/app/backend/bff/HELP.md

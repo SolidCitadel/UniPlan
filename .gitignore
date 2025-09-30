@@ -1,5 +1,9 @@
 # Centralized repo-wide ignores
 
+# Environment variables
+.env
+**/.env
+
 # Gradle
 .gradle/
 **/.gradle/

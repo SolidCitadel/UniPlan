@@ -1,4 +1,4 @@
-package com.uniplan.bff.filter;
+package com.uniplan.gateway.filter;
 
 public class AuthenticationHeaderFilter {
 }

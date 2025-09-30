@@ -1,10 +1,10 @@
-package com.uniplan.bff;
+package com.uniplan.gateway;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class UniPlanBffApplicationTests {
+class GatewayApplicationTests {
 
 	@Test
 	void contextLoads() {

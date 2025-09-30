@@ -1,0 +1,51 @@
+# 게이트웨이 자체의 포트 설정
+server:
+  port: 8080 # 게이트웨이는 8080 포트에서 실행
+
+spring:
+  application:
+    name: api-gateway # 애플리케이션 이름
+
+  cloud:
+    gateway:
+      # HTTP 클라이언트 타임아웃 설정 (전체 라우트에 적용)
+      # 모든 라우트에 공통으로 적용될 필터 설정
+      server:
+        webflux:
+          httpclient:
+            connect-timeout: 1000
+            response-timeout: 5s
+            pool:
+              max-idle-time: 15s
+              type: elastic
+          routes:
+            # 1. 사용자 서비스(user)로 가는 라우팅 규칙
+            - id: user-service
+              uri: lb://user-service # Eureka에 등록된 서비스 이름
+              predicates:
+                - Path=/api/v1/users/**
+
+            # 2. 강의 목록 서비스(catalog)로 가는 라우팅 규칙
+            - id: catalog-service
+              uri: lb://catalog-service # Eureka에 등록된 서비스 이름
+              predicates:
+                - Path=/api/v1/courses/**
+
+            # 3. 플래너 서비스(planner)로 가는 라우팅 규칙
+            - id: planner-service
+              uri: lb://planner-service # Eureka에 등록된 서비스 이름
+              predicates:
+                - Path=/api/v1/plans/**
+
+          default-filters:
+            - name: AddResponseHeader
+              args:
+                name: X-Gateway-Timestamp
+                value: "#{T(java.time.ZonedDateTime).now()}"
+
+eureka:
+  client:
+    register-with-eureka: true # 게이트웨이 자신도 Eureka에 등록
+    fetch-registry: true # Eureka 서버로부터 서비스 목록을 가져옴
+    service-url:
+      defaultZone: http://localhost:8761/eureka # Eureka 서버 주소

@@ -1,4 +1,4 @@
 rootProject.name = "uniplan-backend"
 
-include("bff")
+include("api-gateway")
 include("common-lib")

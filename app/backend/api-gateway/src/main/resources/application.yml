@@ -4,3 +4,15 @@ server:
 spring:
   application:
     name: api-gateway
+
+  # Profile 활성화 (로컬 개발 시)
+  profiles:
+    active: local
+
+# Swagger/OpenAPI 설정 (기본 - 최소 설정)
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true

@@ -1,34 +1,84 @@
+server:
+  port: 8081
+
 spring:
+  application:
+    name: user-service
+
+  # Google OAuth2 설정
   security:
     oauth2:
       client:
         registration:
           google:
-            client-id: ${GOOGLE_CLIENT_ID:your-google-client-id}
-            client-secret: ${GOOGLE_CLIENT_SECRET:your-google-client-secret}
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
             scope:
-              - profile
               - email
+              - profile
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
         provider:
           google:
-            authorization-uri: https://accounts.google.com/o/oauth2/auth
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
             token-uri: https://oauth2.googleapis.com/token
-            user-info-uri: https://openidconnect.googleapis.com/v1/userinfo
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
             user-name-attribute: sub
 
+  # H2 Database (로컬 개발용)
+  datasource:
+    url: jdbc:h2:mem:uniplan_user
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
 
-#        registration:
-#          canvas:
-#            client-id: <Canvas Client ID>
-#            client-secret: <Canvas Client Secret>
-#            authorization-grant-type: authorization_code
-#            redirect-uri: http://localhost:8081/login/oauth2/code/canvas
-#            scope:
-#              - url:GET|/api/v1/users/self/profile
-#        provider:
-#          canvas:
-#            authorization-uri: https://<canvas-domain>/login/oauth2/auth
-#            token-uri: https://<canvas-domain>/login/oauth2/token
-#            user-info-uri: https://<canvas-domain>/api/v1/users/self/profile
-#            user-name-attribute: id
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # 개발: create-drop, 운영: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+
+# JWT 설정 (커스텀)
+jwt:
+  secret: ${JWT_SECRET:uniplan-jwt-secret-key-minimum-256-bits-for-local-development}
+  expiration: 86400000  # 24시간 (ms)
+  refresh-expiration: 604800000  # 7일 (ms)
+
+# OAuth2 로그인 성공 후 리다이렉트 설정
+app:
+  oauth2:
+    # Gateway를 통한 접근 시 X-Forwarded-* 헤더를 자동으로 사용
+    # 직접 접근 시(8081) 기본값으로 자기 자신(8081)로 리다이렉트
+    success-redirect-path: /api/v1/auth/login/success
+
+# OAuth2 로그인 성공 후 프론트엔드 리다이렉트 URL
+oauth2:
+  # 프론트엔드 콜백 URL (토큰을 쿼리 파라미터로 전달)
+  success-redirect-url: ${OAUTH2_SUCCESS_REDIRECT_URL:http://localhost:3000/auth/callback}
+
+# Swagger/OpenAPI 설정
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    tags-sorter: alpha
+    operations-sorter: alpha
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+
+# 로깅
+logging:
+  level:
+    com.uniplan.user: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

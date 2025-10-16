@@ -1,31 +1,86 @@
+server:
+  port: 8080
+
 spring:
+  application:
+    name: api-gateway
+
+  # Spring Cloud Gateway 설정
   cloud:
     gateway:
-      # HTTP 클라이언트 타임아웃 설정 (전체 라우트에 적용)
-      # 모든 라우트에 공통으로 적용될 필터 설정
-      server:
-        webflux:
-          httpclient:
-            connect-timeout: 1000
-            response-timeout: 5s
-            pool:
-              max-idle-time: 15s
-              type: elastic
-          routes:
-            # 1. 사용자 서비스(user)로 가는 라우팅 규칙
-            - id: user-service
-              uri: http://localhost:8081
-              predicates:
-                - Path=/api/v1/users/**
+      # 전역 CORS 설정
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origins: "http://localhost:3000"  # Flutter 웹
+            allowed-methods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowed-headers: "*"
+            allow-credentials: true
+            max-age: 3600
 
-            # 2. 강의 목록 서비스(catalog)로 가는 라우팅 규칙
-            - id: catalog-service
-              uri: http://localhost:8082
-              predicates:
-                - Path=/api/v1/courses/**
+      # 라우트 설정은 FilterConfig.java에서 프로그래밍 방식으로 관리
+      routes:
+        # User Service Swagger Docs 라우팅
+        - id: user-service-docs
+          uri: http://localhost:8081
+          predicates:
+            - Path=/user-service/v3/api-docs
+          filters:
+            - RewritePath=/user-service/v3/api-docs, /v3/api-docs
 
-            # 3. 플래너 서비스(planner)로 가는 라우팅 규칙
-            - id: planner-service
-              uri: http://localhost:8083
-              predicates:
-                - Path=/api/v1/plans/**
+        # Planner Service Swagger Docs 라우팅 (향후 추가)
+        - id: planner-service-docs
+          uri: http://localhost:8082
+          predicates:
+            - Path=/planner-service/v3/api-docs
+          filters:
+            - RewritePath=/planner-service/v3/api-docs, /v3/api-docs
+
+        # Catalog Service Swagger Docs 라우팅 (향후 추가)
+        - id: catalog-service-docs
+          uri: http://localhost:8083
+          predicates:
+            - Path=/catalog-service/v3/api-docs
+          filters:
+            - RewritePath=/catalog-service/v3/api-docs, /v3/api-docs
+
+# 마이크로서비스 URI 설정 (로컬 환경)
+services:
+  user-service:
+    uri: http://localhost:8081
+  planner-service:
+    uri: http://localhost:8082
+  catalog-service:
+    uri: http://localhost:8083
+
+# JWT 설정 (User Service와 동일한 시크릿 사용)
+jwt:
+  secret: ${JWT_SECRET:uniplan-jwt-secret-key-minimum-256-bits-for-local-development}
+
+# Swagger/OpenAPI 설정 (통합 문서 - 드롭다운 방식)
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    # 각 서비스의 OpenAPI 스펙 URL 지정 (드롭다운으로 선택)
+    urls:
+      - name: "User Service"
+        url: /user-service/v3/api-docs
+      - name: "Planner Service"
+        url: /planner-service/v3/api-docs
+      - name: "Catalog Service"
+        url: /catalog-service/v3/api-docs
+      - name: "Gateway (Actuator)"
+        url: /v3/api-docs
+    # UI에서 기본 선택될 서비스
+    urls-primary-name: "User Service"
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json

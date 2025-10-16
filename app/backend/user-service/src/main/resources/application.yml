@@ -4,3 +4,25 @@ server:
 spring:
   application:
     name: user-service
+
+  # Profile 활성화 (로컬 개발 시 기본값)
+  profiles:
+    active: local
+
+# Swagger/OpenAPI 설정 (기본)
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    tags-sorter: alpha
+    operations-sorter: alpha
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+
+# JWT 설정 (기본값)
+jwt:
+  secret: ${JWT_SECRET:uniplan-jwt-secret-key-minimum-256-bits-for-local-development}
+  expiration: 86400000      # 24시간 (ms)
+  refresh-expiration: 604800000 # 7일 (ms)

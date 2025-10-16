@@ -35,6 +35,15 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.cloud:spring-cloud-starter-gateway-server-webflux")
+
+    // Swagger for API Gateway (통합 문서)
+    implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.3.0")
+
+    // JWT 검증 (User Service와 동일한 시크릿 키 사용)
+    implementation("io.jsonwebtoken:jjwt-api:0.12.3")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.3")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.3")
+
     implementation(project(":common-lib"))
 }
 

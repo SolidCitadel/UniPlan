@@ -97,7 +97,7 @@ public class SecurityHeaderConstants {
 
 ### 1. Common-Lib 설정
 
-**build.gradle.kts:**
+**build.gradle.kts (Gradle Kotlin DSL 설정 파일):**
 ```kotlin
 dependencies {
     // JWT 관련 의존성
@@ -176,7 +176,7 @@ return jwtTokenUtil.createAccessToken(jwtClaims, accessTokenExpiration);
 
 ### 4. 의존성 추가
 
-**user-service/build.gradle.kts:**
+**user-service/build.gradle.kts (Gradle Kotlin DSL 설정 파일):**
 ```kotlin
 dependencies {
     // ...existing dependencies...

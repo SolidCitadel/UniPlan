@@ -11,7 +11,7 @@ UniPlan의 **사용자 인증 및 계정 관리**를 담당하는 마이크로�
 
 ## 기술 스택
 - **Framework**: Spring Boot 3.5.6
-- **언어**: Kotlin
+- **언어**: Java
 - **인증**: Spring Security + JWT
 - **데이터베이스**: MySQL (운영) / H2 (개발/테스트)
 - **ORM**: Spring Data JPA + Hibernate

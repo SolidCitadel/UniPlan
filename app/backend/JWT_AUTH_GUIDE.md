@@ -288,6 +288,8 @@ curl -H "Authorization: Bearer {token}" http://localhost:8080/api/v1/users/me
 - API Gateway가 중앙에서 JWT 검증 (DRY 원칙)
 - 각 서비스는 X-User-Id만 신뢰하면 됨 (빠름)
 
+**참고:** 이 문서는 이전 OAuth2 기반 인증 시스템을 설명하고 있습니다. 현재는 ID/PW 기반 JWT 인증으로 변경되었습니다.
+
 ## 🚀 다음 단계
 
 - [ ] API Gateway에 필터 활성화

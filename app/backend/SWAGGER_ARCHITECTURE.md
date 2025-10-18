@@ -125,14 +125,14 @@ planner-service는 영향 없음 ✅
 
 ### API Gateway (WebFlux 기반)
 ```kotlin
-// build.gradle.kts
+// build.gradle.kts (Gradle Kotlin DSL 설정 파일)
 implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.3.0")
 ```
 → Gateway는 **WebFlux**(Reactive) 기반이므로 `-webflux-ui` 사용
 
 ### 일반 서비스 (WebMVC 기반)
 ```kotlin
-// build.gradle.kts
+// build.gradle.kts (Gradle Kotlin DSL 설정 파일)
 implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
 ```
 → User/Planner/Catalog는 **WebMVC** 기반이므로 `-webmvc-ui` 사용
@@ -204,7 +204,7 @@ backend/
 
 ### 1. Swagger 의존성 추가
 ```kotlin
-// planner-service/build.gradle.kts
+// planner-service/build.gradle.kts (Gradle Kotlin DSL 설정 파일)
 dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
 }

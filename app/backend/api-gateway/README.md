@@ -12,7 +12,7 @@ UniPlan의 **단일 진입점(Single Entry Point)**으로, 모든 클라이언�
 
 ## 기술 스택
 - **Framework**: Spring Cloud Gateway
-- **언어**: Kotlin
+- **언어**: Java
 - **포트**: 8080
 - **인증**: JWT (JJWT 라이브러리)
 
@@ -64,7 +64,7 @@ UniPlan의 **단일 진입점(Single Entry Point)**으로, 모든 클라이언�
 ```
 
 ### 코드 예시
-```kotlin
+```java
 // JWT 검증
 Claims claims = Jwts.parser()
     .verifyWith(secretKey)
@@ -282,17 +282,17 @@ OAuth2 기반 인증에서 ID/PW 기반 인증 시스템으로 전환하고, JWT
 ### 2. User 엔티티 변경
 
 #### 변경된 필드
-```kotlin
+```java
 @Entity
 @Table(name = "users")
 class User {
     // 변경: nullable로 수정 (OAuth2 사용자는 null)
     @Column(name = "google_id", unique = true)
-    var googleId: String? = null
+    private String googleId;  // nullable
     
     // 추가: ID/PW 로그인용 비밀번호 필드
     @Column(length = 255)
-    var password: String? = null  // BCrypt 암호화
+    private String password;  // BCrypt 암호화, nullable
     
     // ...기존 필드들...
 }
@@ -347,7 +347,7 @@ class User {
 ### 5. API Gateway 변경
 
 #### JWT 검증 필터 수정
-```kotlin
+```java
 // AuthenticationHeaderFilter.java
 // JWT에서 email, role 정보도 추출하여 헤더로 전달
 Claims claims = Jwts.parser()
@@ -367,7 +367,7 @@ String role = claims.get("role", String.class);
 ```
 
 #### 라우팅 설정 간소화
-```kotlin
+```java
 // FilterConfig.java
 // OAuth2 관련 복잡한 헤더 처리 제거
 .route("user-service-oauth2", r -> r
@@ -397,7 +397,7 @@ String role = claims.get("role", String.class);
 - `ErrorResponse` - 에러 응답 DTO
 
 #### Security 설정 변경
-```kotlin
+```java
 // 이전: OAuth2 로그인 + 인증 필요
 .authorizeHttpRequests(authz -> authz
     .requestMatchers("/auth/**").permitAll()

@@ -1,23 +1,21 @@
 package com.uniplan.user.domain.auth.service;
 
+import com.uniplan.common.jwt.JwtClaims;
+import com.uniplan.common.jwt.JwtTokenUtil;
 import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
-import java.util.Date;
-
 /**
  * JWT 토큰 생성 및 검증
+ * common-lib의 JwtTokenUtil을 사용하여 JWT 구조를 중앙화
  */
 @Component
 @Slf4j
 public class JwtTokenProvider {
 
-    private final SecretKey secretKey;
+    private final JwtTokenUtil jwtTokenUtil;
     private final long accessTokenExpiration;
     private final long refreshTokenExpiration;
 
@@ -26,97 +24,66 @@ public class JwtTokenProvider {
             @Value("${jwt.expiration}") long accessTokenExpiration,
             @Value("${jwt.refresh-expiration}") long refreshTokenExpiration
     ) {
-        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.jwtTokenUtil = new JwtTokenUtil(secret);
         this.accessTokenExpiration = accessTokenExpiration;
         this.refreshTokenExpiration = refreshTokenExpiration;
     }
 
     /**
      * Access Token 생성 (사용자 정보 포함)
+     * common-lib의 JwtClaims와 JwtTokenUtil 사용
      */
     public String createAccessToken(Long userId, String email, String role) {
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + accessTokenExpiration);
-
-        return Jwts.builder()
-                .subject(String.valueOf(userId))
-                .claim("email", email)
-                .claim("role", role)
-                .issuedAt(now)
-                .expiration(expiryDate)
-                .signWith(secretKey, Jwts.SIG.HS256)
-                .compact();
+        JwtClaims jwtClaims = JwtClaims.builder()
+                .userId(userId)
+                .email(email)
+                .role(role)
+                .build();
+        
+        return jwtTokenUtil.createAccessToken(jwtClaims, accessTokenExpiration);
     }
 
     /**
      * Access Token 생성 (기본 - userId만)
      */
     public String generateAccessToken(Long userId) {
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + accessTokenExpiration);
-
-        return Jwts.builder()
-                .subject(String.valueOf(userId))
-                .issuedAt(now)
-                .expiration(expiryDate)
-                .signWith(secretKey, Jwts.SIG.HS256)
-                .compact();
+        JwtClaims jwtClaims = JwtClaims.builder()
+                .userId(userId)
+                .build();
+        
+        return jwtTokenUtil.createAccessToken(jwtClaims, accessTokenExpiration);
     }
 
     /**
      * Refresh Token 생성
      */
     public String createRefreshToken(Long userId) {
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + refreshTokenExpiration);
-
-        return Jwts.builder()
-                .subject(String.valueOf(userId))
-                .claim("type", "refresh")
-                .issuedAt(now)
-                .expiration(expiryDate)
-                .signWith(secretKey, Jwts.SIG.HS256)
-                .compact();
+        return jwtTokenUtil.createRefreshToken(userId, refreshTokenExpiration);
     }
 
     /**
      * Refresh Token 생성 (기본)
      */
     public String generateRefreshToken(Long userId) {
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + refreshTokenExpiration);
-
-        return Jwts.builder()
-                .subject(String.valueOf(userId))
-                .issuedAt(now)
-                .expiration(expiryDate)
-                .signWith(secretKey, Jwts.SIG.HS256)
-                .compact();
+        return jwtTokenUtil.createRefreshToken(userId, refreshTokenExpiration);
     }
 
     /**
      * 토큰에서 사용자 ID 추출
+     * common-lib의 JwtTokenUtil 사용
      */
     public Long getUserIdFromToken(String token) {
-        Claims claims = Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-
-        return Long.parseLong(claims.getSubject());
+        JwtClaims jwtClaims = jwtTokenUtil.extractJwtClaims(token);
+        return jwtClaims.getUserId();
     }
 
     /**
      * 토큰 유효성 검증
+     * common-lib의 JwtTokenUtil 사용
      */
     public boolean validateToken(String token) {
         try {
-            Jwts.parser()
-                    .verifyWith(secretKey)
-                    .build()
-                    .parseSignedClaims(token);
-            return true;
+            return jwtTokenUtil.validateToken(token);
         } catch (SecurityException | MalformedJwtException e) {
             log.error("Invalid JWT signature: {}", e.getMessage());
         } catch (ExpiredJwtException e) {

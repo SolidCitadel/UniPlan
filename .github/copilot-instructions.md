@@ -12,7 +12,7 @@
 ### 백엔드
 - **아키텍처**: 마이크로서비스 (MSA)
 - **Framework**: Spring Boot 3.x
-- **언어**: Kotlin (Java 호환)
+- **언어**: Java
 - **API Gateway**: Spring Cloud Gateway
 - **통신**: RESTful API
 - **DB**: MySQL
@@ -25,7 +25,7 @@ app/backend/
 ├── api-gateway/          # Spring Cloud Gateway (단일 진입점)
 ├── user-service/         # 사용자 인증/계정/데이터 관리
 ├── planner-service/      # 의사결정 트리 기반 시나리오 플랜 생성/관리 (핵심)
-├── catalog-service/      # 강의 목록 관리, 크롤링, 검색 API
+├── catalog-service/      # 강의 목록 관리, 검색 API
 └── common-lib/           # 공통 DTO, 유틸리티, 예외 처리
 ```
 

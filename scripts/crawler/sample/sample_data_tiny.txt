@@ -1,0 +1,94 @@
+var daehak_202510 = {
+    "rows": [
+        { "id": 1, "enm": "College of Humanities", "or_seq": "10", "up": "A10081", "nm": "문과대학", "cd": "A01008", "gb": "H" },
+        { "id": 2, "enm": "College of Politics & Economics", "or_seq": "20", "up": "A10081", "nm": "정경대학", "cd": "A00422", "gb": "H" },
+        { "id": 3, "enm": "College of Business Administration", "or_seq": "30", "up": "A10081", "nm": "경영대학", "cd": "A01024", "gb": "H" },
+        { "id": 4, "enm": "College of Hotel and Tourism Management", "or_seq": "40", "up": "A10081", "nm": "호텔관광대학", "cd": "A00681", "gb": "H" },
+        { "id": 5, "enm": "College of Sciences", "or_seq": "50", "up": "A10081", "nm": "이과대학", "cd": "A01043", "gb": "H" },
+    ]
+}
+
+var major_202510 = {
+    "rows": [
+        { "id": 1, "enm": "College of Politics & Economics", "orgnz_outpt_ord": "20", "orgnz_lvl_se_code": "11", "nm": "정경대학", "cd": "A00422", "gb": "H", "dh": "A00422" },
+        { "id": 2, "enm": "College of Politics & Economics School of International Commerce, Finance, and Investment", "orgnz_outpt_ord": "60", "orgnz_lvl_se_code": "20", "nm": "정경대학 국제통상·금융투자학부", "cd": "A10451", "gb": "H", "dh": "A00422" },
+        { "id": 3, "enm": "College of Politics & Economics Department of Economics Economics", "orgnz_outpt_ord": "10", "orgnz_lvl_se_code": "30", "nm": "정경대학 경제학과 경제학", "cd": "A00430", "gb": "H", "dh": "A00422" },
+        { "id": 4, "enm": "College of Politics & Economics Department of International Trades International Business & Trade", "orgnz_outpt_ord": "10", "orgnz_lvl_se_code": "30", "nm": "정경대학 무역학과 무역학", "cd": "A00446", "gb": "H", "dh": "A00422" },
+        { "id": 5, "enm": "College of Politics & Economics Department of Political Science Political Science & International Relations", "orgnz_outpt_ord": "10", "orgnz_lvl_se_code": "30", "nm": "정경대학 정치외교학과 정치외교학", "cd": "A00473", "gb": "H", "dh": "A00422" },
+    ]
+}
+
+
+var daehak_202520 = {
+    "rows": [
+        { "id": 1, "enm": "College of Humanities", "or_seq": "10", "up": "A10081", "nm": "문과대학", "cd": "A01008", "gb": "H" },
+        { "id": 2, "enm": "College of Politics & Economics", "or_seq": "20", "up": "A10081", "nm": "정경대학", "cd": "A00422", "gb": "H" },
+        { "id": 3, "enm": "College of Business Administration", "or_seq": "30", "up": "A10081", "nm": "경영대학", "cd": "A01024", "gb": "H" },
+        { "id": 4, "enm": "College of Hotel and Tourism Management", "or_seq": "40", "up": "A10081", "nm": "호텔관광대학", "cd": "A00681", "gb": "H" },
+        { "id": 5, "enm": "College of Sciences", "or_seq": "50", "up": "A10081", "nm": "이과대학", "cd": "A01043", "gb": "H" },
+    ]
+}
+
+var major_202520 = {
+    "rows": [
+        { "id": 1, "enm": "College of Politics & Economics School of International Commerce, Finance, and Investment", "orgnz_outpt_ord": "60", "orgnz_lvl_se_code": "20", "nm": "정경대학 국제통상·금융투자학부", "cd": "A10451", "gb": "H", "dh": "A00422" },
+        { "id": 2, "enm": "College of Politics & Economics Department of Economics Economics", "orgnz_outpt_ord": "10", "orgnz_lvl_se_code": "30", "nm": "정경대학 경제학과 경제학", "cd": "A00430", "gb": "H", "dh": "A00422" },
+        { "id": 3, "enm": "College of Politics & Economics Department of International Trades International Business & Trade", "orgnz_outpt_ord": "10", "orgnz_lvl_se_code": "30", "nm": "정경대학 무역학과 무역학", "cd": "A00446", "gb": "H", "dh": "A00422" },
+        { "id": 4, "enm": "College of Politics & Economics Department of Political Science Political Science & International Relations", "orgnz_outpt_ord": "10", "orgnz_lvl_se_code": "30", "nm": "정경대학 정치외교학과 정치외교학", "cd": "A00473", "gb": "H", "dh": "A00422" },
+        { "id": 5, "enm": "College of Politics & Economics Department of Public Administration Public Administration", "orgnz_outpt_ord": "10", "orgnz_lvl_se_code": "30", "nm": "정경대학 행정학과 행정학", "cd": "A00480", "gb": "H", "dh": "A00422" },
+    ]
+}
+
+
+var daehak_202515 = {
+    "rows": [
+        { "id": 1, "enm": "College of Humanities", "or_seq": "10", "up": "A10081", "nm": "문과대학", "cd": "A01008", "gb": "H" },
+        { "id": 2, "enm": "College of Politics & Economics", "or_seq": "20", "up": "A10081", "nm": "정경대학", "cd": "A00422", "gb": "H" },
+        { "id": 3, "enm": "College of Business Administration", "or_seq": "30", "up": "A10081", "nm": "경영대학", "cd": "A01024", "gb": "H" },
+        { "id": 4, "enm": "College of Hotel and Tourism Management", "or_seq": "40", "up": "A10081", "nm": "호텔관광대학", "cd": "A00681", "gb": "H" },
+        { "id": 5, "enm": "College of Sciences", "or_seq": "50", "up": "A10081", "nm": "이과대학", "cd": "A01043", "gb": "H" },
+    ]
+}
+
+var major_202515 = {
+    "rows": [
+        { "id": 1, "enm": "College of Politics & Economics Department of Economics Economics", "orgnz_outpt_ord": "10", "orgnz_lvl_se_code": "30", "nm": "정경대학 경제학과 경제학", "cd": "A00430", "gb": "H", "dh": "A00422" },
+        { "id": 2, "enm": "College of Politics & Economics Department of International Trades International Business & Trade", "orgnz_outpt_ord": "10", "orgnz_lvl_se_code": "30", "nm": "정경대학 무역학과 무역학", "cd": "A00446", "gb": "H", "dh": "A00422" },
+        { "id": 3, "enm": "College of Hotel and Tourism Management School of Tourism and Entertainment Culture and Entertainment", "orgnz_outpt_ord": "10", "orgnz_lvl_se_code": "30", "nm": "호텔관광대학 관광·엔터테인먼트학부 문화엔터테인먼트학과", "cd": "A10777", "gb": "H", "dh": "A00681" },
+        { "id": 4, "enm": "College of Humanities Department of English Language and Literature English Linguistics and Literature", "orgnz_outpt_ord": "10", "orgnz_lvl_se_code": "30", "nm": "문과대학 영어영문학과 영어영문학", "cd": "A07315", "gb": "H", "dh": "A01008" },
+        { "id": 5, "enm": "College of Business Administration", "orgnz_outpt_ord": "30", "orgnz_lvl_se_code": "11", "nm": "경영대학", "cd": "A01024", "gb": "H", "dh": "A01024" },
+    ]
+}
+
+
+var daehak_202525 = {
+    "rows": [
+    ]
+}
+
+var major_202525 = {
+    "rows": [
+    ]
+}
+
+
+var gradIsuCd_2025 = {
+    "rows": [
+        { "id": 1, "nmk": "구분없음", "cd": "00", "nme": "No Section" },
+        { "id": 2, "nmk": "전공필수", "cd": "04", "nme": "Essential Major Studies" },
+        { "id": 3, "nmk": "전공선택", "cd": "05", "nme": "Elective Major Studies" },
+        { "id": 4, "nmk": "교직", "cd": "06", "nme": "Teaching Profession" },
+        { "id": 5, "nmk": "일반선택", "cd": "08", "nme": "Elective" },
+        { "id": 6, "nmk": "공통과목", "cd": "10", "nme": "Common Subject" },
+        { "id": 7, "nmk": "전공기초", "cd": "11", "nme": "Basic Major Studies" },
+        { "id": 8, "nmk": "전공공통", "cd": "12", "nme": "Major (Common Subject)" },
+        { "id": 9, "nmk": "공통필수", "cd": "13", "nme": "Common Essential" },
+        { "id": 10, "nmk": "교직전선", "cd": "20", "nme": "Teaching Profession" },
+        { "id": 11, "nmk": "선수과목", "cd": "41", "nme": "Pre-requisite Courses" },
+        { "id": 12, "nmk": "논문지도과목", "cd": "43", "nme": "Thesis Subject" },
+        { "id": 13, "nmk": "종합시험", "cd": "44", "nme": "Comprehensive Exam" },
+        { "id": 14, "nmk": "외국어대체", "cd": "61", "nme": "Foreign Language (Substitute)" },
+        { "id": 15, "nmk": "논문대체", "cd": "66", "nme": "Thesis Substitute" },
+        { "id": 16, "nmk": "과정구분없음", "cd": "95", "nme": "No Category for Courses" }
+    ]
+}

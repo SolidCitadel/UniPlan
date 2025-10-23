@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python test_regex.py)",
+      "Bash(python test_full_crawler.py)",
+      "Bash(python test_multiple_depts.py)",
+      "Bash(python run_crawler_raw.py --year 2025 --semester 1 --limit 3)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -11,6 +11,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Build Tool**: Gradle with Kotlin DSL
 - **Database**: MySQL (production), H2 (development/testing)
 
+## Project Structure
+
+```
+UniPlan/
+├── app/
+│   ├── backend/           # Spring Boot microservices
+│   │   ├── api-gateway/
+│   │   ├── user-service/
+│   │   ├── catalog-service/
+│   │   ├── planner-service/  (planned)
+│   │   └── common-lib/
+│   ├── frontend/          # Flutter web client (planned)
+│   └── cli-client/        # CLI client for testing/admin (planned)
+├── scripts/
+│   └── crawler/           # Python course data crawler
+└── docs/                  # Additional documentation
+```
+
 ## Microservices Architecture
 
 The backend follows MSA principles with domain-driven design:
@@ -181,7 +199,141 @@ Base Timetable (CS101, CS102, CS103)
 - **Gateway routing**: All client traffic goes through API Gateway (port 8080)
 - **JWT consistency**: `common-lib` centralizes JWT logic; User Service issues tokens, Gateway validates them
 
+## Course Data Crawler (Python)
+
+The `scripts/crawler/` directory contains a Python-based web crawler for fetching course data from university registration systems.
+
+### Architecture: 3-Step Independent Workflow
+
+```
+Step 1: Metadata Crawling (~1 second)
+  python crawl_metadata.py --year 2025 --semester 1
+  → metadata_2025_1.json
+  - colleges, departments, courseTypes (extracted from data.js)
+  - No hardcoded mappings!
+
+Step 2: Courses Crawling (~4 minutes, run once!)
+  python run_crawler.py --year 2025 --semester 1
+  → courses_raw_2025_1.json
+  - Raw API responses saved as-is
+  - Each course references department via class_cd
+
+Step 3: Transformation (~1 second, repeatable!)
+  python transformer.py \
+    --metadata output/metadata_2025_1.json \
+    --courses output/courses_raw_2025_1.json
+  → transformed_2025_1.json
+  - catalog-service compatible format
+  - classTime as structured List: [{"day":"월","startTime":"15:00","endTime":"16:15"}]
+  - Auto-mapped: college, department, courseType from metadata
+```
+
+### Key Design Principles
+
+1. **Metadata Separation**: Extract colleges, departments, courseTypes from data.js (no hardcoding!)
+2. **Crawl Once**: Minimize server load (~4 minutes → run once only!)
+3. **Transform Repeatedly**: Modify data_parser.py → re-run Step 3 only (~1 second)
+4. **Service Simplicity**: catalog-service does NO transformation, only stores data
+5. **DB-Friendly**: classTime is structured List, easy to store as separate table or JSON
+
+### Output Format
+
+```json
+{
+  "openingYear": 2025,
+  "semester": "1학기",
+  "courseCode": "CSE302",
+  "courseName": "컴퓨터네트워크",
+  "professor": "이성원",
+  "credits": 3,
+  "classTime": [
+    {"day": "월", "startTime": "15:00", "endTime": "16:15"},
+    {"day": "수", "startTime": "15:00", "endTime": "16:15"}
+  ],
+  "classroom": "B01",
+  "courseType": "전공필수",
+  "college": "소프트웨어융합대학",
+  "department": "컴퓨터공학과",
+  "campus": "국제"
+}
+```
+
+### Importing to catalog-service
+
+The transformed data can be directly imported via REST API:
+
+```bash
+curl -X POST http://localhost:8080/api/courses/import \
+  -H "Content-Type: application/json" \
+  -d @output/transformed_2025_1.json
+```
+
+catalog-service simply stores the data without any transformation logic.
+
+### Setup & Usage
+
+```bash
+cd scripts/crawler
+
+# Create virtual environment (first time only)
+python -m venv venv
+venv\Scripts\activate  # Windows
+# source venv/bin/activate  # Mac/Linux
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run crawler (see README.md for details)
+python crawl_metadata.py --year 2025 --semester 1
+python run_crawler.py --year 2025 --semester 1 --limit 5
+python transformer.py --metadata output/metadata_2025_1.json \
+  --courses output/courses_raw_2025_1.json
+```
+
+### Documentation
+
+- Main Guide: `scripts/crawler/README.md`
+- Transformation Details: `scripts/crawler/TRANSFORMATION_GUIDE.md`
+- Field Mapping: `scripts/crawler/FIELD_MAPPING.md`
+
+## Client Applications
+
+### Frontend (Planned)
+
+**Tech Stack**: Flutter web
+
+**Location**: `app/frontend/`
+
+**Purpose**: Web-based UI for students to create and manage timetable scenarios with decision trees.
+
+**Key Features** (planned):
+- User authentication (JWT-based)
+- Course search and filtering
+- Visual timetable builder with drag-and-drop
+- Decision tree editor (Plan A, B, C with failure conditions)
+- Real-time navigation during registration
+
+### CLI Client (In Progress)
+
+**Tech Stack**: Dart
+
+**Location**: `app/cli-client/`
+
+**Purpose**: Command-line interface for testing backend APIs before frontend completion.
+
+**Development Order**: Backend → CLI Client → Frontend
+
+**Use Cases**:
+- Backend API endpoint testing without GUI
+- Authentication flow testing (login, signup, token refresh)
+- Course catalog operations testing (search, filter, import)
+- User operations testing (profile, preferences)
+- Rapid iteration and debugging during backend development
+- API integration verification before Flutter web implementation
+
 ## Reference Documentation
+
+### Backend
 
 - Requirements: `요구사항명세서.md`
 - API Path Mapping: `app/backend/API_PATH_MAPPING.md`
@@ -189,3 +341,9 @@ Base Timetable (CS101, CS102, CS103)
 - Swagger Architecture: `app/backend/SWAGGER_ARCHITECTURE.md`
 - User Service README: `app/backend/user-service/README.md`
 - Catalog Service README: `app/backend/catalog-service/README.md`
+
+### Scripts
+
+- Course Crawler Guide: `scripts/crawler/README.md`
+- Transformation Guide: `scripts/crawler/TRANSFORMATION_GUIDE.md`
+- Field Mapping: `scripts/crawler/FIELD_MAPPING.md`

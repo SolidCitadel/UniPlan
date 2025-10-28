@@ -34,6 +34,9 @@ public class Course {
     @Column(name = "course_code", nullable = false, length = 20)
     private String courseCode;
 
+    @Column(length = 10)
+    private String section;
+
     @Column(name = "course_name", nullable = false, length = 100)
     private String courseName;
 

@@ -11,6 +11,7 @@ public class CourseImportRequest {
     private String semester;
     private String targetGrade;
     private String courseCode;
+    private String section;
     private String courseName;
     private String professor;
     private Integer credits;

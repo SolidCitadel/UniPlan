@@ -3,9 +3,11 @@ package com.uniplan.catalog.domain.course.service;
 import com.uniplan.catalog.domain.course.dto.CourseImportRequest;
 import com.uniplan.catalog.domain.course.dto.ImportResponse;
 import com.uniplan.catalog.domain.course.entity.ClassTime;
+import com.uniplan.catalog.domain.course.entity.College;
 import com.uniplan.catalog.domain.course.entity.Course;
 import com.uniplan.catalog.domain.course.entity.CourseType;
 import com.uniplan.catalog.domain.course.entity.Department;
+import com.uniplan.catalog.domain.course.repository.CollegeRepository;
 import com.uniplan.catalog.domain.course.repository.CourseRepository;
 import com.uniplan.catalog.domain.course.repository.CourseTypeRepository;
 import com.uniplan.catalog.domain.course.repository.DepartmentRepository;
@@ -28,8 +30,11 @@ public class CourseImportService {
     private final CourseRepository courseRepository;
     private final DepartmentRepository departmentRepository;
     private final CourseTypeRepository courseTypeRepository;
+    private final CollegeRepository collegeRepository;
 
     private static final int BATCH_SIZE = 100;
+    private static final String UNKNOWN_COLLEGE_CODE = "UNKNOWN";
+    private static final String UNKNOWN_COLLEGE_NAME = "Unknown College";
 
     @Transactional
     public ImportResponse importCourses(List<CourseImportRequest> requests) {
@@ -47,11 +52,10 @@ public class CourseImportService {
             CourseImportRequest request = requests.get(i);
 
             try {
-                // Get or fetch department
+                // Get or create department (auto-create if missing)
                 Department department = departmentCache.computeIfAbsent(
                     request.getDepartmentCode(),
-                    code -> departmentRepository.findByCode(code)
-                        .orElseThrow(() -> new IllegalArgumentException("Department not found: " + code))
+                    code -> getOrCreateDepartment(code)
                 );
 
                 // Get or fetch course type
@@ -67,6 +71,7 @@ public class CourseImportService {
                     .semester(request.getSemester())
                     .targetGrade(request.getTargetGrade())
                     .courseCode(request.getCourseCode())
+                    .section(request.getSection())
                     .courseName(request.getCourseName())
                     .professor(request.getProfessor())
                     .credits(request.getCredits())
@@ -117,5 +122,48 @@ public class CourseImportService {
             .successCount(successCount)
             .failureCount(failureCount)
             .build();
+    }
+
+    /**
+     * Get or create department. If not found, create with Unknown college.
+     */
+    private Department getOrCreateDepartment(String code) {
+        return departmentRepository.findByCode(code)
+            .orElseGet(() -> {
+                log.warn("Department not found: {}. Creating with Unknown college.", code);
+
+                // Get or create Unknown college
+                College unknownCollege = getOrCreateUnknownCollege();
+
+                // Create new department
+                Department newDepartment = Department.builder()
+                    .code(code)
+                    .name("Unknown - " + code)
+                    .college(unknownCollege)
+                    .build();
+
+                Department saved = departmentRepository.save(newDepartment);
+                log.info("Created missing department: {} ({})", saved.getName(), saved.getCode());
+
+                return saved;
+            });
+    }
+
+    /**
+     * Get or create Unknown college for missing departments.
+     */
+    private College getOrCreateUnknownCollege() {
+        return collegeRepository.findByCode(UNKNOWN_COLLEGE_CODE)
+            .orElseGet(() -> {
+                College unknownCollege = College.builder()
+                    .code(UNKNOWN_COLLEGE_CODE)
+                    .name(UNKNOWN_COLLEGE_NAME)
+                    .build();
+
+                College saved = collegeRepository.save(unknownCollege);
+                log.info("Created Unknown college: {} ({})", saved.getName(), saved.getCode());
+
+                return saved;
+            });
     }
 }

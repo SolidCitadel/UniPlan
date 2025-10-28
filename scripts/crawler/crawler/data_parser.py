@@ -148,11 +148,23 @@ class KHUDataParser:
         except (ValueError, AttributeError):
             credits = 0
 
+        # 분반 정보 분리 (lecture_cd_disp: "CSE302-01" → courseCode: "CSE302", section: "01")
+        lecture_cd_disp = raw_course.get('lecture_cd_disp', '')
+        if lecture_cd_disp and '-' in lecture_cd_disp:
+            parts = lecture_cd_disp.rsplit('-', 1)  # 오른쪽에서 1번만 분리
+            course_code = parts[0]
+            section = parts[1]
+        else:
+            # lecture_cd_disp가 없거나 '-'가 없으면 subjt_cd 사용
+            course_code = raw_course.get('subjt_cd', '')
+            section = ''
+
         return {
             "openingYear": year,
             "semester": cls.normalize_semester(semester),
             "targetGrade": cls.extract_target_grade(raw_course),
-            "courseCode": raw_course.get('subjt_cd', ''),
+            "courseCode": course_code,
+            "section": section,
             "courseName": raw_course.get('subjt_name', ''),
             "professor": raw_course.get('teach_na', ''),
             "credits": credits,

@@ -45,6 +45,10 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.3")
 
     implementation(project(":common-lib"))
+
+    // Test dependencies
+    testImplementation("io.projectreactor:reactor-test")
+    testImplementation("org.springframework.cloud:spring-cloud-contract-wiremock")
 }
 
 configurations {

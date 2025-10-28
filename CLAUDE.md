@@ -236,7 +236,7 @@ Step 3: Transformation (~1 second, repeatable!)
 4. **Service Simplicity**: catalog-service does NO transformation, only stores data
 5. **DB-Friendly**: classTime is structured List, easy to store as separate table or JSON
 
-### Output Format
+### Output Format (Code-based, DB Normalized)
 
 ```json
 {
@@ -251,12 +251,13 @@ Step 3: Transformation (~1 second, repeatable!)
     {"day": "수", "startTime": "15:00", "endTime": "16:15"}
   ],
   "classroom": "B01",
-  "courseType": "전공필수",
-  "college": "소프트웨어융합대학",
-  "department": "컴퓨터공학과",
+  "courseTypeCode": "04",
+  "departmentCode": "A10627",
   "campus": "국제"
 }
 ```
+
+Uses codes instead of names for DB normalization. Metadata mapping via join queries.
 
 ### Importing to catalog-service
 

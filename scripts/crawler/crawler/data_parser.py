@@ -141,21 +141,6 @@ class KHUDataParser:
         Returns:
             catalog-service Course 엔티티 형식의 딕셔너리
         """
-        # metadata 추출
-        departments = metadata.get('departments', {})
-        colleges = metadata.get('colleges', {})
-        course_types = metadata.get('courseTypes', {})
-
-        # class_cd로 학과 정보 조회
-        class_cd = raw_course.get('class_cd', '')
-        dept_info = departments.get(class_cd, {})
-        department_name = dept_info.get('name', '')
-        college_code = dept_info.get('collegeCode', '')
-
-        # 대학 정보 조회
-        college_info = colleges.get(college_code, {})
-        college_name = college_info.get('name', '')
-
         # 학점 파싱 (문자열 "  3.0" → 정수 3)
         unit_str = raw_course.get('unit_num', '0')
         try:
@@ -173,10 +158,9 @@ class KHUDataParser:
             "credits": credits,
             "classTime": cls.parse_class_time(raw_course.get('timetable', '')),
             "classroom": cls.extract_classroom(raw_course.get('timetable', '')),
-            "courseType": cls.normalize_course_type(raw_course.get('field_gb', ''), course_types),
+            "courseTypeCode": raw_course.get('field_gb', ''),
             "campus": cls.extract_campus(raw_course),
-            "college": college_name,
-            "department": department_name,
+            "departmentCode": raw_course.get('class_cd', ''),
             "notes": raw_course.get('bigo', '').strip()
         }
 

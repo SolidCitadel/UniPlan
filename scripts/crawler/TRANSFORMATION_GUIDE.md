@@ -114,7 +114,7 @@ Step 3: 변환 (빠름, ~1초, 반복 가능!)
 
 ## 변환 로직 (transformer.py)
 
-### 1. 기본 필드 매핑
+### 1. 기본 필드 매핑 (코드 기반, DB 정규화)
 
 | catalog-service | Raw 필드 | 변환 로직 |
 |-----------------|----------|-----------|
@@ -125,10 +125,9 @@ Step 3: 변환 (빠름, ~1초, 반복 가능!)
 | `professor` | `teach_na` | 그대로 사용 |
 | `credits` | `unit_num` | `trim()` 후 int 변환 |
 | `targetGrade` | `lect_grade` | String 변환 |
-| `courseType` | `field_gb` | **metadata.courseTypes에서 동적 조회** |
+| `courseTypeCode` | `field_gb` | **코드 직접 사용 (metadata FK)** |
 | `campus` | `campus_nm` | 그대로 사용 |
-| `college` | `class_cd` | **class_cd → collegeCode → college name** |
-| `department` | `class_cd` | **class_cd → department name** |
+| `departmentCode` | `class_cd` | **코드 직접 사용 (metadata FK)** |
 | `notes` | `bigo` | `trim()` |
 
 ### 2. classTime 파싱 (중요! DB 친화적!)
@@ -217,66 +216,48 @@ def extract_classroom(timetable: str) -> str:
 - Input: `"화 09:00-11:45 (구(한110))"`
   - classroom: `"구(한110)"` ← 괄호 안 괄호 보존!
 
-### 4. college 및 department 매핑
+### 4. departmentCode 및 courseTypeCode 매핑 (코드 기반, DB 정규화!)
+
+**설계 원칙**:
+- **이름 대신 코드 사용**: DB 정규화, 중복 제거
+- **metadata와 join**: 조회 시 이름 자동 매핑
+- **catalog-service 단순화**: 코드 검증만, 이름 변환 불필요
 
 **매핑 로직** (data_parser.py):
 
 ```python
-# class_cd로 학과 정보 조회
-class_cd = raw_course.get('class_cd', '')
-dept_info = metadata['departments'].get(class_cd, {})
-department_name = dept_info.get('name', '')
-college_code = dept_info.get('collegeCode', '')
-
-# 대학 정보 조회
-college_info = metadata['colleges'].get(college_code, {})
-college_name = college_info.get('name', '')
-```
-
-**예시**:
-- `class_cd`: "A10451"
-- `departments["A10451"]`:
-  - `name`: "정경대학 국제통상·금융투자학부"
-  - `collegeCode`: "A00422"
-- `colleges["A00422"]`:
-  - `name`: "정경대학"
-
-**결과**:
-```json
-{
-  "college": "정경대학",
-  "department": "정경대학 국제통상·금융투자학부"
+# 코드 직접 사용
+return {
+    "departmentCode": raw_course.get('class_cd', ''),      # FK to metadata.departments
+    "courseTypeCode": raw_course.get('field_gb', ''),      # FK to metadata.courseTypes
+    # ...
 }
 ```
 
-### 5. courseType 매핑 (하드코딩 제거!)
-
-**매핑 로직**:
-
-```python
-def normalize_course_type(field_gb: str, course_types: dict) -> str:
-    if not course_types or field_gb not in course_types:
-        return f"기타({field_gb})"
-
-    return course_types[field_gb].get('nameKr', f"기타({field_gb})")
-```
-
 **예시**:
-- `field_gb`: "04"
-- `metadata['courseTypes']["04"]`:
-  - `nameKr`: "전공필수"
-  - `nameEn`: "Essential Major Studies"
+- Raw: `class_cd = "A10451"`, `field_gb = "04"`
+- Transformed: `departmentCode = "A10451"`, `courseTypeCode = "04"`
+- 조회 시: metadata와 join하여 이름 표시
 
-**결과**:
-```json
-{
-  "courseType": "전공필수"
-}
+**DB 구조**:
+```sql
+-- courses 테이블
+courses (
+  department_code VARCHAR FK to metadata.departments(code),
+  course_type_code VARCHAR FK to metadata.courseTypes(code)
+)
+
+-- 조회 시 join
+SELECT c.*, d.name as department_name, ct.name_kr as course_type_name
+FROM courses c
+LEFT JOIN departments d ON c.department_code = d.code
+LEFT JOIN course_types ct ON c.course_type_code = ct.code
 ```
 
-**하드코딩 제거**:
-- 기존: `type_map = {"04": "전공필수", ...}` (하드코딩)
-- 현재: `metadata['courseTypes']`에서 동적 조회 (gradIsuCd_2025에서 자동 추출)
+**장점**:
+- ✅ **이름 중복 제거**: "정경대학 국제통상..."을 매번 저장 안 함
+- ✅ **정규화**: 학과명 변경 시 metadata만 수정
+- ✅ **서비스 단순**: catalog-service는 코드 검증만
 
 ---
 
@@ -331,10 +312,9 @@ public class Course {
     private String classTime;  // [{"day":"월","startTime":"15:00","endTime":"16:15"}]
 
     private String classroom;
-    private String courseType;
+    private String courseTypeCode;    // FK to CourseType (metadata)
     private String campus;
-    private String college;
-    private String department;
+    private String departmentCode;    // FK to Department (metadata)
     private String notes;
 
     // getters, setters

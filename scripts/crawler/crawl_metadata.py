@@ -129,7 +129,20 @@ def extract_course_types(js_content: str, year: int):
                 "code": code
             }
 
-    print(f"   Found {len(course_types)} course types")
+    # 경희대 교양 과목 전용 코드 추가 (data.js에 없지만 실제 사용됨)
+    khu_general_education_codes = {
+        "14": {"nameKr": "중핵교과", "nameEn": "Core Curriculum", "code": "14"},
+        "15": {"nameKr": "배분이수교과", "nameEn": "Distributive Curriculum", "code": "15"},
+        "16": {"nameKr": "기초교과", "nameEn": "Basic Curriculum", "code": "16"},
+        "17": {"nameKr": "자유이수", "nameEn": "Elective Curriculum", "code": "17"}
+    }
+
+    for code, info in khu_general_education_codes.items():
+        if code not in course_types:
+            course_types[code] = info
+            print(f"   Added KHU general education code: {code} ({info['nameKr']})")
+
+    print(f"   Found {len(course_types)} course types (including KHU-specific codes)")
     return course_types
 
 

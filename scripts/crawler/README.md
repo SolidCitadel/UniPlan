@@ -58,11 +58,11 @@ Step 3: 변환 (빠름, ~1초, 반복 가능! ⭐)
 - metadata + courses_raw 조인
 - catalog-service 형식으로 변환
 - **하드코딩 제거**: 모든 매핑이 metadata 기반
-- **DB 친화적 구조**:
+- **DB 정규화 구조** (코드 기반):
   - classTime: List[{day, startTime, endTime}]
-  - college: 대학명 (자동 매핑)
-  - department: 학과명 (자동 매핑)
-  - courseType: 이수구분 (자동 매핑)
+  - departmentCode: 학과 코드 (metadata의 departments FK)
+  - courseTypeCode: 이수구분 코드 (metadata의 courseTypes FK)
+  - 이름 중복 제거, DB join으로 이름 조회
 
 ## 3. 빠른 시작
 
@@ -211,21 +211,20 @@ curl -X POST http://localhost:8080/api/courses/import \
       }
     ],
     "classroom": "B01",
-    "courseType": "전공필수",
+    "courseTypeCode": "04",
     "campus": "국제",
-    "college": "소프트웨어융합대학",
-    "department": "컴퓨터공학과",
+    "departmentCode": "A10627",
     "notes": ""
   }
 ]
 ```
 
-**주요 변환**:
+**주요 변환 (코드 기반, DB 정규화)** 🔥:
 - `classTime`: 문자열 → **List[{day, startTime, endTime}]** (DB 친화적!)
-- `college`: class_cd → collegeCode → college name (자동 매핑)
-- `department`: class_cd → department name (자동 매핑)
-- `courseType`: field_gb → courseTypes → nameKr (동적 매핑, 하드코딩 제거!)
+- `departmentCode`: class_cd 직접 사용 (metadata의 departments 참조)
+- `courseTypeCode`: field_gb 직접 사용 (metadata의 courseTypes 참조)
 - `semester`: 1 → "1학기", 2 → "2학기"
+- **DB 정규화**: 이름 대신 코드 사용으로 중복 제거 및 join 가능
 
 ## 5. 프로젝트 구조
 
@@ -348,13 +347,14 @@ public class Course {
     private String classTime;  // JSON: [{"day":"월","startTime":"15:00","endTime":"16:15"}]
 
     private String classroom;
-    private String courseType;
+    private String courseTypeCode;    // FK to CourseType (metadata)
     private String campus;
-    private String college;
-    private String department;
+    private String departmentCode;    // FK to Department (metadata)
     private String notes;
 }
 ```
+
+**DB 정규화**: courseTypeCode와 departmentCode는 metadata의 코드를 참조합니다.
 
 또는 **classTime을 별도 테이블로 분리**:
 

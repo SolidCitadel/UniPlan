@@ -16,24 +16,64 @@
 
 `catalog-service`에서 관리하는 핵심 데이터 모델은 `Course`입니다.
 
+### 3.1 Course (강의)
+
+| 필드명          | 데이터 타입           | 설명                               | 예시                               |
+| --------------- | --------------------- | ---------------------------------- | ---------------------------------- |
+| `id`            | `Long`                | PK                                 | `1`                                |
+| `openingYear`   | `Integer`             | 개설년도                           | `2024`                             |
+| `semester`      | `String`              | 개설학기                           | `"1학기"`, `"여름학기"`            |
+| `targetGrade`   | `Integer`             | 대상학년                           | `3`                                |
+| `courseCode`    | `String`              | 강좌코드 (학수번호)                | `"CSE1234"`                        |
+| `section`       | `String`              | 분반번호                           | `"01"`, `"02"`                     |
+| `courseName`    | `String`              | 강좌명                             | `"자료구조"`                       |
+| `professor`     | `String`              | 교수명                             | `"홍길동"`                         |
+| `credits`       | `Integer`             | 학점                               | `3`                                |
+| `classTimes`    | `List<ClassTime>`     | 강의시간 (외래키: ClassTime)       | -                                  |
+| `classroom`     | `String`              | 강의실                             | `"6호관 201호"`                    |
+| `courseType`    | `CourseType`          | 이수구분 (외래키: CourseType)      | -                                  |
+| `campus`        | `String`              | 캠퍼스                             | `"용현"`, `"국제"`                 |
+| `department`    | `Department`          | 개설학과 (외래키: Department)      | -                                  |
+| `notes`         | `String`              | 특이사항 (비고)                    | `"팀 프로젝트 포함"`               |
+
+### 3.2 ClassTime (강의시간)
+
 | 필드명          | 데이터 타입    | 설명                               | 예시                               |
 | --------------- | -------------- | ---------------------------------- | ---------------------------------- |
 | `id`            | `Long`         | PK                                 | `1`                                |
-| `openingYear`   | `Int`          | 개설년도                           | `2024`                             |
-| `semester`      | `String`       | 개설학기                           | `"1학기"`, `"여름학기"`            |
-| `targetGrade`   | `String`       | 대상학년                           | `"3학년"`                          |
-| `courseCode`    | `String`       | 강좌코드 (학수번호)                | `"CSE1234"`                        |
-| `courseName`    | `String`       | 강좌명                             | `"자료구조"`                       |
-| `professor`     | `String`       | 교수명                             | `"홍길동"`                         |
-| `credits`       | `Int`          | 학점                               | `3`                                |
-| `classTime`     | `String`       | 강의시간                           | `"월1,수2"`                        |
-| `classroom`     | `String`       | 강의실                             | `"6호관 201호"`                    |
-| `courseType`    | `String`       | 이수구분                           | `"전공필수"`, `"교양"`             |
-| `campus`        | `String`       | 캠퍼스                             | `"용현캠퍼스"`                     |
-| `college`       | `String`       | 개설 단과대학                      | `"공과대학"`                       |
-| `department`    | `String`       | 개설학과                           | `"컴퓨터공학과"`                   |
-| `notes`         | `String`       | 특이사항 (비고)                    | `"팀 프로젝트 포함"`               |
-| `credits`       | `Integer`             | 학점                               | `3`                                |
+| `course`        | `Course`       | 강의 (외래키: Course)              | -                                  |
+| `day`           | `String`       | 요일                               | `"월"`, `"화"`, `"수"`             |
+| `startTime`     | `LocalTime`    | 시작시간                           | `15:00`                            |
+| `endTime`       | `LocalTime`    | 종료시간                           | `16:15`                            |
+
+### 3.3 Department (학과)
+
+| 필드명          | 데이터 타입    | 설명                               | 예시                               |
+| --------------- | -------------- | ---------------------------------- | ---------------------------------- |
+| `id`            | `Long`         | PK                                 | `1`                                |
+| `code`          | `String`       | 학과코드 (고유)                    | `"A10627"`                         |
+| `name`          | `String`       | 학과명 (한글)                      | `"컴퓨터공학과"`                   |
+| `nameEn`        | `String`       | 학과명 (영문)                      | `"Computer Science and Engineering"` |
+| `college`       | `College`      | 단과대학 (외래키: College)         | -                                  |
+| `level`         | `String`       | 레벨 (학부/대학원)                 | `"1"`, `"2"`                       |
+
+### 3.4 College (단과대학)
+
+| 필드명          | 데이터 타입    | 설명                               | 예시                               |
+| --------------- | -------------- | ---------------------------------- | ---------------------------------- |
+| `id`            | `Long`         | PK                                 | `1`                                |
+| `code`          | `String`       | 단과대학코드 (고유)                | `"B01"`                            |
+| `name`          | `String`       | 단과대학명 (한글)                  | `"공과대학"`                       |
+| `nameEn`        | `String`       | 단과대학명 (영문)                  | `"College of Engineering"`         |
+
+### 3.5 CourseType (이수구분)
+
+| 필드명          | 데이터 타입    | 설명                               | 예시                               |
+| --------------- | -------------- | ---------------------------------- | ---------------------------------- |
+| `id`            | `Long`         | PK                                 | `1`                                |
+| `code`          | `String`       | 이수구분코드 (고유)                | `"01"`, `"04"`                     |
+| `nameKr`        | `String`       | 이수구분명 (한글)                  | `"전공필수"`, `"교양"`             |
+| `nameEn`        | `String`       | 이수구분명 (영문)                  | `"Major Required"`, `"Liberal Arts"` |
 
 ## 4. API 명세
 
@@ -70,17 +110,47 @@
         "id": 1,
         "openingYear": 2024,
         "semester": "1학기",
-        "targetGrade": "3",
+        "targetGrade": 3,
         "courseCode": "CSE1234",
+        "section": "01",
         "courseName": "자료구조",
         "professor": "홍길동",
         "credits": 3,
-        "classTime": "월1,수2",
+        "classTimes": [
+          {
+            "id": 1,
+            "day": "월",
+            "startTime": "15:00:00",
+            "endTime": "16:15:00"
+          },
+          {
+            "id": 2,
+            "day": "수",
+            "startTime": "15:00:00",
+            "endTime": "16:15:00"
+          }
+        ],
         "classroom": "6-201",
-        "courseType": "전공필수",
+        "courseType": {
+          "id": 1,
+          "code": "04",
+          "nameKr": "전공필수",
+          "nameEn": "Major Required"
+        },
         "campus": "용현",
-        "college": "공과대학",
-        "department": "컴퓨터공학과",
+        "department": {
+          "id": 1,
+          "code": "A10627",
+          "name": "컴퓨터공학과",
+          "nameEn": "Computer Science and Engineering",
+          "college": {
+            "id": 1,
+            "code": "B01",
+            "name": "공과대학",
+            "nameEn": "College of Engineering"
+          },
+          "level": "1"
+        },
         "notes": ""
       }
     ],
@@ -105,24 +175,54 @@
     "id": 1,
     "openingYear": 2024,
     "semester": "1학기",
-    "targetGrade": "3",
+    "targetGrade": 3,
     "courseCode": "CSE1234",
+    "section": "01",
     "courseName": "자료구조",
     "professor": "홍길동",
     "credits": 3,
-    "classTime": "월1,수2",
+    "classTimes": [
+      {
+        "id": 1,
+        "day": "월",
+        "startTime": "15:00:00",
+        "endTime": "16:15:00"
+      },
+      {
+        "id": 2,
+        "day": "수",
+        "startTime": "15:00:00",
+        "endTime": "16:15:00"
+      }
+    ],
     "classroom": "6-201",
-    "courseType": "전공필수",
+    "courseType": {
+      "id": 1,
+      "code": "04",
+      "nameKr": "전공필수",
+      "nameEn": "Major Required"
+    },
     "campus": "용현",
-    "college": "공과대학",
-    "department": "컴퓨터공학과",
+    "department": {
+      "id": 1,
+      "code": "A10627",
+      "name": "컴퓨터공학과",
+      "nameEn": "Computer Science and Engineering",
+      "college": {
+        "id": 1,
+        "code": "B01",
+        "name": "공과대학",
+        "nameEn": "College of Engineering"
+      },
+      "level": "1"
+    },
     "notes": ""
   }
   ```
 
 ## 5. 기술 스택
 
-- **Language**: Kotlin
+- **Language**: Java 21
 - **Framework**: Spring Boot 3.x
 - **Build Tool**: Gradle (Kotlin DSL)
-- **Database**: MySQL
+- **Database**: MySQL (production), H2 (development/testing)

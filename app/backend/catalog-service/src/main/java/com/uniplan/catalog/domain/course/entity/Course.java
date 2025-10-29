@@ -28,8 +28,8 @@ public class Course {
     @Column(nullable = false, length = 20)
     private String semester;
 
-    @Column(name = "target_grade", length = 10)
-    private String targetGrade;
+    @Column(name = "target_grade")
+    private Integer targetGrade;
 
     @Column(name = "course_code", nullable = false, length = 20)
     private String courseCode;

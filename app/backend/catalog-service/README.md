@@ -33,6 +33,7 @@
 | `college`       | `String`       | 개설 단과대학                      | `"공과대학"`                       |
 | `department`    | `String`       | 개설학과                           | `"컴퓨터공학과"`                   |
 | `notes`         | `String`       | 특이사항 (비고)                    | `"팀 프로젝트 포함"`               |
+| `credits`       | `Integer`             | 학점                               | `3`                                |
 
 ## 4. API 명세
 

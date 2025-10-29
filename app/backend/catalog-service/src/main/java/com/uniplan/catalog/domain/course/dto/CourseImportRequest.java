@@ -9,7 +9,7 @@ public class CourseImportRequest {
 
     private Integer openingYear;
     private String semester;
-    private String targetGrade;
+    private Integer targetGrade;
     private String courseCode;
     private String section;
     private String courseName;

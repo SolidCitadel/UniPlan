@@ -73,13 +73,18 @@ def main():
         print(f"  - Year: {year}, Semester: {semester}")
         print()
 
-        # 2. Raw 강의 데이터 로드
+        # 2. Raw 강의 데이터 로드 (학과별로 그룹화된 형식)
         print("Step 2: Loading raw courses...")
         with open(args.courses, 'r', encoding='utf-8') as f:
             courses_data = json.load(f)
 
-        raw_courses = courses_data.get('courses', [])
-        print(f"Loaded {len(raw_courses)} raw courses")
+        # 학과별 데이터를 하나의 리스트로 통합
+        departments_data = courses_data.get('departments', {})
+        raw_courses = []
+        for dept_code, dept_info in departments_data.items():
+            raw_courses.extend(dept_info.get('courses', []))
+
+        print(f"Loaded {len(raw_courses)} raw courses from {len(departments_data)} departments")
         print()
 
         # 3. 변환

@@ -17,7 +17,7 @@ public class CourseImportRequest {
     private Integer credits;
     private String classroom;
     private String campus;
-    private String departmentCode;
+    private List<String> departmentCodes;
     private String courseTypeCode;
     private String notes;
     private List<ClassTimeDto> classTime;

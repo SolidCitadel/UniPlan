@@ -179,7 +179,7 @@ class KHUDataParser:
     @classmethod
     def parse_courses(cls, raw_courses: List[Dict], year: int, semester: int, metadata: Dict) -> List[Dict]:
         """
-        여러 강의 데이터를 일괄 변환
+        여러 강의 데이터를 일괄 변환 (중복 제거 및 학과 목록 병합)
 
         Args:
             raw_courses: 경희대 API 응답의 강의 목록
@@ -188,10 +188,10 @@ class KHUDataParser:
             metadata: 메타데이터 (colleges, departments, courseTypes)
 
         Returns:
-            변환된 강의 목록
+            변환된 강의 목록 (학과 중복 제거 및 병합)
         """
+        # Step 1: 모든 강의를 파싱
         parsed_courses = []
-
         for raw in raw_courses:
             try:
                 parsed = cls.parse_course(raw, year, semester, metadata)
@@ -200,7 +200,40 @@ class KHUDataParser:
                 print(f"Failed to parse course: {e}")
                 print(f"   Raw data: {raw}")
 
-        return parsed_courses
+        # Step 2: 같은 강의를 그룹핑 (courseCode + section + professor + year + semester)
+        # 학과 정보는 리스트로 병합
+        course_groups = {}
+
+        for course in parsed_courses:
+            # 강의 고유 식별자 (학과 제외)
+            key = (
+                course['courseCode'],
+                course['section'],
+                course['professor'],
+                course['openingYear'],
+                course['semester'],
+                # classTime과 classroom도 포함하여 동일 강의 판별
+                str(course.get('classTime', [])),
+                course.get('classroom', '')
+            )
+
+            if key in course_groups:
+                # 기존 강의에 학과 추가
+                dept_code = course.get('departmentCode')
+                if dept_code and dept_code not in course_groups[key]['departmentCodes']:
+                    course_groups[key]['departmentCodes'].append(dept_code)
+            else:
+                # 새로운 강의 추가 (departmentCode → departmentCodes로 변환)
+                dept_code = course.pop('departmentCode', None)
+                course['departmentCodes'] = [dept_code] if dept_code else []
+                course_groups[key] = course
+
+        # Step 3: 그룹핑된 강의 목록 반환
+        result = list(course_groups.values())
+
+        print(f"  Grouped {len(parsed_courses)} raw courses into {len(result)} unique courses")
+
+        return result
 
 
 # 테스트용

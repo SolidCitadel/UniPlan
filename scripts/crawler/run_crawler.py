@@ -94,29 +94,65 @@ def main():
             print(f"(Limited to {len(departments)} departments for testing)")
             print()
 
-        # 2. 모든 학과의 강의 가져오기
+        # 2. 학과별로 강의 가져오기 (학과 코드별로 그룹화)
         print("Step 2: Fetching courses from all departments...")
-        raw_courses = crawler.fetch_all_departments(
-            args.year,
-            args.semester,
-            departments
-        )
+        print()
 
-        if not raw_courses:
+        departments_data = {}
+        total_courses = 0
+        success_count = 0
+        fail_count = 0
+
+        for idx, (dept_code, dept_name) in enumerate(departments.items(), 1):
+            print(f"[{idx}/{len(departments)}] {dept_code} - {dept_name}")
+
+            try:
+                data = crawler.fetch_courses(args.year, args.semester, major_code=dept_code)
+
+                if data and 'rows' in data:
+                    courses = data['rows']
+                    course_count = len(courses)
+                    total_courses += course_count
+                    success_count += 1
+
+                    # 학과 코드별로 데이터 저장
+                    departments_data[dept_code] = {
+                        "name": dept_name,
+                        "course_count": course_count,
+                        "courses": courses
+                    }
+
+                    print(f"   -> {course_count} courses")
+                else:
+                    fail_count += 1
+                    print(f"   -> No data")
+
+            except Exception as e:
+                fail_count += 1
+                print(f"   -> Error: {str(e)}")
+
+            # Rate limiting (서버 부하 방지)
+            if idx < len(departments):
+                import time
+                time.sleep(0.5)
+
+            print()
+
+        if not departments_data:
             print("ERROR: No courses found!")
             return 1
 
-        print()
-        print(f"Total raw courses: {len(raw_courses)}")
+        print(f"Total raw courses: {total_courses}")
         print()
 
-        # 3. Raw 데이터 저장 (courses만, metadata는 별도)
+        # 3. Raw 데이터 저장 (학과별로 그룹화)
         output_data = {
             "year": args.year,
             "semester": args.semester,
             "crawled_at": datetime.datetime.now().isoformat(),
-            "total_courses": len(raw_courses),
-            "courses": raw_courses  # 각 course의 class_cd로 학과 참조
+            "total_courses": total_courses,
+            "total_departments": len(departments_data),
+            "departments": departments_data  # 학과 코드별로 그룹화된 데이터
         }
 
         print(f"Step 3: Saving raw courses to {args.output}...")
@@ -126,7 +162,11 @@ def main():
         print()
         print("=" * 60)
         print("SUCCESS!")
-        print(f"Saved {len(raw_courses)} raw courses to {args.output}")
+        print(f"Crawling Statistics:")
+        print(f"  - Success: {success_count} departments")
+        print(f"  - Failed: {fail_count} departments")
+        print(f"  - Total courses: {total_courses}")
+        print(f"  - Saved to: {args.output}")
         print()
         print("Next step:")
         print(f"  python transformer.py \\")

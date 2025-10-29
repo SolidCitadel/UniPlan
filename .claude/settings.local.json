@@ -8,7 +8,10 @@
       "Bash(./gradlew:*)",
       "Bash(./gradlew :catalog-service:bootRun:*)",
       "Bash(curl:*)",
-      "Bash(powershell \"Stop-Process -Id 50336 -Force\")"
+      "Bash(powershell \"Stop-Process -Id 50336 -Force\")",
+      "Bash(taskkill /PID 36336 /F)",
+      "Bash(powershell \"Stop-Process -Id 36336 -Force\")",
+      "Bash(python upload_to_service.py:*)"
     ],
     "deny": [],
     "ask": []

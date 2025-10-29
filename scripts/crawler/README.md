@@ -4,39 +4,56 @@
 
 경희대학교 수강신청 시스템에서 강의 정보를 크롤링하여 catalog-service에서 사용할 수 있는 형식으로 변환합니다.
 
-### 핵심 설계 철학: 3-Step 독립 워크플로우
+### 핵심 설계 철학: 5-Step 독립 워크플로우
 
 크롤링은 시간이 오래 걸리고 서버에 부담을 주므로, **각 단계를 독립적으로 반복 가능**하게 설계했습니다.
+**모든 raw 데이터를 보존**하여 언제든 재가공할 수 있습니다.
 
 ```
-Step 1: Metadata 크롤링 (매우 빠름, ~1초)
+Step 1: Metadata 크롤링 및 저장 (매우 빠름, ~1초)
   python crawl_metadata.py --year 2025 --semester 1
-  ↓ metadata_2025_1.json
-  - 50개 대학 (colleges)
-  - 431개 학과 (departments)
-  - 16개 이수구분 코드 (courseTypes)
+  ↓ 1-1. data_js_raw_2025_1.js (221KB)
+      - data.js 파일 원본 그대로 저장
+  ↓ 1-2. metadata_2025_1.json (119KB)
+      - 49개 대학 (colleges)
+      - 437개 학과 (departments)
+      - 20개 이수구분 코드 (courseTypes)
 
-Step 2: Courses 크롤링 (느림, ~4분, 1회만!)
+Step 2: Courses 크롤링 및 저장 (느림, ~4분, 1회만!)
   python run_crawler.py --year 2025 --semester 1
+  - 저장된 metadata에서 학과 목록 로드 ✅
+  - 학과별로 API 크롤링 (2차 크롤링)
   ↓ courses_raw_2025_1.json
-  - Raw API 응답 그대로 저장
-  - 각 course의 class_cd로 학과 참조
+      - Raw API 응답 그대로 저장
+      - 학과 코드별로 그룹화된 구조
+      - departments: { "A10451": { "name": "...", "courses": [...] } }
 
-Step 3: 변환 (빠름, ~1초, 반복 가능! ⭐)
+Step 3: Courses 변환 (빠름, ~1초, 반복 가능! ⭐)
   python transformer.py \
     --metadata output/metadata_2025_1.json \
     --courses output/courses_raw_2025_1.json
   ↓ transformed_2025_1.json
-  - catalog-service 형식으로 변환
-  - metadata와 courses 조인
-  - 결과 확인 → 만족할 때까지 반복!
+      - catalog-service 형식으로 변환
+      - metadata와 courses 조인
+      - 같은 강의 중복 제거 (여러 학과에 속한 과목 처리)
+      - 결과 확인 → 만족할 때까지 반복!
+
+Step 4: 서버 업로드
+  python upload_to_service.py --year 2025 --semester 1
+  - catalog-service에 직접 전송
+  - 중복 자동 스킵
 ```
 
 **장점**:
-1. **Metadata 1회**: 하드코딩 제거, 이수구분 코드 자동 추출
-2. **Crawling 1회**: 시간/서버 부담 최소화 (약 4분 → 1회만!)
-3. **변환 반복**: 로컬에서 즉시 테스트 (data_parser.py 수정 → 재실행)
-4. **서비스 단순**: catalog-service는 단순 import만 (재배포 불필요)
+1. **Raw 데이터 보존**: data.js 원본과 API 응답을 모두 저장
+2. **재가공 가능**: 파서 수정 후 raw 데이터로 재변환 가능
+3. **Metadata 1회**: 하드코딩 제거, 이수구분 코드 자동 추출
+4. **2단계 크롤링**: 1차 metadata → 2차 courses (저장된 metadata 활용)
+5. **학과별 그룹화**: 학과 코드별로 데이터 구조화 및 저장
+6. **Crawling 1회**: 시간/서버 부담 최소화 (약 4분 → 1회만!)
+7. **변환 반복**: 로컬에서 즉시 테스트 (data_parser.py 수정 → 재실행)
+8. **서비스 단순**: catalog-service는 단순 import만 (재배포 불필요)
+9. **중복 자동 처리**: 여러 학과에 속한 강의 자동 병합
 
 ## 2. 주요 기능
 
@@ -48,11 +65,12 @@ Step 3: 변환 (빠름, ~1초, 반복 가능! ⭐)
 
 ### Courses 크롤링 (run_crawler.py)
 - API 기반 크롤링 (Selenium 불필요)
-- metadata에서 학과 목록 로드
+- **저장된 metadata에서 학과 목록 로드** (다시 크롤링하지 않음!)
+- 학과별로 순차 크롤링 (2차 크롤링)
 - 선택적 크롤링 지원:
   - `--limit N`: 처음 N개 학과만
   - `--departments A10451,A00430`: 특정 학과만
-- Raw API 응답 그대로 저장
+- **학과 코드별로 그룹화하여 저장** (departments: {...})
 
 ### 변환 (transformer.py)
 - metadata + courses_raw 조인
@@ -88,12 +106,15 @@ pip install -r requirements.txt
 
 ```bash
 # Step 1: Metadata 크롤링 (~1초)
+# → data_js_raw_2025_1.js + metadata_2025_1.json 생성
 python crawl_metadata.py --year 2025 --semester 1
 
 # Step 2: Courses 크롤링 (테스트: 처음 5개 학과)
+# → metadata_2025_1.json에서 학과 목록 로드 후 크롤링
 python run_crawler.py --year 2025 --semester 1 --limit 5
 
 # Step 3: 변환
+# → 학과별 그룹화된 데이터를 하나의 리스트로 변환
 python transformer.py \
   --metadata output/metadata_2025_1.json \
   --courses output/courses_raw_2025_1.json
@@ -109,19 +130,27 @@ cat output/transformed_2025_1.json | head -100
 ### 전체 크롤링 (실전)
 
 ```bash
-# Step 1: Metadata
+# Step 1: Metadata 크롤링 (1차)
 python crawl_metadata.py --year 2025 --semester 1
 
-# Step 2: 전체 431개 학과 크롤링 (~4분)
+# Step 2: 전체 437개 학과 크롤링 (~4분, 2차)
+# → metadata_2025_1.json에서 학과 목록 자동 로드
 python run_crawler.py --year 2025 --semester 1
 
 # Step 3: 변환
+# → 학과별 그룹 데이터를 통합하여 변환
 python transformer.py \
   --metadata output/metadata_2025_1.json \
   --courses output/courses_raw_2025_1.json
 
-# catalog-service로 업로드
-curl -X POST http://localhost:8080/api/courses/import \
+# Step 4: catalog-service로 업로드 (간편 모드 - 권장!)
+python upload_to_service.py --year 2025 --semester 1
+
+# 또는 파일 경로 직접 지정
+python upload_to_service.py --file output/transformed_2025_1.json
+
+# 또는 curl 사용 (직접 연결)
+curl -X POST http://localhost:8083/courses/import \
   -H "Content-Type: application/json" \
   -d @output/transformed_2025_1.json
 ```
@@ -163,26 +192,40 @@ curl -X POST http://localhost:8080/api/courses/import \
 
 ### Raw Courses (courses_raw_2025_1.json)
 
+**학과 코드별로 그룹화된 구조**:
+
 ```json
 {
   "year": 2025,
   "semester": 1,
   "crawled_at": "2025-10-24T00:39:35",
   "total_courses": 5000,
-  "courses": [
-    {
-      "subjt_cd": "CSE302",
-      "subjt_name": "컴퓨터네트워크",
-      "teach_na": "이성원",
-      "unit_num": "  3.0",
-      "timetable": "월 15:00-16:15 (B01)<BR>수 15:00-16:15 (B01)",
-      "campus_nm": "국제",
-      "lect_grade": 3,
-      "field_gb": "04",
-      "class_cd": "A10627",
-      "bigo": " "
+  "total_departments": 437,
+  "departments": {
+    "A10627": {
+      "name": "소프트웨어융합학과",
+      "course_count": 45,
+      "courses": [
+        {
+          "subjt_cd": "CSE302",
+          "subjt_name": "컴퓨터네트워크",
+          "teach_na": "이성원",
+          "unit_num": "  3.0",
+          "timetable": "월 15:00-16:15 (B01)<BR>수 15:00-16:15 (B01)",
+          "campus_nm": "국제",
+          "lect_grade": 3,
+          "field_gb": "04",
+          "class_cd": "A10627",
+          "bigo": " "
+        }
+      ]
+    },
+    "A10451": {
+      "name": "정경대학 국제통상·금융투자학부",
+      "course_count": 32,
+      "courses": [...]
     }
-  ]
+  }
 }
 ```
 
@@ -195,6 +238,7 @@ curl -X POST http://localhost:8080/api/courses/import \
     "semester": "1학기",
     "targetGrade": "3",
     "courseCode": "CSE302",
+    "section": "01",
     "courseName": "컴퓨터네트워크",
     "professor": "이성원",
     "credits": 3,
@@ -213,7 +257,7 @@ curl -X POST http://localhost:8080/api/courses/import \
     "classroom": "B01",
     "courseTypeCode": "04",
     "campus": "국제",
-    "departmentCode": "A10627",
+    "departmentCodes": ["A10627"],
     "notes": ""
   }
 ]
@@ -221,10 +265,12 @@ curl -X POST http://localhost:8080/api/courses/import \
 
 **주요 변환 (코드 기반, DB 정규화)** 🔥:
 - `classTime`: 문자열 → **List[{day, startTime, endTime}]** (DB 친화적!)
-- `departmentCode`: class_cd 직접 사용 (metadata의 departments 참조)
+- `departmentCodes`: **List[String]** - 여러 학과에 속한 강의 지원 (Many-to-Many)
 - `courseTypeCode`: field_gb 직접 사용 (metadata의 courseTypes 참조)
 - `semester`: 1 → "1학기", 2 → "2학기"
+- `section`: 분반 번호 추가
 - **DB 정규화**: 이름 대신 코드 사용으로 중복 제거 및 join 가능
+- **중복 자동 병합**: 같은 강의가 여러 학과 API에 나오면 departmentCodes에 모두 추가
 
 ## 5. 프로젝트 구조
 
@@ -243,12 +289,14 @@ scripts/crawler/
 │   ├── test_multiple_depts.py     # 여러 학과 테스트
 │   └── test_full_crawler.py       # 전체 워크플로우 테스트
 ├── output/                        # 크롤링 결과 저장
-│   ├── metadata_YYYY_S.json       # 메타데이터
+│   ├── data_js_raw_YYYY_S.js      # Raw data.js (221KB)
+│   ├── metadata_YYYY_S.json       # 메타데이터 (119KB)
 │   ├── courses_raw_YYYY_S.json    # Raw 강의 데이터
-│   └── transformed_YYYY_S.json    # 변환 데이터
+│   └── transformed_YYYY_S.json    # 변환 데이터 (catalog-service용)
 ├── crawl_metadata.py              # Step 1: Metadata 크롤러 ⭐
 ├── run_crawler.py                 # Step 2: Courses 크롤러 ⭐
 ├── transformer.py                 # Step 3: 변환 ⭐
+├── upload_to_service.py           # catalog-service로 업로드 ⭐
 ├── requirements.txt
 ├── .gitignore
 └── README.md

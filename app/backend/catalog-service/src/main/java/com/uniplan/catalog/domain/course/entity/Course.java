@@ -55,9 +55,14 @@ public class Course {
     @Column(length = 500)
     private String notes;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "department_id", nullable = false)
-    private Department department;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "course_departments",
+        joinColumns = @JoinColumn(name = "course_id"),
+        inverseJoinColumns = @JoinColumn(name = "department_id")
+    )
+    @Builder.Default
+    private List<Department> departments = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_type_id", nullable = false)

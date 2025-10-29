@@ -173,14 +173,22 @@ def main():
         js_content = fetch_data_js(args.year)
         print()
 
-        # 2. 메타데이터 추출
-        print("Step 2: Parsing metadata...")
+        # 2. Raw data.js 저장
+        raw_output = f"output/data_js_raw_{args.year}_{args.semester}.js"
+        print(f"Step 2: Saving raw data.js to {raw_output}...")
+        with open(raw_output, 'w', encoding='utf-8') as f:
+            f.write(js_content)
+        print(f"   Saved {len(js_content)} bytes")
+        print()
+
+        # 3. 메타데이터 추출
+        print("Step 3: Parsing metadata...")
         colleges = extract_colleges(js_content, args.year, args.semester)
         departments = extract_departments(js_content, args.year, args.semester)
         course_types = extract_course_types(js_content, args.year)
         print()
 
-        # 3. JSON으로 저장
+        # 4. JSON으로 저장
         metadata = {
             "year": args.year,
             "semester": args.semester,
@@ -190,14 +198,18 @@ def main():
             "courseTypes": course_types
         }
 
-        print(f"Step 3: Saving to {args.output}...")
+        print(f"Step 4: Saving metadata to {args.output}...")
         with open(args.output, 'w', encoding='utf-8') as f:
             json.dump(metadata, f, ensure_ascii=False, indent=2)
 
         print()
         print("=" * 60)
         print("SUCCESS!")
-        print(f"Saved metadata:")
+        print(f"Saved files:")
+        print(f"  - Raw data.js: {raw_output}")
+        print(f"  - Metadata: {args.output}")
+        print()
+        print(f"Metadata contents:")
         print(f"  - {len(colleges)} colleges")
         print(f"  - {len(departments)} departments")
         print(f"  - {len(course_types)} course types")

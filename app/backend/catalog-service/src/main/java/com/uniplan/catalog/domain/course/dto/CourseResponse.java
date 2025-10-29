@@ -56,8 +56,12 @@ public class CourseResponse {
 
     /**
      * Convert Course entity to CourseResponse DTO
+     * Note: Returns only the first department for backward compatibility
      */
     public static CourseResponse from(Course course) {
+        // Get first department (backward compatibility)
+        var department = course.getDepartments().isEmpty() ? null : course.getDepartments().get(0);
+
         return CourseResponse.builder()
             .id(course.getId())
             .openingYear(course.getOpeningYear())
@@ -71,10 +75,10 @@ public class CourseResponse {
             .classroom(course.getClassroom())
             .campus(course.getCampus())
             .notes(course.getNotes())
-            .departmentCode(course.getDepartment().getCode())
-            .departmentName(course.getDepartment().getName())
-            .collegeCode(course.getDepartment().getCollege().getCode())
-            .collegeName(course.getDepartment().getCollege().getName())
+            .departmentCode(department != null ? department.getCode() : null)
+            .departmentName(department != null ? department.getName() : null)
+            .collegeCode(department != null && department.getCollege() != null ? department.getCollege().getCode() : null)
+            .collegeName(department != null && department.getCollege() != null ? department.getCollege().getName() : null)
             .courseTypeCode(course.getCourseType().getCode())
             .courseTypeName(course.getCourseType().getNameKr())
             .classTimes(course.getClassTimes().stream()

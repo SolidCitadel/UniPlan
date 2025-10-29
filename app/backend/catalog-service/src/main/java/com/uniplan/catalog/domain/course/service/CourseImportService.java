@@ -41,6 +41,7 @@ public class CourseImportService {
         int totalCount = requests.size();
         int successCount = 0;
         int failureCount = 0;
+        int skippedCount = 0;
 
         // Cache for departments and course types to reduce DB queries
         Map<String, Department> departmentCache = new HashMap<>();
@@ -52,17 +53,37 @@ public class CourseImportService {
             CourseImportRequest request = requests.get(i);
 
             try {
-                // Get or create department (auto-create if missing)
-                Department department = departmentCache.computeIfAbsent(
-                    request.getDepartmentCode(),
-                    code -> getOrCreateDepartment(code)
+                // Check for duplicates (courseCode + section + year + semester + professor)
+                boolean exists = courseRepository.existsByCourseCodeAndSectionAndOpeningYearAndSemesterAndProfessor(
+                    request.getCourseCode(),
+                    request.getSection(),
+                    request.getOpeningYear(),
+                    request.getSemester(),
+                    request.getProfessor()
                 );
 
-                // Get or fetch course type
+                if (exists) {
+                    skippedCount++;
+                    log.debug("Skipping duplicate course: {} ({})", request.getCourseName(), request.getCourseCode());
+                    continue;
+                }
+
+                // Get or create departments (auto-create if missing)
+                List<Department> departments = new ArrayList<>();
+                if (request.getDepartmentCodes() != null && !request.getDepartmentCodes().isEmpty()) {
+                    for (String deptCode : request.getDepartmentCodes()) {
+                        Department department = departmentCache.computeIfAbsent(
+                            deptCode,
+                            code -> getOrCreateDepartment(code)
+                        );
+                        departments.add(department);
+                    }
+                }
+
+                // Get or create course type (auto-create if missing)
                 CourseType courseType = courseTypeCache.computeIfAbsent(
                     request.getCourseTypeCode(),
-                    code -> courseTypeRepository.findByCode(code)
-                        .orElseThrow(() -> new IllegalArgumentException("CourseType not found: " + code))
+                    code -> getOrCreateCourseType(code)
                 );
 
                 // Build course entity
@@ -78,7 +99,7 @@ public class CourseImportService {
                     .classroom(request.getClassroom())
                     .campus(request.getCampus())
                     .notes(request.getNotes())
-                    .department(department)
+                    .departments(departments)
                     .courseType(courseType)
                     .classTimes(new ArrayList<>())
                     .build();
@@ -103,17 +124,17 @@ public class CourseImportService {
                 if (courseBatch.size() >= BATCH_SIZE || i == requests.size() - 1) {
                     courseRepository.saveAll(courseBatch);
                     courseBatch.clear();
-                    log.info("Imported {} / {} courses", i + 1, totalCount);
+                    log.info("Imported {} / {} courses (skipped: {})", successCount, totalCount, skippedCount);
                 }
 
             } catch (Exception e) {
                 failureCount++;
-                log.error("Failed to import course: {} - {}", request.getCourseCode(), e.getMessage());
+                log.error("Failed to import course: {} - {}", request.getCourseCode(), e.getMessage(), e);
             }
         }
 
-        String message = String.format("Course import completed. Total: %d, Success: %d, Failure: %d",
-            totalCount, successCount, failureCount);
+        String message = String.format("Course import completed. Total: %d, Success: %d, Skipped: %d, Failure: %d",
+            totalCount, successCount, skippedCount, failureCount);
         log.info(message);
 
         return ImportResponse.builder()
@@ -162,6 +183,27 @@ public class CourseImportService {
 
                 College saved = collegeRepository.save(unknownCollege);
                 log.info("Created Unknown college: {} ({})", saved.getName(), saved.getCode());
+
+                return saved;
+            });
+    }
+
+    /**
+     * Get or create course type. If not found, create with placeholder name.
+     */
+    private CourseType getOrCreateCourseType(String code) {
+        return courseTypeRepository.findByCode(code)
+            .orElseGet(() -> {
+                log.warn("CourseType not found: {}. Creating placeholder.", code);
+
+                CourseType newCourseType = CourseType.builder()
+                    .code(code)
+                    .nameKr("Unknown - " + code)
+                    .nameEn("Unknown - " + code)
+                    .build();
+
+                CourseType saved = courseTypeRepository.save(newCourseType);
+                log.info("Created missing CourseType: {} ({})", saved.getNameKr(), saved.getCode());
 
                 return saved;
             });

@@ -77,14 +77,89 @@
 
 ## 4. API 명세
 
-### `POST /api/v1/admin/courses/upload`
+### `POST /api/v1/metadata/import`
 
-- **설명**: 관리자가 크롤링된 강의 정보가 담긴 `JSON` 파일을 업로드하여 DB에 저장합니다. (관리자 전용 API)
-- **요청**: `multipart/form-data` 형식으로 `JSON` 파일 전송
+- **설명**: 크롤러에서 수집한 메타데이터(단과대학, 학과, 이수구분)를 일괄 등록합니다.
+- **요청**: `application/json` 형식
+- **요청 본문**:
+  ```json
+  {
+    "year": 2025,
+    "semester": "1학기",
+    "colleges": [
+      {
+        "code": "B01",
+        "name": "공과대학",
+        "nameEn": "College of Engineering"
+      }
+    ],
+    "departments": [
+      {
+        "code": "A10627",
+        "name": "컴퓨터공학과",
+        "nameEn": "Computer Science and Engineering",
+        "collegeCode": "B01",
+        "level": "1"
+      }
+    ],
+    "courseTypes": [
+      {
+        "code": "04",
+        "nameKr": "전공필수",
+        "nameEn": "Major Required"
+      }
+    ]
+  }
+  ```
 - **성공 응답 (200 OK)**:
   ```json
   {
-    "message": "JSON 파일이 성공적으로 처리되었습니다.",
+    "message": "Import completed successfully",
+    "totalCount": 150,
+    "successCount": 150,
+    "failureCount": 0
+  }
+  ```
+
+### `POST /api/v1/courses/import`
+
+- **설명**: 크롤러에서 변환한 강의 정보를 일괄 등록합니다.
+- **요청**: `application/json` 형식 (List<CourseImportRequest>)
+- **요청 본문**:
+  ```json
+  [
+    {
+      "openingYear": 2025,
+      "semester": "1학기",
+      "targetGrade": 3,
+      "courseCode": "CSE302",
+      "section": "01",
+      "courseName": "컴퓨터네트워크",
+      "professor": "이성원",
+      "credits": 3,
+      "classTime": [
+        {
+          "day": "월",
+          "startTime": "15:00",
+          "endTime": "16:15"
+        },
+        {
+          "day": "수",
+          "startTime": "15:00",
+          "endTime": "16:15"
+        }
+      ],
+      "classroom": "B01",
+      "courseTypeCode": "04",
+      "departmentCode": "A10627",
+      "campus": "국제"
+    }
+  ]
+  ```
+- **성공 응답 (200 OK)**:
+  ```json
+  {
+    "message": "Import completed successfully",
     "totalCount": 1520,
     "successCount": 1520,
     "failureCount": 0

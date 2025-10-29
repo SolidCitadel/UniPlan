@@ -97,7 +97,7 @@ class CourseControllerTest {
         Course course = Course.builder()
             .openingYear(2025)
             .semester("2학기")
-            .targetGrade("1")
+            .targetGrade(1)
             .courseCode(courseCode)
             .section(section)
             .courseName(courseName)

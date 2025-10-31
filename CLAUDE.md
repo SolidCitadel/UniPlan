@@ -314,7 +314,7 @@ python transformer.py --metadata output/metadata_2025_1.json \
 - Decision tree editor (Plan A, B, C with failure conditions)
 - Real-time navigation during registration
 
-### CLI Client (In Progress)
+### CLI Client
 
 **Tech Stack**: Dart
 
@@ -324,13 +324,59 @@ python transformer.py --metadata output/metadata_2025_1.json \
 
 **Development Order**: Backend → CLI Client → Frontend
 
-**Use Cases**:
-- Backend API endpoint testing without GUI
-- Authentication flow testing (login, signup, token refresh)
-- Course catalog operations testing (search, filter, import)
-- User operations testing (profile, preferences)
-- Rapid iteration and debugging during backend development
-- API integration verification before Flutter web implementation
+**Key Features**:
+- **Authentication**: Login, signup, token refresh, logout
+- **Course Management**: List, search, get details, import from JSON
+- **User Management**: Get profile
+- **HTTP Debugging**: `--details` flag shows full request/response
+- **Terminal Control**: `--clear` flag clears screen before output
+- **Token Management**: Automatic JWT token storage and injection
+
+**Project Structure**:
+```
+app/cli-client/
+├── bin/
+│   └── uniplan.dart          # Main entry point
+├── lib/
+│   ├── commands/             # Command implementations
+│   │   ├── auth_command.dart
+│   │   ├── courses_command.dart
+│   │   └── user_command.dart
+│   ├── api/
+│   │   ├── api_client.dart   # HTTP client with logging
+│   │   └── endpoints.dart    # API endpoint constants
+│   ├── utils/
+│   │   ├── token_manager.dart    # JWT token storage
+│   │   ├── output_formatter.dart # Output formatting
+│   │   └── terminal_utils.dart   # Terminal control & colors
+│   └── config.dart           # Configuration management
+└── pubspec.yaml
+```
+
+**Usage Examples**:
+```bash
+# Install dependencies
+cd app/cli-client && dart pub get
+
+# Authentication
+dart run bin/uniplan.dart auth login test@test.com password123
+dart run bin/uniplan.dart auth signup new@test.com pass123 "Name"
+
+# Courses (with debugging)
+dart run bin/uniplan.dart courses list --details
+dart run bin/uniplan.dart courses search "컴퓨터" --clear
+dart run bin/uniplan.dart courses import output/transformed_2025_1.json
+
+# User profile
+dart run bin/uniplan.dart user profile
+
+# Compile to executable (optional)
+dart compile exe bin/uniplan.dart -o uniplan
+```
+
+**Documentation**: See `app/cli-client/USAGE_GUIDE.md` for detailed usage instructions.
+
+**Token Storage**: Tokens are stored in `~/.uniplan/token.json` and automatically included in authenticated requests.
 
 ## Reference Documentation
 
@@ -348,3 +394,8 @@ python transformer.py --metadata output/metadata_2025_1.json \
 - Course Crawler Guide: `scripts/crawler/README.md`
 - Transformation Guide: `scripts/crawler/TRANSFORMATION_GUIDE.md`
 - Field Mapping: `scripts/crawler/FIELD_MAPPING.md`
+
+### CLI Client
+
+- README: `app/cli-client/README.md`
+- Usage Guide: `app/cli-client/USAGE_GUIDE.md`

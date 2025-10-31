@@ -56,5 +56,17 @@ coverage/
 .eslintcache
 *.tsbuildinfo
 
+# Dart / Flutter
+.dart_tool/
+**/.dart_tool/
+.packages
+**/.packages
+pubspec.lock
+**/pubspec.lock
+
+# CLI token storage
+.uniplan/
+**/.uniplan/
+
 # Module-specific
 /app/backend/bff/HELP.md

@@ -1,0 +1,16 @@
+package com.uniplan.planner.domain.scenario.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class UpdateScenarioRequest {
+
+    private String name;
+    private String description;
+}

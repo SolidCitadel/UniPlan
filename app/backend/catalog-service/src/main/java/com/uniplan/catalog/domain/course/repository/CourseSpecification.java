@@ -58,7 +58,7 @@ public class CourseSpecification {
 
             // Department filter (join)
             if (request.getDepartmentCode() != null && !request.getDepartmentCode().isBlank()) {
-                Join<Object, Object> department = root.join("department");
+                Join<Object, Object> department = root.join("departments");
                 predicates.add(criteriaBuilder.equal(department.get("code"), request.getDepartmentCode()));
             }
 

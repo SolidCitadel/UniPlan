@@ -106,7 +106,7 @@ class CourseControllerTest {
             .classroom("테스트강의실")
             .campus(campus)
             .notes("테스트 과목")
-            .department(testDepartment)
+            .departments(java.util.List.of(testDepartment))
             .courseType(testCourseType)
             .build();
 

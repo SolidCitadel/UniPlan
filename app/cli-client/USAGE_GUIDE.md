@@ -39,22 +39,87 @@ dart compile exe bin/uniplan.dart -o uniplan
 uniplan.exe --help  # Windows
 ```
 
-## Basic Usage
+## Usage Modes
 
-### Command Structure
+### Interactive Mode (Recommended)
+
+The CLI now supports an interactive REPL (Read-Eval-Print Loop) mode. This is the recommended way to use the CLI as it provides a more convenient experience.
+
+**Starting Interactive Mode:**
+
+```bash
+# Simply run without arguments
+dart run bin/uniplan.dart
+
+# Or if compiled
+./uniplan
+```
+
+**Interactive Session Example:**
 
 ```
-uniplan <command> <subcommand> [arguments] [options]
+============================================================
+  UniPlan CLI - Interactive Mode
+============================================================
+
+Type help for available commands
+Type exit or quit to exit
+
+uniplan> auth login test@example.com password123
+Successfully logged in!
+Email: test@example.com
+
+uniplan> courses search "컴퓨터"
+Search Results (15)
+...
+
+uniplan> wishlist add 123
+Course added to wishlist!
+
+uniplan> help
+Available Commands:
+
+Authentication:
+  auth login <email> <password>          Login to your account
+  auth signup <email> <password> <name>  Create new account
+  ...
+
+uniplan> clear
+(screen clears)
+
+uniplan> exit
+Goodbye!
+```
+
+**Interactive Mode Features:**
+
+- **Simplified commands**: No need to type `dart run bin/uniplan.dart` prefix
+- **Session persistence**: Login once, tokens automatically saved and reused
+- **Built-in commands**:
+  - `help` or `?` - Show available commands
+  - `clear` or `cls` - Clear the screen
+  - `exit` or `quit` - Exit interactive mode
+- **Quoted strings**: Use quotes for arguments with spaces: `timetable create "Plan A" 2025 "1학기"`
+- **Color-coded output**: Enhanced readability with colored text
+
+### One-Shot Command Mode
+
+You can still run individual commands directly from your terminal:
+
+```
+dart run bin/uniplan.dart <command> <subcommand> [arguments] [options]
 ```
 
 ### Global Options
 
-These options can be used with any command:
+These options can be used with any command in one-shot mode:
 
 - `--details` : Show detailed HTTP request/response logs
 - `--clear` : Clear terminal screen before displaying output
 - `--api-url <url>` : Override the default API base URL
 - `--help` or `-h` : Show help message
+
+**Note**: In interactive mode, global options from the initial launch are applied to all commands during the session.
 
 ## Authentication Commands
 
@@ -429,19 +494,35 @@ dart run bin/uniplan.dart courses get CSE101
 
 ## Tips
 
-1. **Use tab completion**: If you compile to an executable and add it to your PATH, you can use shell tab completion.
+1. **Use Interactive Mode for Better UX**: For most use cases, interactive mode is faster and more convenient:
+   ```bash
+   # Instead of typing this multiple times:
+   dart run bin/uniplan.dart courses search "컴퓨터"
+   dart run bin/uniplan.dart courses search "네트워크"
+   dart run bin/uniplan.dart courses search "알고리즘"
 
-2. **Alias for convenience**: Add an alias to your shell profile:
+   # Do this:
+   dart run bin/uniplan.dart
+   uniplan> courses search "컴퓨터"
+   uniplan> courses search "네트워크"
+   uniplan> courses search "알고리즘"
+   ```
+
+2. **Use tab completion**: If you compile to an executable and add it to your PATH, you can use shell tab completion.
+
+3. **Alias for convenience**: Add an alias to your shell profile:
    ```bash
    # In .bashrc or .zshrc
    alias up='dart run bin/uniplan.dart'
 
-   # Then use:
+   # For quick one-shot commands:
    up courses list
-   up auth login test@test.com password
+
+   # Or start interactive mode:
+   up
    ```
 
-3. **Save credentials**: For testing, you can create a shell script:
+4. **Save credentials**: For testing, you can create a shell script:
    ```bash
    #!/bin/bash
    EMAIL="test@example.com"
@@ -449,8 +530,17 @@ dart run bin/uniplan.dart courses get CSE101
    dart run bin/uniplan.dart auth login $EMAIL $PASSWORD
    ```
 
-4. **Pipe output**: You can pipe the output to other tools:
+5. **Pipe output (one-shot mode only)**: You can pipe the output to other tools:
    ```bash
    dart run bin/uniplan.dart courses list | grep "CSE"
    dart run bin/uniplan.dart user profile | tee profile.txt
+   ```
+
+6. **Use quotes for spaces**: When using arguments with spaces, wrap them in quotes:
+   ```bash
+   # Interactive mode
+   uniplan> timetable create "My Plan A" 2025 "1학기"
+
+   # One-shot mode
+   dart run bin/uniplan.dart timetable create "My Plan A" 2025 "1학기"
    ```

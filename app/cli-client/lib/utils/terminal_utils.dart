@@ -1,6 +1,16 @@
 import 'dart:io';
 import 'package:ansicolor/ansicolor.dart';
 
+enum TerminalColor {
+  green,
+  red,
+  yellow,
+  blue,
+  cyan,
+  gray,
+  white,
+}
+
 class TerminalUtils {
   static final AnsiPen green = AnsiPen()..green();
   static final AnsiPen red = AnsiPen()..red();
@@ -9,6 +19,25 @@ class TerminalUtils {
   static final AnsiPen cyan = AnsiPen()..cyan();
   static final AnsiPen gray = AnsiPen()..gray();
   static final AnsiPen bold = AnsiPen()..white(bold: true);
+
+  /// Colorize text with the given color
+  static String colorize(String text, TerminalColor color, {bool bold = false}) {
+    // ANSI color codes
+    const codes = {
+      TerminalColor.green: '32',
+      TerminalColor.red: '31',
+      TerminalColor.yellow: '33',
+      TerminalColor.blue: '34',
+      TerminalColor.cyan: '36',
+      TerminalColor.gray: '90',
+      TerminalColor.white: '37',
+    };
+
+    final colorCode = codes[color] ?? '37';
+    final boldCode = bold ? '1;' : '';
+
+    return '\x1B[${boldCode}${colorCode}m$text\x1B[0m';
+  }
 
   static void clearScreen() {
     if (Platform.isWindows) {

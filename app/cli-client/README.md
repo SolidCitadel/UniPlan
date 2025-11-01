@@ -13,15 +13,62 @@ A command-line interface for testing UniPlan backend APIs.
 # Install dependencies
 dart pub get
 
-# Run directly
+# Run in interactive mode (recommended)
+dart run bin/uniplan.dart
+
+# Or run one-shot commands
 dart run bin/uniplan.dart <command> [arguments] [options]
 
 # Or compile to executable
 dart compile exe bin/uniplan.dart -o uniplan
-./uniplan <command> [arguments] [options]
+./uniplan
 ```
 
-## Usage
+## Usage Modes
+
+### Interactive Mode (Recommended)
+
+The CLI now supports interactive mode for a better user experience. Simply run without arguments:
+
+```bash
+dart run bin/uniplan.dart
+```
+
+You'll enter an interactive shell where you can type commands directly:
+
+```
+============================================================
+  UniPlan CLI - Interactive Mode
+============================================================
+
+Type help for available commands
+Type exit or quit to exit
+
+uniplan> auth login test@test.com password123
+uniplan> wishlist add 123
+uniplan> timetable create "Plan A" 2025 "1학기"
+uniplan> help
+uniplan> exit
+```
+
+Interactive mode features:
+- **Simplified commands**: Just type `auth login email password` instead of `dart run bin/uniplan.dart auth login email password`
+- **Built-in help**: Type `help` or `?` to see all available commands
+- **Clear screen**: Type `clear` or `cls` to clear the terminal
+- **Exit**: Type `exit` or `quit` to exit
+- **Persistent session**: Tokens are automatically saved and reused
+- **Color-coded output**: Enhanced readability with colors
+
+### One-Shot Mode
+
+You can still run individual commands directly from the command line:
+
+```bash
+dart run bin/uniplan.dart auth login test@test.com password123
+dart run bin/uniplan.dart courses list
+```
+
+## Commands
 
 ### Authentication
 

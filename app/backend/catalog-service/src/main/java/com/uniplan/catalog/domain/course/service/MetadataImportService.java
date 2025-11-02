@@ -38,6 +38,15 @@ public class MetadataImportService {
                 totalCount++;
                 try {
                     College college = collegeRepository.findByCode(dto.getCode())
+                        .map(existing -> {
+                            // Update existing college
+                            return College.builder()
+                                .id(existing.getId())
+                                .code(dto.getCode())
+                                .name(dto.getName())
+                                .nameEn(dto.getNameEn())
+                                .build();
+                        })
                         .orElseGet(() -> College.builder()
                             .code(dto.getCode())
                             .name(dto.getName())
@@ -61,6 +70,15 @@ public class MetadataImportService {
                 totalCount++;
                 try {
                     CourseType courseType = courseTypeRepository.findByCode(dto.getCode())
+                        .map(existing -> {
+                            // Update existing course type
+                            return CourseType.builder()
+                                .id(existing.getId())
+                                .code(dto.getCode())
+                                .nameKr(dto.getNameKr())
+                                .nameEn(dto.getNameEn())
+                                .build();
+                        })
                         .orElseGet(() -> CourseType.builder()
                             .code(dto.getCode())
                             .nameKr(dto.getNameKr())
@@ -90,6 +108,17 @@ public class MetadataImportService {
 
                     final College finalCollege = college;
                     Department department = departmentRepository.findByCode(dto.getCode())
+                        .map(existing -> {
+                            // Update existing department
+                            return Department.builder()
+                                .id(existing.getId())
+                                .code(dto.getCode())
+                                .name(dto.getName())
+                                .nameEn(dto.getNameEn())
+                                .college(finalCollege)
+                                .level(dto.getLevel())
+                                .build();
+                        })
                         .orElseGet(() -> Department.builder()
                             .code(dto.getCode())
                             .name(dto.getName())

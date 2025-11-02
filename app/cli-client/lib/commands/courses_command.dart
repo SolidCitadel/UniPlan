@@ -45,12 +45,23 @@ class CoursesCommand {
 
     // Parse query parameters
     final queryParams = <String>[];
-    for (var i = 1; i < args.length; i++) {
+    var i = 1;
+    while (i < args.length) {
       if (args[i].startsWith('--')) {
         final param = args[i].substring(2);
         if (param.contains('=')) {
+          // Format: --key=value
           queryParams.add(param);
+          i++;
+        } else if (i + 1 < args.length && !args[i + 1].startsWith('--')) {
+          // Format: --key value
+          queryParams.add('$param=${args[i + 1]}');
+          i += 2; // Skip both --key and value
+        } else {
+          i++;
         }
+      } else {
+        i++;
       }
     }
 
@@ -60,7 +71,12 @@ class CoursesCommand {
     }
 
     final response = await _apiClient.get(path);
-    final courses = response.jsonList;
+    final data = response.json;
+
+    // Handle paginated response
+    final List<dynamic> courses = data.containsKey('content')
+        ? data['content'] as List<dynamic>
+        : <dynamic>[];
 
     if (courses.isEmpty) {
       TerminalUtils.printWarning('No courses found.');
@@ -77,7 +93,7 @@ class CoursesCommand {
         'Name': c['courseName']?.toString() ?? '',
         'Professor': c['professor']?.toString() ?? '',
         'Credits': c['credits']?.toString() ?? '',
-        'Department': c['departmentCode']?.toString() ?? '',
+        'Department': c['departmentName']?.toString() ?? c['departmentCode']?.toString() ?? '',
       };
     }).toList();
 
@@ -89,20 +105,76 @@ class CoursesCommand {
 
   Future<void> _search(List<String> args) async {
     if (args.length < 2) {
-      TerminalUtils.printError('Usage: uniplan courses search <keyword>');
+      TerminalUtils.printError('Usage: uniplan courses search [keyword] [options]');
+      TerminalUtils.printInfo('Options:');
+      TerminalUtils.printInfo('  --professor <name>    Filter by professor name');
+      TerminalUtils.printInfo('  --credits <number>    Filter by credits');
+      TerminalUtils.printInfo('  --department <code>   Filter by department code');
+      TerminalUtils.printInfo('  --college <code>      Filter by college code');
+      TerminalUtils.printInfo('  --year <year>         Filter by opening year');
+      TerminalUtils.printInfo('  --semester <semester> Filter by semester (e.g., "1학기", "2학기")');
+      TerminalUtils.printInfo('');
+      TerminalUtils.printInfo('Examples:');
+      TerminalUtils.printInfo('  courses search --professor 이성원 --year 2025 --semester 2학기');
+      TerminalUtils.printInfo('  courses search "컴퓨터" --credits 3');
       return;
     }
 
-    final keyword = args[1];
-    TerminalUtils.printInfo('Searching for "$keyword"...');
+    // Build query parameters
+    final queryParams = <String>[];
+    String? keyword;
+
+    var i = 1;
+    while (i < args.length) {
+      final arg = args[i];
+      if (arg.startsWith('--')) {
+        final param = arg.substring(2);
+        if (param.contains('=')) {
+          // Format: --key=value
+          queryParams.add(param);
+          i++;
+        } else if (i + 1 < args.length && !args[i + 1].startsWith('--')) {
+          // Format: --key value
+          queryParams.add('$param=${args[i + 1]}');
+          i += 2; // Skip both --key and value
+        } else {
+          i++;
+        }
+      } else if (keyword == null) {
+        // First non-flag argument is the keyword
+        keyword = arg;
+        i++;
+      } else {
+        i++;
+      }
+    }
+
+    // Add keyword if provided
+    if (keyword != null && keyword.isNotEmpty) {
+      queryParams.add('keyword=$keyword');
+    }
+
+    if (queryParams.isEmpty) {
+      TerminalUtils.printError('Please provide at least one search criterion');
+      return;
+    }
+
+    final searchDesc = keyword != null ? '"$keyword"' : 'with filters';
+    TerminalUtils.printInfo('Searching for $searchDesc...');
 
     final response = await _apiClient.get(
-      '${Endpoints.courses}?keyword=$keyword',
+      '${Endpoints.courses}?${queryParams.join('&')}',
     );
-    final courses = response.jsonList;
+
+    final data = response.json;
+
+    // Handle paginated response
+    final List<dynamic> courses = data.containsKey('content')
+        ? data['content'] as List<dynamic>
+        : <dynamic>[];
 
     if (courses.isEmpty) {
-      TerminalUtils.printWarning('No courses found for "$keyword".');
+      TerminalUtils.printWarning('No courses found for $searchDesc.');
       return;
     }
 
@@ -115,12 +187,13 @@ class CoursesCommand {
         'Name': c['courseName']?.toString() ?? '',
         'Professor': c['professor']?.toString() ?? '',
         'Credits': c['credits']?.toString() ?? '',
+        'Department': c['departmentName']?.toString() ?? c['departmentCode']?.toString() ?? '',
       };
     }).toList();
 
     TerminalUtils.printTable(
       rows,
-      ['Code', 'Name', 'Professor', 'Credits'],
+      ['Code', 'Name', 'Professor', 'Credits', 'Department'],
     );
   }
 
@@ -205,15 +278,28 @@ class CoursesCommand {
     print('''
 Courses Commands:
 
-  list [--department=<code>]    List all courses (optional: filter by department)
-  search <keyword>              Search courses by keyword
+  list [options]                List all courses with optional filters
+  search [keyword] [options]    Search courses by keyword or filters
   get <course-code>             Get course details by code
   import <file-path>            Import courses from JSON file
 
+Search/List Options:
+  --professor <name>            Filter by professor name
+  --professor=<name>            (alternative format)
+  --credits <number>            Filter by credits (e.g., 3)
+  --department <code>           Filter by department code
+  --college <code>              Filter by college code
+  --year <year>                 Filter by opening year (e.g., 2025)
+  --semester <semester>         Filter by semester (e.g., "1학기", "2학기")
+
 Examples:
   uniplan courses list
-  uniplan courses list --department=A10627
+  uniplan courses list --department A10627
   uniplan courses search "컴퓨터"
+  uniplan courses search --professor 김철수
+  uniplan courses search --credits 3
+  uniplan courses search "네트워크" --credits 3
+  uniplan courses search --professor 이성원 --year 2025 --semester 2학기
   uniplan courses get CSE302
   uniplan courses import output/transformed_2025_1.json
 ''');

@@ -81,38 +81,53 @@ class ScenarioCommand {
   Future<void> _alternative(List<String> args) async {
     if (args.length < 4) {
       TerminalUtils.printError(
-        'Usage: uniplan scenario alternative <parentId> <name> <failedCourseId> <timetableId>',
+        'Usage: uniplan scenario alternative <parentId> <name> <failedCourseId1> [failedCourseId2...] <timetableId>',
       );
+      TerminalUtils.printInfo('Example: uniplan scenario alternative 1 "Plan B" 101 2');
+      TerminalUtils.printInfo('Multiple failures: uniplan scenario alternative 1 "Plan D" 101 102 3');
       return;
     }
 
     final parentId = int.tryParse(args[1]);
     final name = args[2];
-    final failedCourseId = int.tryParse(args[3]);
-    final timetableId = int.tryParse(args[4]);
 
     if (parentId == null) {
       TerminalUtils.printError('Invalid parent scenario ID: ${args[1]}');
       return;
     }
-    if (failedCourseId == null) {
-      TerminalUtils.printError('Invalid failed course ID: ${args[3]}');
+
+    // Parse failed course IDs (all arguments except last one)
+    final failedCourseIds = <int>[];
+    for (var i = 3; i < args.length - 1; i++) {
+      final courseId = int.tryParse(args[i]);
+      if (courseId == null) {
+        TerminalUtils.printError('Invalid failed course ID: ${args[i]}');
+        return;
+      }
+      failedCourseIds.add(courseId);
+    }
+
+    // Last argument is timetable ID
+    final timetableId = int.tryParse(args[args.length - 1]);
+    if (timetableId == null) {
+      TerminalUtils.printError('Invalid timetable ID: ${args[args.length - 1]}');
       return;
     }
-    if (timetableId == null) {
-      TerminalUtils.printError('Invalid timetable ID: ${args[4]}');
+
+    if (failedCourseIds.isEmpty) {
+      TerminalUtils.printError('At least one failed course ID is required');
       return;
     }
 
     TerminalUtils.printInfo(
-      'Creating alternative scenario "$name" (when course $failedCourseId fails)...',
+      'Creating alternative scenario "$name" (when courses ${failedCourseIds.join(', ')} fail)...',
     );
 
     final response = await _apiClient.post(
       Endpoints.scenarioAlternative(parentId),
       body: {
         'name': name,
-        'failedCourseId': failedCourseId,
+        'failedCourseIds': failedCourseIds,
         'existingTimetableId': timetableId,
       },
     );
@@ -193,30 +208,35 @@ class ScenarioCommand {
   Future<void> _navigate(List<String> args) async {
     if (args.length < 3) {
       TerminalUtils.printError(
-        'Usage: uniplan scenario navigate <scenarioId> <failedCourseId>',
+        'Usage: uniplan scenario navigate <scenarioId> <failedCourseId1> [failedCourseId2...]',
       );
       return;
     }
 
     final scenarioId = int.tryParse(args[1]);
-    final failedCourseId = int.tryParse(args[2]);
-
     if (scenarioId == null) {
       TerminalUtils.printError('Invalid scenario ID: ${args[1]}');
       return;
     }
-    if (failedCourseId == null) {
-      TerminalUtils.printError('Invalid failed course ID: ${args[2]}');
-      return;
+
+    // Parse all failed course IDs
+    final failedCourseIds = <int>[];
+    for (var i = 2; i < args.length; i++) {
+      final courseId = int.tryParse(args[i]);
+      if (courseId == null) {
+        TerminalUtils.printError('Invalid failed course ID: ${args[i]}');
+        return;
+      }
+      failedCourseIds.add(courseId);
     }
 
     TerminalUtils.printInfo(
-      'Navigating from scenario $scenarioId when course $failedCourseId fails...',
+      'Navigating from scenario $scenarioId when courses ${failedCourseIds.join(', ')} fail...',
     );
 
     final response = await _apiClient.post(
       Endpoints.scenarioNavigate(scenarioId),
-      body: {'failedCourseId': failedCourseId},
+      body: {'failedCourseIds': failedCourseIds},
     );
 
     final nextScenario = response.json;
@@ -247,10 +267,11 @@ class ScenarioCommand {
   void _printScenarioSummary(Map<String, dynamic> scenario) {
     TerminalUtils.printKeyValue('ID', scenario['id'].toString());
     TerminalUtils.printKeyValue('Name', scenario['name'].toString());
-    if (scenario['failedCourseId'] != null) {
+    final failedCourseIds = scenario['failedCourseIds'] as List?;
+    if (failedCourseIds != null && failedCourseIds.isNotEmpty) {
       TerminalUtils.printKeyValue(
-        'Failed Course ID',
-        scenario['failedCourseId'].toString(),
+        'Failed Course IDs',
+        failedCourseIds.join(', '),
       );
     }
     final timetable = scenario['timetable'] as Map<String, dynamic>?;
@@ -278,8 +299,10 @@ class ScenarioCommand {
     final indent = '  ' * level;
     final marker = level == 0 ? '' : '└─ ';
 
-    final failedCourseId = scenario['failedCourseId'];
-    final failedInfo = failedCourseId != null ? ' (Course $failedCourseId fails)' : '';
+    final failedCourseIds = scenario['failedCourseIds'] as List?;
+    final failedInfo = (failedCourseIds != null && failedCourseIds.isNotEmpty)
+        ? ' (Courses ${failedCourseIds.join(', ')} fail)'
+        : '';
 
     print('$indent$marker${scenario['name']}$failedInfo (ID: ${scenario['id']})');
 
@@ -295,22 +318,47 @@ class ScenarioCommand {
     print('''
 Scenario Commands:
 
-  create <name> <timetableId>                   Create a root scenario
-  alternative <parentId> <name> <failedCourseId> <timetableId>
-                                                 Create an alternative scenario
-  list                                           List all root scenarios
-  get <scenarioId>                              Get scenario details
-  tree <scenarioId>                             Show full scenario tree
-  navigate <scenarioId> <failedCourseId>        Navigate to next scenario
-  delete <scenarioId>                           Delete a scenario
+  create <name> <timetableId>
+      Create a root scenario
+
+  alternative <parentId> <name> <failedCourseId1> [failedCourseId2...] <timetableId>
+      Create an alternative scenario
+      Supports single or multiple failed courses
+
+  list
+      List all root scenarios
+
+  get <scenarioId>
+      Get scenario details
+
+  tree <scenarioId>
+      Show full scenario tree
+
+  navigate <scenarioId> <failedCourseId1> [failedCourseId2...]
+      Navigate to next scenario when courses fail
+
+  delete <scenarioId>
+      Delete a scenario
 
 Examples:
   uniplan scenario create "Plan A" 1
-  uniplan scenario alternative 1 "Plan B - CS101 fails" 123 2
+
+  # Single course failure
+  uniplan scenario alternative 1 "Plan B - CS101 fails" 101 2
+
+  # Multiple courses failure
+  uniplan scenario alternative 1 "Plan D - CS101+CS102 fail" 101 102 3
+
   uniplan scenario list
   uniplan scenario get 1
   uniplan scenario tree 1
-  uniplan scenario navigate 1 123
+
+  # Navigate when single course fails
+  uniplan scenario navigate 1 101
+
+  # Navigate when multiple courses fail
+  uniplan scenario navigate 1 101 102
+
   uniplan scenario delete 2
 ''');
   }

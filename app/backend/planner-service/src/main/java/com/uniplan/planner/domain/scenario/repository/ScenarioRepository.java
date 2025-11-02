@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface ScenarioRepository extends JpaRepository<Scenario, Long> {
@@ -24,9 +25,14 @@ public interface ScenarioRepository extends JpaRepository<Scenario, Long> {
     // 부모 시나리오의 자식들 조회
     List<Scenario> findByParentScenarioIdOrderByOrderIndexAsc(Long parentScenarioId);
 
-    // 특정 강의 실패 시 대안 시나리오 찾기
-    @Query("SELECT s FROM Scenario s WHERE s.parentScenario.id = :parentId AND s.failedCourseId = :courseId")
-    Optional<Scenario> findAlternativeScenario(@Param("parentId") Long parentId, @Param("courseId") Long courseId);
+    // 특정 강의(들) 실패 시 대안 시나리오 찾기
+    // Java에서 정확한 Set 매칭을 위해 모든 자식을 조회 후 필터링
+    default Optional<Scenario> findAlternativeScenario(Long parentId, Set<Long> failedCourseIds) {
+        List<Scenario> children = findByParentScenarioIdOrderByOrderIndexAsc(parentId);
+        return children.stream()
+                .filter(scenario -> scenario.getFailedCourseIds().equals(failedCourseIds))
+                .findFirst();
+    }
 
     // 시나리오 트리 전체 조회 (루트부터 모든 자손까지)
     @Query("SELECT s FROM Scenario s LEFT JOIN FETCH s.childScenarios WHERE s.userId = :userId AND s.parentScenario IS NULL")

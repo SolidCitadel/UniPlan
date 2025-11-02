@@ -1,5 +1,6 @@
 package com.uniplan.planner.domain.scenario.service;
 
+import com.uniplan.planner.domain.registration.repository.RegistrationRepository;
 import com.uniplan.planner.domain.scenario.dto.*;
 import com.uniplan.planner.domain.scenario.entity.Scenario;
 import com.uniplan.planner.domain.scenario.repository.ScenarioRepository;
@@ -21,6 +22,7 @@ public class ScenarioService {
 
     private final ScenarioRepository scenarioRepository;
     private final TimetableRepository timetableRepository;
+    private final RegistrationRepository registrationRepository;
 
     @Transactional
     public ScenarioResponse createRootScenario(Long userId, CreateScenarioRequest request) {
@@ -38,7 +40,7 @@ public class ScenarioService {
                 .description(request.getDescription())
                 .timetable(timetable)
                 .parentScenario(null)  // 루트 시나리오
-                .failedCourseId(null)  // 기본 시나리오
+                .failedCourseIds(new java.util.HashSet<>())  // 기본 시나리오
                 .orderIndex(0)
                 .build();
 
@@ -73,7 +75,7 @@ public class ScenarioService {
                 .description(request.getDescription())
                 .timetable(timetable)
                 .parentScenario(parentScenario)
-                .failedCourseId(request.getFailedCourseId())
+                .failedCourseIds(request.getFailedCourseIds())
                 .orderIndex(request.getOrderIndex() != null ? request.getOrderIndex() : 0)
                 .build();
 
@@ -113,21 +115,39 @@ public class ScenarioService {
     public void deleteScenario(Long userId, Long scenarioId) {
         Scenario scenario = scenarioRepository.findByIdAndUserId(scenarioId, userId)
                 .orElseThrow(() -> new ScenarioNotFoundException(scenarioId));
+
+        // 이 시나리오를 사용하는 Registration이 있는지 체크
+        long countAsStart = registrationRepository.countByStartScenarioId(scenarioId);
+        long countAsCurrent = registrationRepository.countByCurrentScenarioId(scenarioId);
+
+        if (countAsStart > 0 || countAsCurrent > 0) {
+            throw new IllegalStateException(
+                    String.format("시나리오를 삭제할 수 없습니다. %d개의 수강신청이 이 시나리오를 참조하고 있습니다. " +
+                            "먼저 해당 수강신청들을 삭제해주세요.", countAsStart + countAsCurrent)
+            );
+        }
+
+        // 자식 시나리오도 함께 삭제 (CASCADE)
+        List<Scenario> children = scenarioRepository.findByParentScenarioIdOrderByOrderIndexAsc(scenarioId);
+        for (Scenario child : children) {
+            deleteScenario(userId, child.getId());  // 재귀적으로 삭제
+        }
+
         scenarioRepository.delete(scenario);
     }
 
     /**
-     * 실시간 네비게이션: 특정 강의 실패 시 다음 시나리오 찾기
+     * 실시간 네비게이션: 특정 강의(들) 실패 시 다음 시나리오 찾기
      */
     public ScenarioResponse navigate(Long userId, Long currentScenarioId, NavigationRequest request) {
         Scenario currentScenario = scenarioRepository.findByIdAndUserId(currentScenarioId, userId)
                 .orElseThrow(() -> new ScenarioNotFoundException(currentScenarioId));
 
-        // 실패한 강의에 대한 대안 시나리오 찾기
+        // 실패한 강의들에 대한 대안 시나리오 찾기
         Scenario nextScenario = scenarioRepository.findAlternativeScenario(
-                currentScenarioId, request.getFailedCourseId()
+                currentScenarioId, request.getFailedCourseIds()
         ).orElseThrow(() -> new RuntimeException(
-                "강의 " + request.getFailedCourseId() + " 실패에 대한 대안 시나리오가 없습니다"
+                "강의 " + request.getFailedCourseIds() + " 실패에 대한 대안 시나리오가 없습니다"
         ));
 
         return ScenarioResponse.from(nextScenario);

@@ -82,6 +82,14 @@ public class RegistrationController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "사용자의 모든 수강신청 삭제", description = "사용자의 모든 수강신청 세션을 삭제합니다")
+    @DeleteMapping
+    public ResponseEntity<Void> deleteAllUserRegistrations(
+            @Parameter(hidden = true) @RequestHeader("X-User-Id") Long userId) {
+        registrationService.deleteAllUserRegistrations(userId);
+        return ResponseEntity.noContent().build();
+    }
+
     @Operation(summary = "성공한 과목 목록", description = "지금까지 성공한 모든 과목의 ID를 조회합니다")
     @GetMapping("/{registrationId}/succeeded-courses")
     public ResponseEntity<List<Long>> getAllSucceededCourses(

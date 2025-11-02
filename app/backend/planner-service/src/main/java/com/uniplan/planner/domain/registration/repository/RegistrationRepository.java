@@ -16,4 +16,8 @@ public interface RegistrationRepository extends JpaRepository<Registration, Long
     List<Registration> findByUserIdAndStatus(Long userId, RegistrationStatus status);
 
     Optional<Registration> findByIdAndUserId(Long id, Long userId);
+
+    long countByStartScenarioId(Long startScenarioId);
+
+    long countByCurrentScenarioId(Long currentScenarioId);
 }

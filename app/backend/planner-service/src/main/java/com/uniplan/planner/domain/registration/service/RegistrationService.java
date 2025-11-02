@@ -62,20 +62,20 @@ public class RegistrationService {
 
         // 자동 네비게이션: 실패한 과목이 있으면 대안 시나리오 찾기
         if (!request.getFailedCourses().isEmpty()) {
-            // 첫 번째 실패 과목을 기준으로 네비게이션
-            Long firstFailedCourse = request.getFailedCourses().get(0);
+            // 실패한 과목들의 Set을 만들어서 네비게이션
+            java.util.Set<Long> failedCourseSet = new java.util.HashSet<>(request.getFailedCourses());
 
             Optional<Scenario> alternativeScenario = scenarioRepository
-                    .findAlternativeScenario(currentScenario.getId(), firstFailedCourse);
+                    .findAlternativeScenario(currentScenario.getId(), failedCourseSet);
 
             if (alternativeScenario.isPresent()) {
                 nextScenario = alternativeScenario.get();
                 registration.navigateToScenario(nextScenario);
-                log.info("Navigated from scenario {} to {} due to failed course {}",
-                        currentScenario.getId(), nextScenario.getId(), firstFailedCourse);
+                log.info("Navigated from scenario {} to {} due to failed courses {}",
+                        currentScenario.getId(), nextScenario.getId(), failedCourseSet);
             } else {
-                log.warn("No alternative scenario found for failed course {} in scenario {}",
-                        firstFailedCourse, currentScenario.getId());
+                log.warn("No alternative scenario found for failed courses {} in scenario {}",
+                        failedCourseSet, currentScenario.getId());
             }
         }
 
@@ -85,6 +85,7 @@ public class RegistrationService {
                 .scenario(currentScenario)
                 .succeededCourses(request.getSucceededCourses())
                 .failedCourses(request.getFailedCourses())
+                .canceledCourses(request.getCanceledCourses())
                 .nextScenario(nextScenario)
                 .notes(request.getNotes())
                 .build();
@@ -151,5 +152,14 @@ public class RegistrationService {
                 .flatMap(step -> step.getSucceededCourses().stream())
                 .distinct()
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 사용자의 모든 수강신청 삭제
+     */
+    @Transactional
+    public void deleteAllUserRegistrations(Long userId) {
+        List<Registration> registrations = registrationRepository.findByUserId(userId);
+        registrationRepository.deleteAll(registrations);
     }
 }

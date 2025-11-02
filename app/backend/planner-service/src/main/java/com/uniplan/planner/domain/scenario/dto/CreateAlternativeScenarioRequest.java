@@ -3,11 +3,13 @@ package com.uniplan.planner.domain.scenario.dto;
 import com.uniplan.planner.domain.timetable.dto.CreateTimetableRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -20,9 +22,9 @@ public class CreateAlternativeScenarioRequest {
 
     private String description;
 
-    // 어떤 강의가 실패했을 때 이 시나리오로 이동하는가
-    @NotNull(message = "실패 강의 ID는 필수입니다")
-    private Long failedCourseId;
+    // 어떤 강의들이 실패했을 때 이 시나리오로 이동하는가
+    @NotEmpty(message = "실패 강의 ID 목록은 필수입니다")
+    private Set<Long> failedCourseIds;
 
     // 시간표 생성 정보 (timetableRequest 또는 existingTimetableId 둘 중 하나만 사용)
     @Valid

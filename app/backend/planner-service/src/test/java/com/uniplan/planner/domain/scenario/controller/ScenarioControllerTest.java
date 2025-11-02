@@ -19,6 +19,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Set;
+
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -87,7 +89,7 @@ class ScenarioControllerTest {
                 .andExpect(jsonPath("$.name").value("Plan A - 기본 계획"))
                 .andExpect(jsonPath("$.description").value("1지망 강의들로 구성된 기본 계획"))
                 .andExpect(jsonPath("$.parentScenarioId").doesNotExist())
-                .andExpect(jsonPath("$.failedCourseId").doesNotExist())
+                .andExpect(jsonPath("$.failedCourseIds").isEmpty())
                 .andExpect(jsonPath("$.timetable").exists())
                 .andExpect(jsonPath("$.timetable.name").value("2025-1학기 기본 시간표"));
     }
@@ -96,7 +98,7 @@ class ScenarioControllerTest {
     @DisplayName("대안 시나리오 생성")
     void createAlternativeScenario() throws Exception {
         // Given: 부모 시나리오 생성
-        Scenario parentScenario = createTestScenario(TEST_USER_ID, "Plan A", null, null);
+        Scenario parentScenario = createTestScenario(TEST_USER_ID, "Plan A", null, Set.of());
 
         CreateTimetableRequest timetableRequest = CreateTimetableRequest.builder()
                 .name("2025-1학기 대안 시간표")
@@ -107,7 +109,7 @@ class ScenarioControllerTest {
         CreateAlternativeScenarioRequest request = CreateAlternativeScenarioRequest.builder()
                 .name("Plan B - CS101 실패 시")
                 .description("CS101 수강신청 실패 시 대안")
-                .failedCourseId(101L)
+                .failedCourseIds(Set.of(101L))
                 .timetableRequest(timetableRequest)
                 .orderIndex(1)
                 .build();
@@ -122,7 +124,7 @@ class ScenarioControllerTest {
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.name").value("Plan B - CS101 실패 시"))
                 .andExpect(jsonPath("$.parentScenarioId").value(parentScenario.getId()))
-                .andExpect(jsonPath("$.failedCourseId").value(101L))
+                .andExpect(jsonPath("$.failedCourseIds", hasSize(1)))
                 .andExpect(jsonPath("$.orderIndex").value(1));
     }
 
@@ -130,9 +132,9 @@ class ScenarioControllerTest {
     @DisplayName("루트 시나리오 목록 조회")
     void getRootScenarios() throws Exception {
         // Given
-        createTestScenario(TEST_USER_ID, "Plan A", null, null);
-        createTestScenario(TEST_USER_ID, "Plan X", null, null);
-        createTestScenario(OTHER_USER_ID, "다른 사용자 시나리오", null, null);
+        createTestScenario(TEST_USER_ID, "Plan A", null, Set.of());
+        createTestScenario(TEST_USER_ID, "Plan X", null, Set.of());
+        createTestScenario(OTHER_USER_ID, "다른 사용자 시나리오", null, Set.of());
 
         // When & Then
         mockMvc.perform(get("/scenarios")
@@ -148,7 +150,7 @@ class ScenarioControllerTest {
     @DisplayName("시나리오 상세 조회")
     void getScenario() throws Exception {
         // Given
-        Scenario scenario = createTestScenario(TEST_USER_ID, "Plan A", null, null);
+        Scenario scenario = createTestScenario(TEST_USER_ID, "Plan A", null, Set.of());
 
         // When & Then
         mockMvc.perform(get("/scenarios/" + scenario.getId())
@@ -167,9 +169,9 @@ class ScenarioControllerTest {
         //   Root
         //   ├─ Child 1 (CS101 fail)
         //   └─ Child 2 (CS102 fail)
-        Scenario root = createTestScenario(TEST_USER_ID, "Root", null, null);
-        createTestScenario(TEST_USER_ID, "Child 1", root, 101L);
-        createTestScenario(TEST_USER_ID, "Child 2", root, 102L);
+        Scenario root = createTestScenario(TEST_USER_ID, "Root", null, Set.of());
+        createTestScenario(TEST_USER_ID, "Child 1", root, Set.of(101L));
+        createTestScenario(TEST_USER_ID, "Child 2", root, Set.of(102L));
 
         // When & Then
         mockMvc.perform(get("/scenarios/" + root.getId() + "/tree")
@@ -185,7 +187,7 @@ class ScenarioControllerTest {
     @DisplayName("시나리오 정보 수정")
     void updateScenario() throws Exception {
         // Given
-        Scenario scenario = createTestScenario(TEST_USER_ID, "원래 이름", null, null);
+        Scenario scenario = createTestScenario(TEST_USER_ID, "원래 이름", null, Set.of());
 
         UpdateScenarioRequest request = UpdateScenarioRequest.builder()
                 .name("수정된 이름")
@@ -208,7 +210,7 @@ class ScenarioControllerTest {
     @DisplayName("시나리오 삭제")
     void deleteScenario() throws Exception {
         // Given
-        Scenario scenario = createTestScenario(TEST_USER_ID, "삭제할 시나리오", null, null);
+        Scenario scenario = createTestScenario(TEST_USER_ID, "삭제할 시나리오", null, Set.of());
 
         // When & Then
         mockMvc.perform(delete("/scenarios/" + scenario.getId())
@@ -229,12 +231,12 @@ class ScenarioControllerTest {
         //   Plan A
         //   ├─ Plan B (CS101 fail)
         //   └─ Plan C (CS102 fail)
-        Scenario planA = createTestScenario(TEST_USER_ID, "Plan A", null, null);
-        Scenario planB = createTestScenario(TEST_USER_ID, "Plan B", planA, 101L);
-        createTestScenario(TEST_USER_ID, "Plan C", planA, 102L);
+        Scenario planA = createTestScenario(TEST_USER_ID, "Plan A", null, Set.of());
+        Scenario planB = createTestScenario(TEST_USER_ID, "Plan B", planA, Set.of(101L));
+        createTestScenario(TEST_USER_ID, "Plan C", planA, Set.of(102L));
 
         NavigationRequest request = NavigationRequest.builder()
-                .failedCourseId(101L)
+                .failedCourseIds(Set.of(101L))
                 .build();
 
         // When & Then: CS101 실패 시 Plan B로 이동
@@ -246,16 +248,16 @@ class ScenarioControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(planB.getId()))
                 .andExpect(jsonPath("$.name").value("Plan B"))
-                .andExpect(jsonPath("$.failedCourseId").value(101L));
+                .andExpect(jsonPath("$.failedCourseIds", hasSize(1)));
     }
 
     @Test
     @DisplayName("자식 시나리오 목록 조회")
     void getChildScenarios() throws Exception {
         // Given
-        Scenario parent = createTestScenario(TEST_USER_ID, "Parent", null, null);
-        createTestScenario(TEST_USER_ID, "Child 1", parent, 101L);
-        createTestScenario(TEST_USER_ID, "Child 2", parent, 102L);
+        Scenario parent = createTestScenario(TEST_USER_ID, "Parent", null, Set.of());
+        createTestScenario(TEST_USER_ID, "Child 1", parent, Set.of(101L));
+        createTestScenario(TEST_USER_ID, "Child 2", parent, Set.of(102L));
 
         // When & Then
         mockMvc.perform(get("/scenarios/" + parent.getId() + "/children")
@@ -269,7 +271,7 @@ class ScenarioControllerTest {
     @DisplayName("다른 사용자의 시나리오 접근 차단")
     void accessOtherUserScenario() throws Exception {
         // Given: 다른 사용자의 시나리오
-        Scenario otherScenario = createTestScenario(OTHER_USER_ID, "다른 사용자 시나리오", null, null);
+        Scenario otherScenario = createTestScenario(OTHER_USER_ID, "다른 사용자 시나리오", null, Set.of());
 
         // When & Then: 접근 시도 -> 404
         mockMvc.perform(get("/scenarios/" + otherScenario.getId())
@@ -279,7 +281,7 @@ class ScenarioControllerTest {
     }
 
     // Helper methods
-    private Scenario createTestScenario(Long userId, String name, Scenario parent, Long failedCourseId) {
+    private Scenario createTestScenario(Long userId, String name, Scenario parent, Set<Long> failedCourseIds) {
         Timetable timetable = Timetable.builder()
                 .userId(userId)
                 .name(name + " 시간표")
@@ -294,7 +296,7 @@ class ScenarioControllerTest {
                 .description(name + " 설명")
                 .timetable(timetable)
                 .parentScenario(parent)
-                .failedCourseId(failedCourseId)
+                .failedCourseIds(failedCourseIds)
                 .orderIndex(0)
                 .build();
         return scenarioRepository.save(scenario);

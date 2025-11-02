@@ -20,5 +20,8 @@ public class AddStepRequest {
     @NotNull(message = "실패한 과목 목록은 필수입니다 (빈 리스트 가능)")
     private List<Long> failedCourses;
 
+    @NotNull(message = "취소한 과목 목록은 필수입니다 (빈 리스트 가능)")
+    private List<Long> canceledCourses;
+
     private String notes;
 }

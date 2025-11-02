@@ -20,6 +20,7 @@ public class RegistrationStepResponse {
     private String scenarioName;
     private List<Long> succeededCourses;
     private List<Long> failedCourses;
+    private List<Long> canceledCourses;
     private Long nextScenarioId;
     private String nextScenarioName;
     private String notes;
@@ -32,6 +33,7 @@ public class RegistrationStepResponse {
                 .scenarioName(step.getScenario().getName())
                 .succeededCourses(step.getSucceededCourses())
                 .failedCourses(step.getFailedCourses())
+                .canceledCourses(step.getCanceledCourses())
                 .nextScenarioId(step.getNextScenario() != null ? step.getNextScenario().getId() : null)
                 .nextScenarioName(step.getNextScenario() != null ? step.getNextScenario().getName() : null)
                 .notes(step.getNotes())

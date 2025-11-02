@@ -8,7 +8,9 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "scenarios", indexes = {
@@ -45,10 +47,14 @@ public class Scenario {
     @Builder.Default
     private List<Scenario> childScenarios = new ArrayList<>();
 
-    // 실패 조건: 어떤 강의가 실패했을 때 이 시나리오로 이동하는가
-    // null이면 기본(루트) 시나리오
-    @Column(name = "failed_course_id")
-    private Long failedCourseId;
+    // 실패 조건: 어떤 강의들이 실패했을 때 이 시나리오로 이동하는가
+    // empty이면 기본(루트) 시나리오
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "scenario_failed_courses",
+                     joinColumns = @JoinColumn(name = "scenario_id"))
+    @Column(name = "course_id")
+    @Builder.Default
+    private Set<Long> failedCourseIds = new HashSet<>();
 
     // 형제 노드 간 순서 (같은 부모의 자식들 중 순서)
     @Column(name = "order_index")
@@ -92,7 +98,7 @@ public class Scenario {
     }
 
     public boolean isAlternative() {
-        return this.failedCourseId != null;
+        return !this.failedCourseIds.isEmpty();
     }
 
     // Setter for bidirectional relationship

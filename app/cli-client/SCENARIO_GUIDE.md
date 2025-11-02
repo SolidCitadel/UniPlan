@@ -265,6 +265,8 @@ Timetable: Plan A - 기본 시간표
 
 Create alternatives for when specific courses fail:
 
+**Single Course Failure:**
+
 ```bash
 # If course 1 fails in scenario 1, go to Plan B (timetable 2)
 dart run bin/uniplan.dart scenario alternative 1 "Plan B - Course 1 fails" 1 2
@@ -278,9 +280,27 @@ dart run bin/uniplan.dart scenario alternative 1 "Plan C - Course 2 fails" 2 3
 Alternative scenario created successfully!
 ID: 2
 Name: Plan B - Course 1 fails
-Failed Course ID: 1
+Failed Course IDs: 1
 Timetable: Plan B - Course 1 fails
 ```
+
+**Multiple Courses Failure (New!):**
+
+```bash
+# If BOTH course 1 AND course 2 fail, go to Plan D (timetable 4)
+dart run bin/uniplan.dart scenario alternative 1 "Plan D - Course 1+2 fail" 1 2 4
+```
+
+**Expected Output:**
+```
+Alternative scenario created successfully!
+ID: 4
+Name: Plan D - Course 1+2 fail
+Failed Course IDs: 1, 2
+Timetable: Plan D - Course 1+2 fail
+```
+
+**Why Multiple Failures?** If you try CS101 and CS102 fails together, the backend will find the exact matching scenario (Plan D with `failedCourseIds: [1, 2]`) instead of navigating through sequential alternatives.
 
 #### 5.3 View Scenario Tree
 ```bash
@@ -292,11 +312,15 @@ dart run bin/uniplan.dart scenario tree 1
 Scenario Tree
 =============
 Plan A (ID: 1)
-  └─ Plan B - Course 1 fails (Course 1 fails) (ID: 2)
-  └─ Plan C - Course 2 fails (Course 2 fails) (ID: 3)
+  └─ Plan B - Course 1 fails (Courses 1 fail) (ID: 2)
+  └─ Plan C - Course 2 fails (Courses 2 fail) (ID: 3)
+  └─ Plan D - Course 1+2 fail (Courses 1, 2 fail) (ID: 4)
 ```
 
 #### 5.4 Test Navigation
+
+**Single Course Failure:**
+
 ```bash
 # Simulate: If course 1 fails, which scenario should I use?
 dart run bin/uniplan.dart scenario navigate 1 1
@@ -310,8 +334,27 @@ Next Scenario
 =============
 ID: 2
 Name: Plan B - Course 1 fails
-Failed Course ID: 1
+Failed Course IDs: 1
 Timetable: Plan B - Course 1 fails
+```
+
+**Multiple Courses Failure:**
+
+```bash
+# Simulate: If course 1 AND 2 both fail, which scenario should I use?
+dart run bin/uniplan.dart scenario navigate 1 1 2
+```
+
+**Expected Output:**
+```
+Next scenario found!
+
+Next Scenario
+=============
+ID: 4
+Name: Plan D - Course 1+2 fail
+Failed Course IDs: 1, 2
+Timetable: Plan D - Course 1+2 fail
 ```
 
 ---
@@ -347,74 +390,113 @@ Courses in Current Timetable:
 
 **Note the Registration ID (1 in this example)**
 
-#### 6.2 Register Courses with Success/Failure
+#### 6.2 Register Courses with Mark-and-Submit Workflow
 
-Simulate registering for courses one by one:
+**New Batch Workflow:** Mark all course results first, then submit to backend at once.
+
+**Why?** This allows the backend to consider all failures together for better scenario matching (e.g., CS101 + CS102 both fail → Plan D).
+
+**Status Types:**
+- **SUCCESS**: Successfully registered a course
+- **FAILED**: Tried to register but failed (triggers alternative scenario navigation)
+- **CANCELED**: Previously registered, now canceled (removed from succeeded list)
 
 ```bash
 # Try to register for course 1 - SUCCESS
-dart run bin/uniplan.dart registration step 1 1 SUCCESS
+dart run bin/uniplan.dart registration mark 1 SUCCESS
 ```
 
 **Expected Output:**
 ```
-Course 1 registered successfully!
+Course 1 marked as SUCCESS
 
-Current Scenario:
-ID: 1
-Name: Plan A
+Current marks:
+Marked Courses:
+  SUCCESS: 1
 
-Successfully Registered Courses:
-  - Course ID: 1
+Use submit to send to backend.
 ```
 
 ```bash
 # Try to register for course 2 - FAILED (out of seats)
-dart run bin/uniplan.dart registration step 1 2 FAILED
+dart run bin/uniplan.dart registration mark 2 FAILED
 ```
 
 **Expected Output:**
 ```
-Course 2 registration failed!
+Course 2 marked as FAILED
 
-Current Scenario:
-ID: 3
-Name: Plan C - Course 2 fails
+Current marks:
+Marked Courses:
+  SUCCESS: 1
+  FAILED: 2
 
-Successfully Registered Courses:
-  - Course ID: 1
-```
-
-**Note:** The system automatically navigated to Plan C because course 2 failed!
-
-The current scenario is now Plan C, which has courses [1, 5, 3].
-
-```bash
-# Continue with Plan C - Register course 5
-dart run bin/uniplan.dart registration step 1 5 SUCCESS
-```
-
-**Expected Output:**
-```
-Course 5 registered successfully!
-
-Current Scenario:
-ID: 3
-Name: Plan C - Course 2 fails
-
-Successfully Registered Courses:
-  - Course ID: 1
-  - Course ID: 5
+Use submit to send to backend.
 ```
 
 ```bash
-# Register course 3
-dart run bin/uniplan.dart registration step 1 3 SUCCESS
+# Continue marking course 3 - SUCCESS
+dart run bin/uniplan.dart registration mark 3 SUCCESS
 ```
 
 **Expected Output:**
 ```
-Course 3 registered successfully!
+Course 3 marked as SUCCESS
+
+Current marks:
+Marked Courses:
+  SUCCESS: 1, 3
+  FAILED: 2
+
+Use submit to send to backend.
+```
+
+**Canceling a Course (if needed):**
+```bash
+# If you need to cancel a previously registered course
+dart run bin/uniplan.dart registration mark 1 CANCELED
+```
+
+**Expected Output:**
+```
+Course 1 marked as CANCELED
+
+Current marks:
+Marked Courses:
+  SUCCESS: 3
+  FAILED: 2
+  CANCELED: 1
+
+Use submit to send to backend.
+```
+
+```bash
+# Check current status (optional)
+dart run bin/uniplan.dart registration status
+```
+
+**Expected Output:**
+```
+Registration Session Status
+===========================
+Registration ID: 1
+
+Marked Courses:
+  SUCCESS: 1, 3
+  FAILED: 2
+
+Use "submit" to send to backend.
+```
+
+```bash
+# Submit all marked courses to backend
+dart run bin/uniplan.dart registration submit
+```
+
+**Expected Output:**
+```
+Submitting marked courses to backend...
+Results submitted successfully!
 
 Current Scenario:
 ID: 3
@@ -422,9 +504,12 @@ Name: Plan C - Course 2 fails
 
 Successfully Registered Courses:
   - Course ID: 1
-  - Course ID: 5
   - Course ID: 3
+
+Continue marking courses or use "complete" when done.
 ```
+
+**Note:** The system automatically navigated to Plan C because course 2 failed! Now the marks are cleared and you can continue marking courses from Plan C.
 
 #### 6.3 View Registration Progress
 ```bash
@@ -523,14 +608,26 @@ dart run bin/uniplan.dart timetable add-course 2 3
 # 5. Create decision tree
 dart run bin/uniplan.dart scenario create "Plan A" 1
 dart run bin/uniplan.dart scenario alternative 1 "Plan B - Course 1 fails" 1 2
+dart run bin/uniplan.dart scenario alternative 1 "Plan C - Course 2 fails" 2 3
 dart run bin/uniplan.dart scenario tree 1
 
-# 6. Simulate registration
+# 6. Simulate registration (NEW: mark-and-submit workflow)
 dart run bin/uniplan.dart registration start 1
-dart run bin/uniplan.dart registration step 1 1 SUCCESS
-dart run bin/uniplan.dart registration step 1 2 FAILED  # Auto-navigates to Plan B
-dart run bin/uniplan.dart registration step 1 4 SUCCESS
-dart run bin/uniplan.dart registration step 1 3 SUCCESS
+dart run bin/uniplan.dart registration mark 1 SUCCESS
+dart run bin/uniplan.dart registration mark 2 FAILED
+dart run bin/uniplan.dart registration mark 3 SUCCESS
+dart run bin/uniplan.dart registration status       # Check before submit
+dart run bin/uniplan.dart registration submit       # Auto-navigates to Plan C
+
+# 6a. Resume registration (if CLI was restarted)
+dart run bin/uniplan.dart registration list         # Find IN_PROGRESS registration
+dart run bin/uniplan.dart registration resume 1     # Resume session
+
+# 6b. Cancel a course if needed
+dart run bin/uniplan.dart registration mark 1 CANCELED
+dart run bin/uniplan.dart registration submit
+
+# Continue with Plan C courses...
 dart run bin/uniplan.dart registration complete 1
 ```
 

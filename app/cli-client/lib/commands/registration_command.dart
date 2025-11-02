@@ -1,9 +1,11 @@
 import 'package:uniplan_cli/api/api_client.dart';
 import 'package:uniplan_cli/api/endpoints.dart';
+import 'package:uniplan_cli/session/registration_session.dart';
 import 'package:uniplan_cli/utils/terminal_utils.dart';
 
 class RegistrationCommand {
   final ApiClient _apiClient = ApiClient();
+  final RegistrationSession _session = RegistrationSession();
 
   Future<void> execute(List<String> args) async {
     if (args.isEmpty) {
@@ -18,8 +20,20 @@ class RegistrationCommand {
         case 'start':
           await _start(args);
           break;
-        case 'step':
-          await _step(args);
+        case 'resume':
+          await _resume(args);
+          break;
+        case 'mark':
+          _mark(args);
+          break;
+        case 'unmark':
+          _unmark(args);
+          break;
+        case 'status':
+          _status();
+          break;
+        case 'submit':
+          await _submit();
           break;
         case 'get':
           await _get(args);
@@ -33,12 +47,17 @@ class RegistrationCommand {
         case 'cancel':
           await _cancel(args);
           break;
+        case 'delete-all':
+          await _deleteAll();
+          break;
         default:
           TerminalUtils.printError('Unknown registration command: $subCommand');
           _printHelp();
       }
     } on ApiException catch (e) {
       TerminalUtils.printError(e.toString());
+    } on StateError catch (e) {
+      TerminalUtils.printError(e.message);
     } catch (e) {
       TerminalUtils.printError('Unexpected error: $e');
     }
@@ -66,55 +85,158 @@ class RegistrationCommand {
     );
 
     final registration = response.json;
+    final registrationId = registration['id'] as int;
+
+    // Initialize session
+    _session.start(registrationId);
+
     TerminalUtils.printSuccess('Registration started!');
     _printRegistrationDetails(registration);
+
+    print('\n${TerminalUtils.bold('Next Steps')}:');
+    print('  1. Mark courses as SUCCESS or FAILED: ${TerminalUtils.gray('mark <courseId> <SUCCESS|FAILED>')}');
+    print('  2. Check status: ${TerminalUtils.gray('status')}');
+    print('  3. Submit to backend: ${TerminalUtils.gray('submit')}');
   }
 
-  Future<void> _step(List<String> args) async {
-    if (args.length < 4) {
-      TerminalUtils.printError(
-        'Usage: uniplan registration step <registrationId> <courseId> <status>',
-      );
-      TerminalUtils.printInfo('Status: SUCCESS or FAILED');
+  Future<void> _resume(List<String> args) async {
+    if (args.length < 2) {
+      TerminalUtils.printError('Usage: uniplan registration resume <registrationId>');
       return;
     }
 
     final registrationId = int.tryParse(args[1]);
-    final courseId = int.tryParse(args[2]);
-    final status = args[3].toUpperCase();
-
     if (registrationId == null) {
       TerminalUtils.printError('Invalid registration ID: ${args[1]}');
       return;
     }
-    if (courseId == null) {
-      TerminalUtils.printError('Invalid course ID: ${args[2]}');
-      return;
-    }
-    if (status != 'SUCCESS' && status != 'FAILED') {
-      TerminalUtils.printError('Invalid status: ${args[3]} (must be SUCCESS or FAILED)');
+
+    TerminalUtils.printInfo('Resuming registration $registrationId...');
+
+    final response = await _apiClient.get(Endpoints.registration(registrationId));
+    final registration = response.json;
+
+    // Check if registration is still in progress
+    final status = registration['status'] as String?;
+    if (status != 'IN_PROGRESS') {
+      TerminalUtils.printError('Cannot resume registration: status is $status');
+      TerminalUtils.printInfo('Only IN_PROGRESS registrations can be resumed.');
       return;
     }
 
-    TerminalUtils.printInfo(
-      'Adding step: Course $courseId -> $status...',
-    );
+    // Initialize session
+    _session.start(registrationId);
+
+    TerminalUtils.printSuccess('Registration session resumed!');
+    _printRegistrationDetails(registration);
+
+    print('\n${TerminalUtils.bold('Next Steps')}:');
+    print('  1. Mark courses as SUCCESS or FAILED: ${TerminalUtils.gray('mark <courseId> <SUCCESS|FAILED>')}');
+    print('  2. Check status: ${TerminalUtils.gray('status')}');
+    print('  3. Submit to backend: ${TerminalUtils.gray('submit')}');
+  }
+
+  void _mark(List<String> args) {
+    if (args.length < 3) {
+      TerminalUtils.printError(
+        'Usage: uniplan registration mark <courseId> <SUCCESS|FAILED|CANCELED>',
+      );
+      return;
+    }
+
+    final courseId = int.tryParse(args[1]);
+    final status = args[2].toUpperCase();
+
+    if (courseId == null) {
+      TerminalUtils.printError('Invalid course ID: ${args[1]}');
+      return;
+    }
+
+    if (status != 'SUCCESS' && status != 'FAILED' && status != 'CANCELED') {
+      TerminalUtils.printError('Status must be SUCCESS, FAILED, or CANCELED');
+      return;
+    }
+
+    try {
+      _session.mark(courseId, status);
+      TerminalUtils.printSuccess('Course $courseId marked as $status');
+      print('\nCurrent marks:');
+      print(_session.getSummary());
+      print('\nUse ${TerminalUtils.bold('submit')} to send to backend.');
+    } on StateError catch (e) {
+      TerminalUtils.printError(e.message);
+      TerminalUtils.printInfo('Use "registration start <scenarioId>" first.');
+    }
+  }
+
+  void _unmark(List<String> args) {
+    if (args.length < 2) {
+      TerminalUtils.printError('Usage: uniplan registration unmark <courseId>');
+      return;
+    }
+
+    final courseId = int.tryParse(args[1]);
+    if (courseId == null) {
+      TerminalUtils.printError('Invalid course ID: ${args[1]}');
+      return;
+    }
+
+    try {
+      _session.unmark(courseId);
+      TerminalUtils.printSuccess('Course $courseId unmarked');
+      print('\n${_session.getSummary()}');
+    } on StateError catch (e) {
+      TerminalUtils.printError(e.message);
+    }
+  }
+
+  void _status() {
+    if (!_session.isActive) {
+      TerminalUtils.printWarning('No active registration session.');
+      TerminalUtils.printInfo('Use "registration start <scenarioId>" to begin.');
+      return;
+    }
+
+    TerminalUtils.printHeader('Registration Session Status');
+    TerminalUtils.printKeyValue('Registration ID', _session.registrationId.toString());
+    print('\n${_session.getSummary()}');
+
+    if (_session.markedCourses.isEmpty) {
+      print('\n${TerminalUtils.gray('Use "mark <courseId> <SUCCESS|FAILED>" to record results.')}');
+    } else {
+      print('\n${TerminalUtils.gray('Use "submit" to send to backend.')}');
+    }
+  }
+
+  Future<void> _submit() async {
+    if (!_session.isActive) {
+      TerminalUtils.printError('No active registration session.');
+      TerminalUtils.printInfo('Use "registration start <scenarioId>" first.');
+      return;
+    }
+
+    if (_session.markedCourses.isEmpty) {
+      TerminalUtils.printWarning('No courses marked yet.');
+      TerminalUtils.printInfo('Use "mark <courseId> <SUCCESS|FAILED>" to record results first.');
+      return;
+    }
+
+    final registrationId = _session.registrationId!;
+    final submitData = _session.getSubmitData();
+
+    TerminalUtils.printInfo('Submitting marked courses to backend...');
 
     final response = await _apiClient.post(
       Endpoints.registrationSteps(registrationId),
-      body: {
-        'courseId': courseId,
-        'status': status,
-      },
+      body: submitData,
     );
 
     final registration = response.json;
 
-    if (status == 'SUCCESS') {
-      TerminalUtils.printSuccess('Course $courseId registered successfully!');
-    } else {
-      TerminalUtils.printWarning('Course $courseId registration failed!');
-    }
+    TerminalUtils.printSuccess('Results submitted successfully!');
+
+    // Clear marks after successful submit
+    _session.clearMarks();
 
     // Show current scenario
     final currentScenario = registration['currentScenario'] as Map<String, dynamic>?;
@@ -122,16 +244,70 @@ class RegistrationCommand {
       print('\n${TerminalUtils.bold('Current Scenario')}:');
       TerminalUtils.printKeyValue('ID', currentScenario['id'].toString());
       TerminalUtils.printKeyValue('Name', currentScenario['name'].toString());
-    }
 
-    // Show succeeded courses
-    final succeededCourses = registration['succeededCourses'] as List?;
-    if (succeededCourses != null && succeededCourses.isNotEmpty) {
-      print('\n${TerminalUtils.bold('Successfully Registered Courses')}:');
-      for (final courseId in succeededCourses) {
-        print('  - Course ID: $courseId');
+      // Show timetable information
+      final timetable = currentScenario['timetable'] as Map<String, dynamic>?;
+      if (timetable != null) {
+        print('\n${TerminalUtils.bold('Current Timetable')}:');
+        TerminalUtils.printKeyValue('Name', timetable['name'].toString());
+
+        final succeededCourses = registration['succeededCourses'] as List? ?? [];
+        final items = timetable['items'] as List?;
+
+        // Get course IDs in current timetable
+        final timetableCourseIds = items
+            ?.map((item) => (item as Map<String, dynamic>)['courseId'])
+            .toSet() ?? {};
+
+        // Show courses in timetable
+        if (items != null && items.isNotEmpty) {
+          print('\n${TerminalUtils.bold('Courses to Register')}:');
+
+          for (final item in items) {
+            final i = item as Map<String, dynamic>;
+            final courseId = i['courseId'];
+            final isRegistered = succeededCourses.contains(courseId);
+
+            if (isRegistered) {
+              print('  ${TerminalUtils.green('✓')} Course ID: $courseId ${TerminalUtils.gray('(already registered)')}');
+            } else {
+              print('  ${TerminalUtils.yellow('○')} Course ID: $courseId ${TerminalUtils.yellow('(pending)')}');
+            }
+          }
+        }
+
+        // Show courses to cancel (registered but not in current timetable)
+        final coursesToCancel = succeededCourses
+            .where((courseId) => !timetableCourseIds.contains(courseId))
+            .toList();
+
+        if (coursesToCancel.isNotEmpty) {
+          print('\n${TerminalUtils.bold('Courses to Cancel')}:');
+          for (final courseId in coursesToCancel) {
+            print('  ${TerminalUtils.red('✗')} Course ID: $courseId ${TerminalUtils.red('(registered but removed from timetable)')}');
+          }
+        }
       }
     }
+
+    // Show summary
+    final succeededCourses = registration['succeededCourses'] as List?;
+    final failedCourses = registration['failedCourses'] as List?;
+    final canceledCourses = registration['canceledCourses'] as List?;
+
+    if (succeededCourses != null && succeededCourses.isNotEmpty) {
+      print('\n${TerminalUtils.green('✓ Total Registered')} (${succeededCourses.length}): ${succeededCourses.join(', ')}');
+    }
+
+    if (failedCourses != null && failedCourses.isNotEmpty) {
+      print('${TerminalUtils.red('✗ Total Failed')} (${failedCourses.length}): ${failedCourses.join(', ')}');
+    }
+
+    if (canceledCourses != null && canceledCourses.isNotEmpty) {
+      print('${TerminalUtils.gray('⊗ Total Canceled')} (${canceledCourses.length}): ${canceledCourses.join(', ')}');
+    }
+
+    print('\n${TerminalUtils.gray('→ Mark remaining courses and submit again, or use "complete" when done.')}');
   }
 
   Future<void> _get(List<String> args) async {
@@ -208,6 +384,12 @@ class RegistrationCommand {
     final registration = response.json;
     TerminalUtils.printSuccess('Registration completed!');
     _printRegistrationSummary(registration);
+
+    // End session if it matches
+    if (_session.isActive && _session.registrationId == registrationId) {
+      _session.end();
+      TerminalUtils.printInfo('Session ended.');
+    }
   }
 
   Future<void> _cancel(List<String> args) async {
@@ -229,6 +411,26 @@ class RegistrationCommand {
     await _apiClient.delete(Endpoints.registration(registrationId));
 
     TerminalUtils.printSuccess('Registration canceled!');
+
+    // End session if it matches
+    if (_session.isActive && _session.registrationId == registrationId) {
+      _session.end();
+      TerminalUtils.printInfo('Session ended.');
+    }
+  }
+
+  Future<void> _deleteAll() async {
+    TerminalUtils.printInfo('Deleting all registrations...');
+
+    await _apiClient.delete(Endpoints.registrations);
+
+    TerminalUtils.printSuccess('All registrations deleted!');
+
+    // End session if active
+    if (_session.isActive) {
+      _session.end();
+      TerminalUtils.printInfo('Session ended.');
+    }
   }
 
   void _printRegistrationSummary(Map<String, dynamic> registration) {
@@ -263,34 +465,86 @@ class RegistrationCommand {
         print('\n${TerminalUtils.bold('Current Timetable')}:');
         TerminalUtils.printKeyValue('Name', timetable['name'].toString());
 
+        final succeededCourses = registration['succeededCourses'] as List? ?? [];
         final items = timetable['items'] as List?;
+
+        // Get course IDs in current timetable
+        final timetableCourseIds = items
+            ?.map((item) => (item as Map<String, dynamic>)['courseId'])
+            .toSet() ?? {};
+
+        // Show courses with status (registered / pending)
         if (items != null && items.isNotEmpty) {
-          print('\n${TerminalUtils.bold('Courses in Current Timetable')}:');
+          print('\n${TerminalUtils.bold('Courses to Register')}:');
+
           for (final item in items) {
             final i = item as Map<String, dynamic>;
-            print('  - Course ID: ${i['courseId']}');
+            final courseId = i['courseId'];
+            final isRegistered = succeededCourses.contains(courseId);
+
+            if (isRegistered) {
+              print('  ${TerminalUtils.green('✓')} Course ID: $courseId ${TerminalUtils.gray('(already registered)')}');
+            } else {
+              print('  ${TerminalUtils.yellow('○')} Course ID: $courseId ${TerminalUtils.yellow('(pending)')}');
+            }
+          }
+        }
+
+        // Show courses to cancel (registered but not in current timetable)
+        final coursesToCancel = succeededCourses
+            .where((courseId) => !timetableCourseIds.contains(courseId))
+            .toList();
+
+        if (coursesToCancel.isNotEmpty) {
+          print('\n${TerminalUtils.bold('Courses to Cancel')}:');
+          for (final courseId in coursesToCancel) {
+            print('  ${TerminalUtils.red('✗')} Course ID: $courseId ${TerminalUtils.red('(registered but removed from timetable)')}');
           }
         }
       }
     }
 
+    // Show summary
     final succeededCourses = registration['succeededCourses'] as List?;
+    final failedCourses = registration['failedCourses'] as List?;
+    final canceledCourses = registration['canceledCourses'] as List?;
+
     if (succeededCourses != null && succeededCourses.isNotEmpty) {
-      print('\n${TerminalUtils.bold('Successfully Registered Courses')}:');
-      for (final courseId in succeededCourses) {
-        print('  - Course ID: $courseId');
-      }
+      print('\n${TerminalUtils.green('✓ Total Registered')} (${succeededCourses.length}): ${succeededCourses.join(', ')}');
     }
 
+    if (failedCourses != null && failedCourses.isNotEmpty) {
+      print('${TerminalUtils.red('✗ Total Failed')} (${failedCourses.length}): ${failedCourses.join(', ')}');
+    }
+
+    if (canceledCourses != null && canceledCourses.isNotEmpty) {
+      print('${TerminalUtils.gray('⊗ Total Canceled')} (${canceledCourses.length}): ${canceledCourses.join(', ')}');
+    }
+
+    // Show history (steps)
     final steps = registration['steps'] as List?;
     if (steps != null && steps.isNotEmpty) {
-      print('\n${TerminalUtils.bold('Registration Steps')} (${steps.length}):');
+      print('\n${TerminalUtils.bold('Registration History')} (${steps.length} submission${steps.length > 1 ? 's' : ''}):');
+      var stepNum = 1;
       for (final step in steps) {
         final s = step as Map<String, dynamic>;
-        final status = s['status'] == 'SUCCESS'
-            ? TerminalUtils.green('SUCCESS')
-            : TerminalUtils.red('FAILED');
-        print('  ${s['stepOrder']}. Course ${s['courseId']}: $status');
+        final succeededList = s['succeededCourses'] as List?;
+        final failedList = s['failedCourses'] as List?;
+        final canceledList = s['canceledCourses'] as List?;
+
+        print('  ${TerminalUtils.gray('Step $stepNum:')}');
+
+        if (succeededList != null && succeededList.isNotEmpty) {
+          print('    ${TerminalUtils.green('SUCCESS')}: ${succeededList.join(', ')}');
+        }
+        if (failedList != null && failedList.isNotEmpty) {
+          print('    ${TerminalUtils.red('FAILED')}: ${failedList.join(', ')}');
+        }
+        if (canceledList != null && canceledList.isNotEmpty) {
+          print('    ${TerminalUtils.gray('CANCELED')}: ${canceledList.join(', ')}');
+        }
+
+        stepNum++;
       }
     }
   }
@@ -299,21 +553,49 @@ class RegistrationCommand {
     print('''
 Registration Commands:
 
-  start <scenarioId>                        Start registration with a scenario
-  step <registrationId> <courseId> <status> Add a registration step (SUCCESS/FAILED)
-  get <registrationId>                      Get registration details
-  list                                       List all registrations
-  complete <registrationId>                 Complete a registration
-  cancel <registrationId>                   Cancel a registration
+  start <scenarioId>                            Start registration with a scenario
+  resume <registrationId>                       Resume an existing registration session
+  mark <courseId> <SUCCESS|FAILED|CANCELED>     Mark a course result (local)
+  unmark <courseId>                             Unmark a course
+  status                                         Show current session status
+  submit                                         Submit marked courses to backend
+  get <registrationId>                          Get registration details
+  list                                           List all registrations
+  complete <registrationId>                     Complete a registration
+  cancel <registrationId>                       Cancel a registration
+  delete-all                                     Delete all registrations
+
+Status types:
+  SUCCESS   - Successfully registered a course
+  FAILED    - Tried to register but failed
+  CANCELED  - Previously registered, now canceled
+
+Workflow:
+  1. uniplan registration start 1           # Start with scenario 1
+  2. uniplan registration mark 101 SUCCESS  # Mark course 101 as success
+  3. uniplan registration mark 102 FAILED   # Mark course 102 as failed
+  4. uniplan registration mark 103 CANCELED # Mark course 103 as canceled
+  5. uniplan registration status            # Check current marks
+  6. uniplan registration submit            # Submit to backend
+  7. uniplan registration complete 1        # Complete registration
+
+Resume workflow (after CLI restart):
+  1. uniplan registration list              # Find your IN_PROGRESS registration
+  2. uniplan registration resume 1          # Resume registration with ID 1
+  3. uniplan registration mark 103 SUCCESS  # Continue marking courses
+  4. uniplan registration submit            # Submit to backend
 
 Examples:
   uniplan registration start 1
-  uniplan registration step 1 123 SUCCESS
-  uniplan registration step 1 456 FAILED
+  uniplan registration resume 1
+  uniplan registration mark 123 SUCCESS
+  uniplan registration mark 456 FAILED
+  uniplan registration mark 789 CANCELED
+  uniplan registration status
+  uniplan registration submit
   uniplan registration get 1
-  uniplan registration list
   uniplan registration complete 1
-  uniplan registration cancel 1
+  uniplan registration delete-all          # Delete all registrations
 ''');
   }
 }

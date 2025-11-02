@@ -325,9 +325,17 @@ python transformer.py --metadata output/metadata_2025_1.json \
 **Development Order**: Backend → CLI Client → Frontend
 
 **Key Features**:
+- **Interactive Mode**: Shell-like interface for continuous command execution
 - **Authentication**: Login, signup, token refresh, logout
 - **Course Management**: List, search, get details, import from JSON
 - **User Management**: Get profile
+- **Wishlist**: Add/remove courses with priority levels
+- **Timetable**: Create, manage, and link courses to timetables
+- **Scenarios**: Build decision trees for registration alternatives
+- **Registration**: Real-time simulation with mark-and-submit workflow
+  - Mark course results (SUCCESS/FAILED/CANCELED) locally before submitting
+  - Resume sessions after CLI restart
+  - Automatic navigation to alternative scenarios
 - **HTTP Debugging**: `--details` flag shows full request/response
 - **Terminal Control**: `--clear` flag clears screen before output
 - **Token Management**: Automatic JWT token storage and injection

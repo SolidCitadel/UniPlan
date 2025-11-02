@@ -46,6 +46,12 @@ public class RegistrationStep {
     @Builder.Default
     private List<Long> failedCourses = List.of();
 
+    // 취소한 과목 ID 목록 (JSON array) - 성공했지만 나중에 취소한 과목
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "canceled_courses", columnDefinition = "json")
+    @Builder.Default
+    private List<Long> canceledCourses = List.of();
+
     // 다음으로 이동한 시나리오 (null이면 현재 시나리오 유지)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "next_scenario_id")

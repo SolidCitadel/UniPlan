@@ -85,8 +85,8 @@ class Scenario {
     Scenario parentScenario;      // null이면 루트
     List<Scenario> childScenarios;
 
-    // 실패 조건
-    Long failedCourseId;    // null이면 기본(루트), 있으면 대안
+    // 실패 조건 (여러 과목 조합)
+    Set<Long> failedCourseIds;    // empty면 기본(루트), 있으면 대안
     Integer orderIndex;     // 형제 노드 간 순서
 
     // 실제 시간표 참조
@@ -99,13 +99,15 @@ class Scenario {
 
 **용도**: 수강신청 실패 시 대안 계획을 트리 구조로 표현
 
-**Decision Tree Example**:
+**Decision Tree Example** (여러 과목 실패 조합 지원):
 ```
-Plan A (CS101, CS102, CS103)
-  ├─ CS101 실패 → Plan B (CS104, CS102, CS103)
-  │   └─ CS104 실패 → Plan B-1 (CS105, CS102, CS103)
-  └─ CS102 실패 → Plan C (CS101, CS106, CS103)
+Plan A (CS101, CS102, CS103) - failedCourseIds: []
+  ├─ Plan B: CS101만 실패 → (CS104, CS102, CS103) - failedCourseIds: [101]
+  ├─ Plan C: CS102만 실패 → (CS101, CS106, CS103) - failedCourseIds: [102]
+  └─ Plan D: CS101 + CS102 실패 → (CS104, CS106, CS103) - failedCourseIds: [101, 102]
 ```
+
+**장점**: 단일 과목 실패뿐만 아니라 여러 과목 조합 실패에도 대응 가능
 
 ### 4. Registration (수강신청 시뮬레이션)
 ```java
@@ -294,26 +296,36 @@ POST /api/v1/registrations
 ```
 
 ### 6단계: 실시간 수강신청 진행
+
+**Note**: CLI는 단일 과목 ID와 상태를 받지만, 백엔드 API는 리스트 형식을 요구합니다.
+
 ```json
 # CS101 수강신청 실패
 POST /api/v1/registrations/100/steps
 {
-  "courseId": 101,
-  "result": "FAILED"
+  "succeededCourses": [],
+  "failedCourses": [101]
 }
 → Response: {
-  "navigatedScenario": { "id": 11, "name": "Plan B - CS101 실패 시" },
-  "recommendedCourses": [104, 102, 103]
+  "id": 100,
+  "currentScenario": { "id": 11, "name": "CS101 failed → Plan B" },
+  "succeededCourses": []
 }
 
 # CS104 수강신청 성공
 POST /api/v1/registrations/100/steps
 {
-  "courseId": 104,
-  "result": "SUCCESS"
+  "succeededCourses": [104],
+  "failedCourses": []
 }
-→ Response: { "message": "Course registered successfully" }
+→ Response: {
+  "id": 100,
+  "currentScenario": { "id": 11, "name": "CS101 failed → Plan B" },
+  "succeededCourses": [104]
+}
 ```
+
+**CLI Convenience**: CLI 클라이언트는 `registration step 100 101 FAILED` 형식으로 단일 과목을 받아서 자동으로 리스트로 변환합니다.
 
 ### 7단계: 수강신청 완료
 ```json

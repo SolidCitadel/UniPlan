@@ -1,10 +1,12 @@
 package com.uniplan.planner.domain.scenario.dto;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -12,6 +14,6 @@ import lombok.NoArgsConstructor;
 @Builder
 public class NavigationRequest {
 
-    @NotNull(message = "실패한 강의 ID는 필수입니다")
-    private Long failedCourseId;
+    @NotEmpty(message = "실패한 강의 ID 목록은 필수입니다")
+    private Set<Long> failedCourseIds;
 }

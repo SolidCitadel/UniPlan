@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Data
@@ -22,7 +23,7 @@ public class ScenarioResponse {
     private String name;
     private String description;
     private Long parentScenarioId;
-    private Long failedCourseId;
+    private Set<Long> failedCourseIds;
     private Integer orderIndex;
     private TimetableResponse timetable;
     private List<ScenarioResponse> childScenarios;
@@ -40,7 +41,7 @@ public class ScenarioResponse {
                 .name(scenario.getName())
                 .description(scenario.getDescription())
                 .parentScenarioId(scenario.getParentScenario() != null ? scenario.getParentScenario().getId() : null)
-                .failedCourseId(scenario.getFailedCourseId())
+                .failedCourseIds(scenario.getFailedCourseIds())
                 .orderIndex(scenario.getOrderIndex())
                 .timetable(TimetableResponse.from(scenario.getTimetable()))
                 .createdAt(scenario.getCreatedAt())
@@ -62,7 +63,7 @@ public class ScenarioResponse {
                 .name(scenario.getName())
                 .description(scenario.getDescription())
                 .parentScenarioId(scenario.getParentScenario() != null ? scenario.getParentScenario().getId() : null)
-                .failedCourseId(scenario.getFailedCourseId())
+                .failedCourseIds(scenario.getFailedCourseIds())
                 .orderIndex(scenario.getOrderIndex())
                 .timetable(TimetableResponse.from(scenario.getTimetable()))
                 .childScenarios(scenario.getChildScenarios().stream()

@@ -82,9 +82,11 @@ class RegistrationControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.userId").value(TEST_USER_ID))
-                .andExpect(jsonPath("$.startScenarioId").value(planA.getId()))
-                .andExpect(jsonPath("$.currentScenarioId").value(planA.getId()))
+                .andExpect(jsonPath("$.startScenario.id").value(planA.getId()))
+                .andExpect(jsonPath("$.currentScenario.id").value(planA.getId()))
                 .andExpect(jsonPath("$.status").value("IN_PROGRESS"))
+                .andExpect(jsonPath("$.succeededCourses").isEmpty())
+                .andExpect(jsonPath("$.failedCourses").isEmpty())
                 .andExpect(jsonPath("$.steps").isEmpty());
     }
 
@@ -98,6 +100,7 @@ class RegistrationControllerTest {
         AddStepRequest request = AddStepRequest.builder()
                 .succeededCourses(List.of(101L, 102L))
                 .failedCourses(List.of())
+                .canceledCourses(List.of())
                 .notes("모두 성공")
                 .build();
 
@@ -108,7 +111,9 @@ class RegistrationControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.currentScenarioId").value(planA.getId()))
+                .andExpect(jsonPath("$.currentScenario.id").value(planA.getId()))
+                .andExpect(jsonPath("$.succeededCourses", hasSize(2)))
+                .andExpect(jsonPath("$.failedCourses").isEmpty())
                 .andExpect(jsonPath("$.steps", hasSize(1)))
                 .andExpect(jsonPath("$.steps[0].succeededCourses", hasSize(2)))
                 .andExpect(jsonPath("$.steps[0].failedCourses").isEmpty())
@@ -127,6 +132,7 @@ class RegistrationControllerTest {
         AddStepRequest request = AddStepRequest.builder()
                 .succeededCourses(List.of(102L))
                 .failedCourses(List.of(101L))  // CS101 실패
+                .canceledCourses(List.of())
                 .notes("CS101 실패")
                 .build();
 
@@ -137,8 +143,10 @@ class RegistrationControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.currentScenarioId").value(planB.getId()))
-                .andExpect(jsonPath("$.currentScenarioName").value("Plan B"))
+                .andExpect(jsonPath("$.currentScenario.id").value(planB.getId()))
+                .andExpect(jsonPath("$.currentScenario.name").value("Plan B"))
+                .andExpect(jsonPath("$.succeededCourses", hasSize(1)))
+                .andExpect(jsonPath("$.failedCourses", hasSize(1)))
                 .andExpect(jsonPath("$.steps[0].scenarioId").value(planA.getId()))
                 .andExpect(jsonPath("$.steps[0].nextScenarioId").value(planB.getId()));
     }
@@ -162,6 +170,7 @@ class RegistrationControllerTest {
         AddStepRequest step1 = AddStepRequest.builder()
                 .succeededCourses(List.of(102L, 103L))
                 .failedCourses(List.of(101L))
+                .canceledCourses(List.of())
                 .build();
 
         mockMvc.perform(post("/registrations/" + registrationId + "/steps")
@@ -169,12 +178,13 @@ class RegistrationControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(step1)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.currentScenarioId").value(planB.getId()));
+                .andExpect(jsonPath("$.currentScenario.id").value(planB.getId()));
 
         // Step 2: CS104 실패 → Plan B-1로 이동
         AddStepRequest step2 = AddStepRequest.builder()
                 .succeededCourses(List.of())
                 .failedCourses(List.of(104L))
+                .canceledCourses(List.of())
                 .build();
 
         mockMvc.perform(post("/registrations/" + registrationId + "/steps")
@@ -182,7 +192,7 @@ class RegistrationControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(step2)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.currentScenarioId").value(planB1.getId()))
+                .andExpect(jsonPath("$.currentScenario.id").value(planB1.getId()))
                 .andExpect(jsonPath("$.steps", hasSize(2)));
     }
 
@@ -232,6 +242,7 @@ class RegistrationControllerTest {
         AddStepRequest step1 = AddStepRequest.builder()
                 .succeededCourses(List.of(101L, 102L))
                 .failedCourses(List.of())
+                .canceledCourses(List.of())
                 .build();
 
         mockMvc.perform(post("/registrations/" + registrationId + "/steps")
@@ -243,6 +254,7 @@ class RegistrationControllerTest {
         AddStepRequest step2 = AddStepRequest.builder()
                 .succeededCourses(List.of(103L, 104L))
                 .failedCourses(List.of())
+                .canceledCourses(List.of())
                 .build();
 
         mockMvc.perform(post("/registrations/" + registrationId + "/steps")
@@ -272,6 +284,49 @@ class RegistrationControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)));
+    }
+
+    @Test
+    @DisplayName("과목 취소 처리")
+    void cancelCourses() throws Exception {
+        // Given
+        Scenario planA = createTestScenario(TEST_USER_ID, "Plan A");
+        Long registrationId = startTestRegistration(TEST_USER_ID, planA.getId());
+
+        // Step 1: 101, 102, 103 성공
+        AddStepRequest step1 = AddStepRequest.builder()
+                .succeededCourses(List.of(101L, 102L, 103L))
+                .failedCourses(List.of())
+                .canceledCourses(List.of())
+                .build();
+
+        mockMvc.perform(post("/registrations/" + registrationId + "/steps")
+                .header("X-User-Id", TEST_USER_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(step1)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.succeededCourses", hasSize(3)))
+                .andExpect(jsonPath("$.canceledCourses").isEmpty());
+
+        // Step 2: 102 취소
+        AddStepRequest step2 = AddStepRequest.builder()
+                .succeededCourses(List.of())
+                .failedCourses(List.of())
+                .canceledCourses(List.of(102L))
+                .build();
+
+        mockMvc.perform(post("/registrations/" + registrationId + "/steps")
+                .header("X-User-Id", TEST_USER_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(step2)))
+                .andDo(print())
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.succeededCourses", hasSize(2)))  // 101, 103만 남음
+                .andExpect(jsonPath("$.canceledCourses", hasSize(1)))
+                .andExpect(jsonPath("$.canceledCourses[0]").value(102L))
+                .andExpect(jsonPath("$.steps", hasSize(2)))
+                .andExpect(jsonPath("$.steps[1].canceledCourses", hasSize(1)))
+                .andExpect(jsonPath("$.steps[1].canceledCourses[0]").value(102L));
     }
 
     // Helper methods
@@ -306,7 +361,7 @@ class RegistrationControllerTest {
                 .name(name)
                 .timetable(timetable)
                 .parentScenario(parent)
-                .failedCourseId(failedCourseId)
+                .failedCourseIds(java.util.Set.of(failedCourseId))
                 .build();
         return scenarioRepository.save(scenario);
     }

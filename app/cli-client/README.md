@@ -167,7 +167,11 @@ dart run bin/uniplan.dart timetable delete <timetableId>
 dart run bin/uniplan.dart scenario create <name> <timetableId>
 
 # Create alternative scenario (Plan B, C...)
+# Single course failure
 dart run bin/uniplan.dart scenario alternative <parentId> <name> <failedCourseId> <timetableId>
+
+# Multiple courses failure
+dart run bin/uniplan.dart scenario alternative <parentId> <name> <failedCourseId1> <failedCourseId2> <timetableId>
 
 # List all root scenarios
 dart run bin/uniplan.dart scenario list
@@ -178,8 +182,8 @@ dart run bin/uniplan.dart scenario get <scenarioId>
 # View full scenario tree
 dart run bin/uniplan.dart scenario tree <scenarioId>
 
-# Test navigation
-dart run bin/uniplan.dart scenario navigate <scenarioId> <failedCourseId>
+# Test navigation (single or multiple course failures)
+dart run bin/uniplan.dart scenario navigate <scenarioId> <failedCourseId1> [failedCourseId2...]
 
 # Delete scenario
 dart run bin/uniplan.dart scenario delete <scenarioId>
@@ -187,25 +191,63 @@ dart run bin/uniplan.dart scenario delete <scenarioId>
 
 ### Registration (수강신청 시뮬레이션)
 
+**New Batch Workflow** (Recommended):
+
 ```bash
-# Start registration with a scenario
+# 1. Start registration with a scenario
 dart run bin/uniplan.dart registration start <scenarioId>
 
-# Add registration step (success or failure)
-dart run bin/uniplan.dart registration step <registrationId> <courseId> <SUCCESS|FAILED>
+# 2. Resume an existing registration (after CLI restart)
+dart run bin/uniplan.dart registration resume <registrationId>
 
-# Get registration details
+# 3. Mark course results locally (repeatable)
+dart run bin/uniplan.dart registration mark <courseId> <SUCCESS|FAILED|CANCELED>
+
+# 4. Check current marks (optional)
+dart run bin/uniplan.dart registration status
+
+# 5. Submit all marks to backend at once
+dart run bin/uniplan.dart registration submit
+
+# 6. Unmark a course if needed (optional)
+dart run bin/uniplan.dart registration unmark <courseId>
+
+# 7. Get registration details
 dart run bin/uniplan.dart registration get <registrationId>
 
-# List all registrations
+# 8. List all registrations
 dart run bin/uniplan.dart registration list
 
-# Complete registration
+# 9. Complete registration
 dart run bin/uniplan.dart registration complete <registrationId>
 
-# Cancel registration
+# 10. Cancel registration
 dart run bin/uniplan.dart registration cancel <registrationId>
+
+# 11. Delete all registrations
+dart run bin/uniplan.dart registration delete-all
 ```
+
+**Status Types:**
+- **SUCCESS**: Successfully registered a course
+- **FAILED**: Tried to register but failed (triggers alternative scenario navigation)
+- **CANCELED**: Previously registered, now canceled (removed from succeeded list)
+
+**Workflow Explanation:**
+- **start**: Begin a new registration session with a scenario
+- **resume**: Continue an IN_PROGRESS registration after CLI restart
+- **mark**: Records course results locally (not sent to backend yet)
+- **status**: Shows what you've marked so far
+- **submit**: Sends all marked courses to backend in one request
+- **unmark**: Remove a mark before submitting
+
+**Benefits:**
+- Mark multiple courses before submitting
+- Resume registration sessions after CLI restart
+- Review marks before sending
+- Backend receives complete course results for better decision tree navigation
+- Supports multiple course failure scenarios (e.g., CS101 + CS102 both fail → Plan D)
+- Track canceled courses separately from failed attempts
 
 ### User
 

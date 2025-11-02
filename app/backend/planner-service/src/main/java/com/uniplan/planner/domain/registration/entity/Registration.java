@@ -81,4 +81,31 @@ public class Registration {
     public boolean isInProgress() {
         return this.status == RegistrationStatus.IN_PROGRESS;
     }
+
+    public List<Long> getAllSucceededCourses() {
+        // 취소된 과목 제외
+        java.util.Set<Long> canceledSet = steps.stream()
+                .flatMap(step -> step.getCanceledCourses().stream())
+                .collect(java.util.stream.Collectors.toSet());
+
+        return steps.stream()
+                .flatMap(step -> step.getSucceededCourses().stream())
+                .distinct()
+                .filter(courseId -> !canceledSet.contains(courseId))
+                .toList();
+    }
+
+    public List<Long> getAllFailedCourses() {
+        return steps.stream()
+                .flatMap(step -> step.getFailedCourses().stream())
+                .distinct()
+                .toList();
+    }
+
+    public List<Long> getAllCanceledCourses() {
+        return steps.stream()
+                .flatMap(step -> step.getCanceledCourses().stream())
+                .distinct()
+                .toList();
+    }
 }

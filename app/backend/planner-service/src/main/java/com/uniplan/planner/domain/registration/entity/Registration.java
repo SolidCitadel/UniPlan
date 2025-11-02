@@ -29,12 +29,12 @@ public class Registration {
     private Long userId;
 
     // 시작 시나리오 (Plan A)
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "start_scenario_id", nullable = false)
     private Scenario startScenario;
 
     // 현재 시나리오 (네비게이션에 따라 변경됨)
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "current_scenario_id", nullable = false)
     private Scenario currentScenario;
 

@@ -39,8 +39,10 @@ class WishlistCommand {
   }
 
   Future<void> _add(List<String> args) async {
-    if (args.length < 2) {
-      TerminalUtils.printError('Usage: uniplan wishlist add <courseId>');
+    if (args.length < 3) {
+      TerminalUtils.printError('Usage: uniplan wishlist add <courseId> <priority>');
+      TerminalUtils.printInfo('Priority must be between 1 and 5');
+      TerminalUtils.printInfo('Example: uniplan wishlist add 123 1');
       return;
     }
 
@@ -50,16 +52,31 @@ class WishlistCommand {
       return;
     }
 
-    TerminalUtils.printInfo('Adding course $courseId to wishlist...');
+    final priority = int.tryParse(args[2]);
+    if (priority == null) {
+      TerminalUtils.printError('Invalid priority: ${args[2]}');
+      return;
+    }
+
+    if (priority < 1 || priority > 5) {
+      TerminalUtils.printError('Priority must be between 1 and 5');
+      return;
+    }
+
+    TerminalUtils.printInfo('Adding course $courseId to wishlist with priority $priority...');
 
     final response = await _apiClient.post(
       Endpoints.wishlist,
-      body: {'courseId': courseId},
+      body: {
+        'courseId': courseId,
+        'priority': priority,
+      },
     );
 
     final item = response.json;
     TerminalUtils.printSuccess('Course added to wishlist!');
     TerminalUtils.printKeyValue('Course ID', item['courseId'].toString());
+    TerminalUtils.printKeyValue('Priority', item['priority'].toString());
     if (item.containsKey('createdAt')) {
       TerminalUtils.printKeyValue('Added At', item['createdAt'].toString());
     }
@@ -83,11 +100,12 @@ class WishlistCommand {
       return {
         'ID': i['id']?.toString() ?? '',
         'Course ID': i['courseId']?.toString() ?? '',
+        'Priority': i['priority']?.toString() ?? '',
         'Added At': i['createdAt']?.toString() ?? '',
       };
     }).toList();
 
-    TerminalUtils.printTable(rows, ['ID', 'Course ID', 'Added At']);
+    TerminalUtils.printTable(rows, ['ID', 'Course ID', 'Priority', 'Added At']);
   }
 
   Future<void> _remove(List<String> args) async {
@@ -135,13 +153,21 @@ class WishlistCommand {
     print('''
 Wishlist Commands:
 
-  add <courseId>       Add a course to wishlist
-  list                 Show all wishlist items
-  remove <courseId>    Remove a course from wishlist
-  check <courseId>     Check if a course is in wishlist
+  add <courseId> <priority>    Add a course to wishlist with priority (1-5)
+  list                         Show all wishlist items
+  remove <courseId>            Remove a course from wishlist
+  check <courseId>             Check if a course is in wishlist
+
+Priority Levels:
+  1 - Highest priority (must-have course)
+  2 - High priority
+  3 - Medium priority
+  4 - Low priority
+  5 - Lowest priority (backup option)
 
 Examples:
-  uniplan wishlist add 123
+  uniplan wishlist add 123 1        # Add course 123 with highest priority
+  uniplan wishlist add 456 3        # Add course 456 with medium priority
   uniplan wishlist list
   uniplan wishlist remove 123
   uniplan wishlist check 123

@@ -55,9 +55,11 @@ Interactive mode features:
 - **Simplified commands**: Just type `auth login email password` instead of `dart run bin/uniplan.dart auth login email password`
 - **Built-in help**: Type `help` or `?` to see all available commands
 - **Clear screen**: Type `clear` or `cls` to clear the terminal
+- **Details toggle**: Type `details on` to enable HTTP request/response logging, `details off` to disable
 - **Exit**: Type `exit` or `quit` to exit
-- **Persistent session**: Tokens are automatically saved and reused
+- **Persistent session**: Tokens are automatically saved and reused across sessions
 - **Color-coded output**: Enhanced readability with colors
+- **UTF-8 support**: Properly displays Korean and other Unicode characters
 
 ### One-Shot Mode
 
@@ -105,8 +107,12 @@ dart run bin/uniplan.dart courses import <file-path>
 ### Wishlist (희망과목)
 
 ```bash
-# Add course to wishlist
-dart run bin/uniplan.dart wishlist add <courseId>
+# Add course to wishlist with priority (1-5)
+dart run bin/uniplan.dart wishlist add <courseId> <priority>
+
+# Examples
+dart run bin/uniplan.dart wishlist add 123 1    # Highest priority
+dart run bin/uniplan.dart wishlist add 456 3    # Medium priority
 
 # View your wishlist
 dart run bin/uniplan.dart wishlist list
@@ -117,6 +123,13 @@ dart run bin/uniplan.dart wishlist remove <courseId>
 # Check if course is in wishlist
 dart run bin/uniplan.dart wishlist check <courseId>
 ```
+
+**Priority Levels:**
+- `1` - Highest priority (must-have course)
+- `2` - High priority
+- `3` - Medium priority
+- `4` - Low priority
+- `5` - Lowest priority (backup option)
 
 ### Timetable (시간표)
 
@@ -219,6 +232,26 @@ dart run bin/uniplan.dart courses list --api-url http://api.example.com
 The CLI stores configuration and tokens in `~/.uniplan/`:
 - `config.json` : Configuration settings
 - `token.json` : JWT access and refresh tokens
+
+### Korean Character Display (한글 표시)
+
+If Korean characters appear garbled in PowerShell/CMD:
+
+**PowerShell:**
+```powershell
+# Set UTF-8 encoding for current session
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+# Or permanently in PowerShell profile ($PROFILE)
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+```
+
+**CMD:**
+```cmd
+chcp 65001
+```
+
+**Recommended**: Use **Windows Terminal** or **PowerShell 7+** for the best Unicode support.
 
 ## Complete User Scenario
 

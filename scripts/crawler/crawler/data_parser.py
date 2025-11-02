@@ -218,6 +218,12 @@ class KHUDataParser:
             )
 
             if key in course_groups:
+                # 기존 과목명과 비교하여 더 짧은 것 선택 (괄호 없는 버전 우선)
+                existing_name = course_groups[key]['courseName']
+                new_name = course['courseName']
+                if len(new_name) < len(existing_name):
+                    course_groups[key]['courseName'] = new_name
+
                 # 기존 강의에 학과 추가
                 dept_code = course.get('departmentCode')
                 if dept_code and dept_code not in course_groups[key]['departmentCodes']:

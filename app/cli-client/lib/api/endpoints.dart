@@ -23,6 +23,7 @@ class Endpoints {
   // Timetable endpoints
   static const String timetables = '$apiVersion/timetables';
   static String timetable(int id) => '$timetables/$id';
+  static String timetableAlternatives(int id) => '$timetables/$id/alternatives';
   static String timetableAddCourse(int id) => '$timetables/$id/courses';
   static String timetableRemoveCourse(int timetableId, int courseId) =>
       '$timetables/$timetableId/courses/$courseId';

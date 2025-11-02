@@ -191,23 +191,40 @@ Courses (3):
 
 #### 4.4 Create Alternative Timetables (Plan B, C)
 
-Create alternative timetables for when courses fail:
+Create alternative timetables for when courses fail. The `alternative` command automatically copies the base timetable and excludes the failed course(s):
 
 ```bash
-# Plan B: If course 1 fails, take course 4 instead
-dart run bin/uniplan.dart timetable create "Plan B - Course 1 fails" 2025 "1학기"
-# Assuming this creates timetable ID 2
-dart run bin/uniplan.dart timetable add-course 2 4
-dart run bin/uniplan.dart timetable add-course 2 2
-dart run bin/uniplan.dart timetable add-course 2 3
+# Plan B: If course 1 fails, copy Plan A but exclude course 1
+dart run bin/uniplan.dart timetable alternative 1 "Plan B - Course 1 fails" 1
+# This creates timetable ID 2 with courses 2 and 3 (course 1 excluded)
+# Now course 1 is in the excludedCourseIds list and cannot be added
 
-# Plan C: If course 2 fails, take course 5 instead
-dart run bin/uniplan.dart timetable create "Plan C - Course 2 fails" 2025 "1학기"
-# Assuming this creates timetable ID 3
-dart run bin/uniplan.dart timetable add-course 3 1
+# Add replacement course 4 to Plan B
+dart run bin/uniplan.dart timetable add-course 2 4
+
+# Verify Plan B
+dart run bin/uniplan.dart timetable get 2
+# Output shows:
+# - Excluded Courses: course 1
+# - Courses: 2, 3, 4
+
+# Plan C: If course 2 fails, copy Plan A but exclude course 2
+dart run bin/uniplan.dart timetable alternative 1 "Plan C - Course 2 fails" 2
+# This creates timetable ID 3 with courses 1 and 3 (course 2 excluded)
+
+# Add replacement course 5 to Plan C
 dart run bin/uniplan.dart timetable add-course 3 5
-dart run bin/uniplan.dart timetable add-course 3 3
+
+# ❌ Trying to add excluded course will fail:
+# dart run bin/uniplan.dart timetable add-course 2 1
+# → Error: "제외된 과목은 추가할 수 없습니다: 1"
 ```
+
+**Benefits of using `alternative` command:**
+- Automatically copies all courses except excluded ones
+- Stores excluded courses in `excludedCourseIds` to prevent accidental re-addition
+- Inherits semester and year from base timetable
+- Validates against excluded courses when adding new courses
 
 #### 4.5 List All Your Timetables
 ```bash

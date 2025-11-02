@@ -7,7 +7,9 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "timetables", indexes = {
@@ -47,6 +49,13 @@ public class Timetable {
     @OneToMany(mappedBy = "timetable", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<TimetableItem> items = new ArrayList<>();
+
+    @ElementCollection
+    @CollectionTable(name = "timetable_excluded_courses",
+                     joinColumns = @JoinColumn(name = "timetable_id"))
+    @Column(name = "course_id")
+    @Builder.Default
+    private Set<Long> excludedCourseIds = new HashSet<>();
 
     public void addItem(TimetableItem item) {
         this.items.add(item);

@@ -137,13 +137,20 @@ dart run bin/uniplan.dart wishlist check <courseId>
 # Create new timetable
 dart run bin/uniplan.dart timetable create <name> <year> <semester>
 
+# Create alternative timetable (copy with excluded courses)
+dart run bin/uniplan.dart timetable alternative <baseTimetableId> <name> <excludedCourseId1> [excludedCourseId2...]
+
+# Examples
+dart run bin/uniplan.dart timetable alternative 1 "Plan B - CS101 failed" 101
+dart run bin/uniplan.dart timetable alternative 1 "Plan C - Multiple failed" 101 102
+
 # List all your timetables
 dart run bin/uniplan.dart timetable list
 
-# Get timetable details
+# Get timetable details (shows excludedCourseIds if any)
 dart run bin/uniplan.dart timetable get <timetableId>
 
-# Add course to timetable
+# Add course to timetable (validates against excludedCourseIds)
 dart run bin/uniplan.dart timetable add-course <timetableId> <courseId>
 
 # Remove course from timetable

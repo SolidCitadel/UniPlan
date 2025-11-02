@@ -73,6 +73,17 @@ public class TimetableController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "대안 시간표 생성",
+               description = "원본 시간표를 복사하여 대안 시간표를 생성합니다. 제외할 과목은 복사되지 않으며 excludedCourseIds에 추가됩니다.")
+    @PostMapping("/{timetableId}/alternatives")
+    public ResponseEntity<TimetableResponse> createAlternative(
+            @Parameter(hidden = true) @RequestHeader("X-User-Id") Long userId,
+            @PathVariable Long timetableId,
+            @Valid @RequestBody CreateAlternativeTimetableRequest request) {
+        TimetableResponse response = timetableService.createAlternative(userId, timetableId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
     @Operation(summary = "시간표에 강의 추가", description = "시간표에 강의를 추가합니다")
     @PostMapping("/{timetableId}/courses")
     public ResponseEntity<TimetableItemResponse> addCourse(

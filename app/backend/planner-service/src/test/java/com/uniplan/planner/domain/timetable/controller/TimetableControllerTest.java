@@ -3,12 +3,15 @@ package com.uniplan.planner.domain.timetable.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uniplan.planner.domain.scenario.repository.ScenarioRepository;
 import com.uniplan.planner.domain.timetable.dto.AddCourseRequest;
+import com.uniplan.planner.domain.timetable.dto.CreateAlternativeTimetableRequest;
 import com.uniplan.planner.domain.timetable.dto.CreateTimetableRequest;
 import com.uniplan.planner.domain.timetable.dto.UpdateTimetableRequest;
 import com.uniplan.planner.domain.timetable.entity.Timetable;
 import com.uniplan.planner.domain.timetable.entity.TimetableItem;
 import com.uniplan.planner.domain.timetable.repository.TimetableItemRepository;
 import com.uniplan.planner.domain.timetable.repository.TimetableRepository;
+
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -271,6 +274,158 @@ class TimetableControllerTest {
                 .andExpect(jsonPath("$.items[0].courseId").exists())
                 .andExpect(jsonPath("$.items[1].courseId").exists())
                 .andExpect(jsonPath("$.items[2].courseId").exists());
+    }
+
+    @Test
+    @DisplayName("대안 시간표 생성 - 제외 과목이 복사되지 않고 excludedCourseIds에 저장됨")
+    void createAlternativeTimetable() throws Exception {
+        // Given: 원본 시간표에 3개 강의 추가
+        Timetable baseTimetable = createTestTimetable(TEST_USER_ID, "Plan A", 2025, "1학기");
+        addCourseToTestTimetable(baseTimetable, 101L);
+        addCourseToTestTimetable(baseTimetable, 102L);
+        addCourseToTestTimetable(baseTimetable, 103L);
+
+        CreateAlternativeTimetableRequest request = CreateAlternativeTimetableRequest.builder()
+                .name("Plan B - CS101 failed")
+                .excludedCourseIds(Set.of(101L))
+                .build();
+
+        // When & Then: CS101 제외하고 복사
+        mockMvc.perform(post("/timetables/" + baseTimetable.getId() + "/alternatives")
+                        .header("X-User-Id", TEST_USER_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.userId").value(TEST_USER_ID))
+                .andExpect(jsonPath("$.name").value("Plan B - CS101 failed"))
+                .andExpect(jsonPath("$.openingYear").value(2025))
+                .andExpect(jsonPath("$.semester").value("1학기"))
+                .andExpect(jsonPath("$.items", hasSize(2)))  // CS102, CS103만 복사됨
+                .andExpect(jsonPath("$.excludedCourseIds", hasSize(1)))  // CS101 제외됨
+                .andExpect(jsonPath("$.excludedCourseIds[0]").value(101L));
+    }
+
+    @Test
+    @DisplayName("대안 시간표 생성 - 여러 과목 제외")
+    void createAlternativeTimetable_multipleExcluded() throws Exception {
+        // Given
+        Timetable baseTimetable = createTestTimetable(TEST_USER_ID, "Plan A", 2025, "1학기");
+        addCourseToTestTimetable(baseTimetable, 101L);
+        addCourseToTestTimetable(baseTimetable, 102L);
+        addCourseToTestTimetable(baseTimetable, 103L);
+        addCourseToTestTimetable(baseTimetable, 104L);
+
+        CreateAlternativeTimetableRequest request = CreateAlternativeTimetableRequest.builder()
+                .name("Plan C - Multiple failed")
+                .excludedCourseIds(Set.of(101L, 102L))
+                .build();
+
+        // When & Then
+        mockMvc.perform(post("/timetables/" + baseTimetable.getId() + "/alternatives")
+                        .header("X-User-Id", TEST_USER_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.items", hasSize(2)))  // CS103, CS104만 복사됨
+                .andExpect(jsonPath("$.excludedCourseIds", hasSize(2)));
+    }
+
+    @Test
+    @DisplayName("제외된 과목을 시간표에 추가 시도 시 실패")
+    void addExcludedCourseToTimetable_shouldFail() throws Exception {
+        // Given: CS101이 제외된 대안 시간표 생성
+        Timetable baseTimetable = createTestTimetable(TEST_USER_ID, "Plan A", 2025, "1학기");
+        addCourseToTestTimetable(baseTimetable, 101L);
+        addCourseToTestTimetable(baseTimetable, 102L);
+
+        CreateAlternativeTimetableRequest alternativeRequest = CreateAlternativeTimetableRequest.builder()
+                .name("Plan B - CS101 failed")
+                .excludedCourseIds(Set.of(101L))
+                .build();
+
+        String alternativeResponse = mockMvc.perform(post("/timetables/" + baseTimetable.getId() + "/alternatives")
+                        .header("X-User-Id", TEST_USER_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(alternativeRequest)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        Long alternativeTimetableId = objectMapper.readTree(alternativeResponse).get("id").asLong();
+
+        // When & Then: 제외된 CS101을 추가 시도 -> 409 Conflict
+        AddCourseRequest addCourseRequest = AddCourseRequest.builder()
+                .courseId(101L)
+                .build();
+
+        mockMvc.perform(post("/timetables/" + alternativeTimetableId + "/courses")
+                        .header("X-User-Id", TEST_USER_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(addCourseRequest)))
+                .andDo(print())
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("제외된 과목은 추가할 수 없습니다: 101"));
+    }
+
+    @Test
+    @DisplayName("제외되지 않은 과목은 정상적으로 추가 가능")
+    void addNonExcludedCourseToAlternativeTimetable() throws Exception {
+        // Given: CS101이 제외된 대안 시간표
+        Timetable baseTimetable = createTestTimetable(TEST_USER_ID, "Plan A", 2025, "1학기");
+        addCourseToTestTimetable(baseTimetable, 101L);
+
+        CreateAlternativeTimetableRequest alternativeRequest = CreateAlternativeTimetableRequest.builder()
+                .name("Plan B")
+                .excludedCourseIds(Set.of(101L))
+                .build();
+
+        String alternativeResponse = mockMvc.perform(post("/timetables/" + baseTimetable.getId() + "/alternatives")
+                        .header("X-User-Id", TEST_USER_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(alternativeRequest)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        Long alternativeTimetableId = objectMapper.readTree(alternativeResponse).get("id").asLong();
+
+        // When & Then: 제외되지 않은 CS104 추가 -> 성공
+        AddCourseRequest addCourseRequest = AddCourseRequest.builder()
+                .courseId(104L)
+                .build();
+
+        mockMvc.perform(post("/timetables/" + alternativeTimetableId + "/courses")
+                        .header("X-User-Id", TEST_USER_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(addCourseRequest)))
+                .andDo(print())
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.courseId").value(104L));
+    }
+
+    @Test
+    @DisplayName("대안 시간표 생성 - 다른 사용자의 시간표로 생성 시도 시 실패")
+    void createAlternativeTimetable_otherUser() throws Exception {
+        // Given: 다른 사용자의 시간표
+        Timetable otherTimetable = createTestTimetable(OTHER_USER_ID, "다른 사용자 시간표", 2025, "1학기");
+
+        CreateAlternativeTimetableRequest request = CreateAlternativeTimetableRequest.builder()
+                .name("Plan B")
+                .excludedCourseIds(Set.of(101L))
+                .build();
+
+        // When & Then: 권한 없음 -> 404
+        mockMvc.perform(post("/timetables/" + otherTimetable.getId() + "/alternatives")
+                        .header("X-User-Id", TEST_USER_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isNotFound());
     }
 
     // Helper methods

@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Data
@@ -24,6 +25,7 @@ public class TimetableResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<TimetableItemResponse> items;
+    private Set<Long> excludedCourseIds;
 
     public static TimetableResponse from(Timetable timetable) {
         return TimetableResponse.builder()
@@ -37,6 +39,7 @@ public class TimetableResponse {
                 .items(timetable.getItems().stream()
                         .map(TimetableItemResponse::from)
                         .collect(Collectors.toList()))
+                .excludedCourseIds(timetable.getExcludedCourseIds())
                 .build();
     }
 }

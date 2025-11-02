@@ -18,6 +18,9 @@ class TimetableCommand {
         case 'create':
           await _create(args);
           break;
+        case 'alternative':
+          await _alternative(args);
+          break;
         case 'list':
           await _list(args);
           break;
@@ -74,6 +77,61 @@ class TimetableCommand {
 
     final timetable = response.json;
     TerminalUtils.printSuccess('Timetable created successfully!');
+    _printTimetableSummary(timetable);
+  }
+
+  Future<void> _alternative(List<String> args) async {
+    if (args.length < 3) {
+      TerminalUtils.printError(
+        'Usage: uniplan timetable alternative <baseTimetableId> <name> <excludedCourseId1> [excludedCourseId2...]',
+      );
+      TerminalUtils.printInfo(
+        'Example: uniplan timetable alternative 1 "Plan B - CS101 failed" 101',
+      );
+      return;
+    }
+
+    final baseTimetableId = int.tryParse(args[1]);
+    if (baseTimetableId == null) {
+      TerminalUtils.printError('Invalid base timetable ID: ${args[1]}');
+      return;
+    }
+
+    final name = args[2];
+
+    // Parse excluded course IDs (from args[3] onwards)
+    final excludedCourseIds = <int>[];
+    for (var i = 3; i < args.length; i++) {
+      final courseId = int.tryParse(args[i]);
+      if (courseId == null) {
+        TerminalUtils.printError('Invalid course ID: ${args[i]}');
+        return;
+      }
+      excludedCourseIds.add(courseId);
+    }
+
+    if (excludedCourseIds.isEmpty) {
+      TerminalUtils.printError('At least one excluded course ID is required');
+      return;
+    }
+
+    TerminalUtils.printInfo(
+      'Creating alternative timetable from timetable $baseTimetableId...',
+    );
+    TerminalUtils.printInfo(
+      'Excluding courses: ${excludedCourseIds.join(", ")}',
+    );
+
+    final response = await _apiClient.post(
+      Endpoints.timetableAlternatives(baseTimetableId),
+      body: {
+        'name': name,
+        'excludedCourseIds': excludedCourseIds,
+      },
+    );
+
+    final timetable = response.json;
+    TerminalUtils.printSuccess('Alternative timetable created successfully!');
     _printTimetableSummary(timetable);
   }
 
@@ -243,6 +301,15 @@ class TimetableCommand {
   void _printTimetableDetails(Map<String, dynamic> timetable) {
     _printTimetableSummary(timetable);
 
+    // Show excluded courses if any
+    final excludedCourseIds = timetable['excludedCourseIds'] as List?;
+    if (excludedCourseIds != null && excludedCourseIds.isNotEmpty) {
+      print('\n${TerminalUtils.bold('Excluded Courses')} (${excludedCourseIds.length}):');
+      for (final courseId in excludedCourseIds) {
+        print('  - Course ID: $courseId');
+      }
+    }
+
     final items = timetable['items'] as List?;
     if (items != null && items.isNotEmpty) {
       print('\n${TerminalUtils.bold('Courses')} (${items.length}):');
@@ -259,15 +326,18 @@ class TimetableCommand {
     print('''
 Timetable Commands:
 
-  create <name> <year> <semester>      Create a new timetable
-  list [--openingYear=X --semester=Y]  List all timetables (with optional filters)
-  get <timetableId>                    Get timetable details
-  add-course <timetableId> <courseId>  Add a course to timetable
-  remove-course <timetableId> <courseId>  Remove a course from timetable
-  delete <timetableId>                 Delete a timetable
+  create <name> <year> <semester>                Create a new timetable
+  alternative <baseId> <name> <excludedId...>    Create alternative timetable (copy with excluded courses)
+  list [--openingYear=X --semester=Y]            List all timetables (with optional filters)
+  get <timetableId>                              Get timetable details
+  add-course <timetableId> <courseId>            Add a course to timetable
+  remove-course <timetableId> <courseId>         Remove a course from timetable
+  delete <timetableId>                           Delete a timetable
 
 Examples:
   uniplan timetable create "Plan A" 2025 "1학기"
+  uniplan timetable alternative 1 "Plan B - CS101 failed" 101
+  uniplan timetable alternative 1 "Plan C - Multiple failed" 101 102
   uniplan timetable list
   uniplan timetable list --openingYear=2025 --semester=1학기
   uniplan timetable get 1

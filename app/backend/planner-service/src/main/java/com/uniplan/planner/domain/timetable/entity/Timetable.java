@@ -50,7 +50,7 @@ public class Timetable {
     @Builder.Default
     private List<TimetableItem> items = new ArrayList<>();
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "timetable_excluded_courses",
                      joinColumns = @JoinColumn(name = "timetable_id"))
     @Column(name = "course_id")

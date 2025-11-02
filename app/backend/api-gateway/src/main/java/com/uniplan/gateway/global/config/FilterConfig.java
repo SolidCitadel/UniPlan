@@ -59,7 +59,7 @@ public class FilterConfig {
 
                 // Planner Service - 인증 필요
                 .route("planner-service", r -> r
-                        .path("/api/v1/planner/**", "/api/v1/timetables/**", "/api/v1/scenarios/**", "/api/v1/wishlist/**")
+                        .path("/api/v1/planner/**", "/api/v1/timetables/**", "/api/v1/scenarios/**", "/api/v1/wishlist/**", "/api/v1/registrations/**")
                         .filters(f -> f
                                 .filter(authenticationHeaderFilter.apply(new AuthenticationHeaderFilter.Config()))
                                 .rewritePath("/api/v1/(?<segment>.*)", "/${segment}"))

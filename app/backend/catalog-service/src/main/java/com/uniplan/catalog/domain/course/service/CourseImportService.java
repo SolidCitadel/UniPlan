@@ -11,6 +11,7 @@ import com.uniplan.catalog.domain.course.repository.CollegeRepository;
 import com.uniplan.catalog.domain.course.repository.CourseRepository;
 import com.uniplan.catalog.domain.course.repository.CourseTypeRepository;
 import com.uniplan.catalog.domain.course.repository.DepartmentRepository;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ public class CourseImportService {
     private final DepartmentRepository departmentRepository;
     private final CourseTypeRepository courseTypeRepository;
     private final CollegeRepository collegeRepository;
+    private final EntityManager entityManager;
 
     private static final int BATCH_SIZE = 100;
     private static final String UNKNOWN_COLLEGE_CODE = "UNKNOWN";
@@ -122,14 +124,40 @@ public class CourseImportService {
 
                 // Save in batches
                 if (courseBatch.size() >= BATCH_SIZE || i == requests.size() - 1) {
-                    courseRepository.saveAll(courseBatch);
-                    courseBatch.clear();
-                    log.info("Imported {} / {} courses (skipped: {})", successCount, totalCount, skippedCount);
+                    try {
+                        courseRepository.saveAll(courseBatch);
+                        entityManager.flush();  // Explicitly flush to database
+                        entityManager.clear();  // Clear persistence context
+                        courseBatch.clear();
+                        log.info("Imported {} / {} courses (skipped: {})", successCount, totalCount, skippedCount);
+                    } catch (Exception batchError) {
+                        // If batch save fails, clear the persistence context and retry one by one
+                        entityManager.clear();
+                        log.warn("Batch save failed, retrying courses one by one: {}", batchError.getMessage());
+
+                        int batchFailures = 0;
+                        for (Course failedCourse : courseBatch) {
+                            try {
+                                courseRepository.save(failedCourse);
+                                entityManager.flush();
+                            } catch (Exception individualError) {
+                                batchFailures++;
+                                failureCount++;
+                                successCount--;  // Decrement since we counted it earlier
+                                log.error("Failed to save course: {} - {}",
+                                    failedCourse.getCourseCode(), individualError.getMessage());
+                                entityManager.clear();  // Clear after each failure
+                            }
+                        }
+                        courseBatch.clear();
+                        log.info("Batch completed with {} failures", batchFailures);
+                    }
                 }
 
             } catch (Exception e) {
                 failureCount++;
-                log.error("Failed to import course: {} - {}", request.getCourseCode(), e.getMessage(), e);
+                log.error("Failed to process course: {} - {}", request.getCourseCode(), e.getMessage());
+                entityManager.clear();  // Clear persistence context on error
             }
         }
 
@@ -207,5 +235,26 @@ public class CourseImportService {
 
                 return saved;
             });
+    }
+
+    /**
+     * Delete all courses from database
+     */
+    @Transactional
+    public ImportResponse deleteAllCourses() {
+        log.info("Deleting all courses...");
+
+        long count = courseRepository.count();
+        courseRepository.deleteAll();
+
+        String message = String.format("Successfully deleted %d courses", count);
+        log.info(message);
+
+        return ImportResponse.builder()
+            .message(message)
+            .totalCount((int) count)
+            .successCount((int) count)
+            .failureCount(0)
+            .build();
     }
 }

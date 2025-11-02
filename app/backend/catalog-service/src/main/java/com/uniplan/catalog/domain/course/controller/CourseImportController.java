@@ -39,4 +39,12 @@ public class CourseImportController {
         ImportResponse response = courseImportService.importCourses(requests);
         return ResponseEntity.ok(response);
     }
+
+    @DeleteMapping("/courses")
+    @Operation(summary = "Delete all courses", description = "Delete all courses from database (use with caution)")
+    public ResponseEntity<ImportResponse> deleteAllCourses() {
+        log.warn("Received request to delete all courses");
+        ImportResponse response = courseImportService.deleteAllCourses();
+        return ResponseEntity.ok(response);
+    }
 }

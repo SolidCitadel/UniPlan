@@ -69,7 +69,7 @@ class ScenarioCommand {
       Endpoints.scenarios,
       body: {
         'name': name,
-        'timetableId': timetableId,
+        'existingTimetableId': timetableId,
       },
     );
 
@@ -113,7 +113,7 @@ class ScenarioCommand {
       body: {
         'name': name,
         'failedCourseId': failedCourseId,
-        'timetableId': timetableId,
+        'existingTimetableId': timetableId,
       },
     );
 

@@ -24,6 +24,11 @@ public class ScenarioService {
 
     @Transactional
     public ScenarioResponse createRootScenario(Long userId, CreateScenarioRequest request) {
+        // 시간표 정보 검증
+        if (request.getExistingTimetableId() == null && request.getTimetableRequest() == null) {
+            throw new IllegalArgumentException("existingTimetableId 또는 timetableRequest 중 하나는 필수입니다");
+        }
+
         // 시간표 생성 또는 기존 시간표 사용
         Timetable timetable = createOrGetTimetable(userId, request);
 
@@ -44,12 +49,23 @@ public class ScenarioService {
     @Transactional
     public ScenarioResponse createAlternativeScenario(Long userId, Long parentScenarioId,
                                                      CreateAlternativeScenarioRequest request) {
+        // 시간표 정보 검증
+        if (request.getExistingTimetableId() == null && request.getTimetableRequest() == null) {
+            throw new IllegalArgumentException("existingTimetableId 또는 timetableRequest 중 하나는 필수입니다");
+        }
+
         // 부모 시나리오 조회
         Scenario parentScenario = scenarioRepository.findByIdAndUserId(parentScenarioId, userId)
                 .orElseThrow(() -> new ScenarioNotFoundException(parentScenarioId));
 
-        // 시간표 생성
-        Timetable timetable = createTimetableFromRequest(userId, request.getTimetableRequest());
+        // 시간표 생성 또는 기존 시간표 사용
+        Timetable timetable;
+        if (request.getExistingTimetableId() != null) {
+            timetable = timetableRepository.findByIdAndUserId(request.getExistingTimetableId(), userId)
+                    .orElseThrow(() -> new TimetableNotFoundException(request.getExistingTimetableId()));
+        } else {
+            timetable = createTimetableFromRequest(userId, request.getTimetableRequest());
+        }
 
         Scenario alternativeScenario = Scenario.builder()
                 .userId(userId)

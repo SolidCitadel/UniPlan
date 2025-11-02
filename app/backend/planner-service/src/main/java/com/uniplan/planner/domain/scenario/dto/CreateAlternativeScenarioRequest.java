@@ -24,10 +24,12 @@ public class CreateAlternativeScenarioRequest {
     @NotNull(message = "실패 강의 ID는 필수입니다")
     private Long failedCourseId;
 
-    // 시간표 생성 정보
-    @NotNull(message = "시간표 정보는 필수입니다")
+    // 시간표 생성 정보 (timetableRequest 또는 existingTimetableId 둘 중 하나만 사용)
     @Valid
     private CreateTimetableRequest timetableRequest;
+
+    // 기존 시간표 ID 사용
+    private Long existingTimetableId;
 
     // 형제 노드 간 순서
     private Integer orderIndex;

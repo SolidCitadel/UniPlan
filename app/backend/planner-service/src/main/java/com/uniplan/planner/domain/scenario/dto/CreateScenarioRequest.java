@@ -20,11 +20,10 @@ public class CreateScenarioRequest {
 
     private String description;
 
-    // 시간표 생성 정보
-    @NotNull(message = "시간표 정보는 필수입니다")
+    // 시간표 생성 정보 (timetableRequest 또는 existingTimetableId 둘 중 하나만 사용)
     @Valid
     private CreateTimetableRequest timetableRequest;
 
-    // 기존 시간표 ID 사용 (timetableRequest와 둘 중 하나만 사용)
+    // 기존 시간표 ID 사용
     private Long existingTimetableId;
 }

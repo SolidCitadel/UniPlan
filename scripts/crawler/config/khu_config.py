@@ -14,8 +14,8 @@ LOGIN_REFERER = "https://sugang.khu.ac.kr/login?attribute=loginMain&lang=ko&logi
 
 # API 파라미터 (p_term)용
 SEMESTER_CODES = {
-    1: "20",  # 1학기 → p_term="20"
-    2: "10",  # 2학기 → p_term="10"
+    1: "10",  # 1학기 → p_term="10"
+    2: "20",  # 2학기 → p_term="20"
     "summer": "15",  # 여름학기 → p_term="15"
     "winter": "25",  # 겨울학기 → p_term="25"
 }

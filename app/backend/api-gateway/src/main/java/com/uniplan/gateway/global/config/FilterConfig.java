@@ -73,6 +73,20 @@ public class FilterConfig {
                                 .rewritePath("/api/v1/(?<segment>.*)", "/${segment}"))
                         .uri(catalogServiceUri))
 
+                // Admin API - User Service (개발 환경 전용, 인증 불필요)
+                .route("user-service-admin", r -> r
+                        .path("/api/v1/admin/user/**")
+                        .filters(f -> f
+                                .rewritePath("/api/v1/admin/user/(?<segment>.*)", "/admin/${segment}"))
+                        .uri(userServiceUri))
+
+                // Admin API - Planner Service (개발 환경 전용, 인증 불필요)
+                .route("planner-service-admin", r -> r
+                        .path("/api/v1/admin/planner/**")
+                        .filters(f -> f
+                                .rewritePath("/api/v1/admin/planner/(?<segment>.*)", "/admin/${segment}"))
+                        .uri(plannerServiceUri))
+
                 .build();
     }
 }

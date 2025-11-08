@@ -4,6 +4,8 @@ import com.uniplan.planner.domain.wishlist.dto.AddToWishlistRequest;
 import com.uniplan.planner.domain.wishlist.dto.WishlistItemResponse;
 import com.uniplan.planner.domain.wishlist.entity.WishlistItem;
 import com.uniplan.planner.domain.wishlist.repository.WishlistItemRepository;
+import com.uniplan.planner.global.client.CatalogClient;
+import com.uniplan.planner.global.client.dto.CourseSimpleResponse;
 import com.uniplan.planner.global.exception.DuplicateWishlistItemException;
 import com.uniplan.planner.global.exception.WishlistItemNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,6 +22,7 @@ import java.util.stream.Collectors;
 public class WishlistService {
 
     private final WishlistItemRepository wishlistItemRepository;
+    private final CatalogClient catalogClient;
 
     @Transactional
     public WishlistItemResponse addToWishlist(Long userId, AddToWishlistRequest request) {
@@ -40,8 +44,29 @@ public class WishlistService {
 
     public List<WishlistItemResponse> getMyWishlist(Long userId) {
         List<WishlistItem> items = wishlistItemRepository.findByUserIdOrderByPriorityAsc(userId);
+
+        if (items.isEmpty()) {
+            return List.of();
+        }
+
+        // Extract course IDs and fetch course details from catalog-service
+        List<Long> courseIds = items.stream()
+                .map(WishlistItem::getCourseId)
+                .collect(Collectors.toList());
+
+        Map<Long, CourseSimpleResponse> courseMap = catalogClient.getCoursesByIds(courseIds);
+
+        // Combine wishlist items with course information
         return items.stream()
-                .map(WishlistItemResponse::from)
+                .map(item -> {
+                    CourseSimpleResponse course = courseMap.get(item.getCourseId());
+                    if (course != null) {
+                        return WishlistItemResponse.from(item, course.getCourseName(), course.getProfessor());
+                    } else {
+                        // If course not found, return without course details
+                        return WishlistItemResponse.from(item, null, null);
+                    }
+                })
                 .collect(Collectors.toList());
     }
 

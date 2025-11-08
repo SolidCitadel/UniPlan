@@ -18,6 +18,11 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.H2Dialect
 
+# 외부 서비스 URL (테스트용)
+services:
+  catalog:
+    url: http://localhost:8083
+
 logging:
   level:
     com.uniplan.planner: DEBUG

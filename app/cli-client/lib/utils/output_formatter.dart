@@ -35,9 +35,25 @@ class OutputFormatter {
     if (body != null && body.isNotEmpty) {
       try {
         final json = jsonDecode(body);
-        print(JsonEncoder.withIndent('  ').convert(json));
+        final prettyJson = JsonEncoder.withIndent('  ').convert(json);
+
+        // Truncate if more than 20 lines
+        final lines = prettyJson.split('\n');
+        if (lines.length > 20) {
+          print(lines.take(20).join('\n'));
+          print(TerminalUtils.gray('... (${lines.length - 20} more lines omitted)'));
+        } else {
+          print(prettyJson);
+        }
       } catch (e) {
-        print(body);
+        // Not JSON, print as is (also truncate if too long)
+        final lines = body.split('\n');
+        if (lines.length > 20) {
+          print(lines.take(20).join('\n'));
+          print(TerminalUtils.gray('... (${lines.length - 20} more lines omitted)'));
+        } else {
+          print(body);
+        }
       }
     }
   }
@@ -58,9 +74,25 @@ class OutputFormatter {
     if (body != null && body.isNotEmpty) {
       try {
         final json = jsonDecode(body);
-        print(JsonEncoder.withIndent('  ').convert(json));
+        final prettyJson = JsonEncoder.withIndent('  ').convert(json);
+
+        // Truncate if more than 20 lines
+        final lines = prettyJson.split('\n');
+        if (lines.length > 20) {
+          print(lines.take(20).join('\n'));
+          print(TerminalUtils.gray('... (${lines.length - 20} more lines omitted)'));
+        } else {
+          print(prettyJson);
+        }
       } catch (e) {
-        print(body);
+        // Not JSON, print as is (also truncate if too long)
+        final lines = body.split('\n');
+        if (lines.length > 20) {
+          print(lines.take(20).join('\n'));
+          print(TerminalUtils.gray('... (${lines.length - 20} more lines omitted)'));
+        } else {
+          print(body);
+        }
       }
     }
 

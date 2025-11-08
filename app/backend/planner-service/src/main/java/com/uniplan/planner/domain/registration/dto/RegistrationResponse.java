@@ -3,6 +3,7 @@ package com.uniplan.planner.domain.registration.dto;
 import com.uniplan.planner.domain.registration.entity.Registration;
 import com.uniplan.planner.domain.registration.entity.RegistrationStatus;
 import com.uniplan.planner.domain.scenario.dto.ScenarioResponse;
+import com.uniplan.planner.global.client.dto.CourseSimpleResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Data
@@ -36,6 +38,24 @@ public class RegistrationResponse {
                 .userId(registration.getUserId())
                 .startScenario(ScenarioResponse.from(registration.getStartScenario()))
                 .currentScenario(ScenarioResponse.from(registration.getCurrentScenario()))
+                .status(registration.getStatus())
+                .startedAt(registration.getStartedAt())
+                .completedAt(registration.getCompletedAt())
+                .succeededCourses(registration.getAllSucceededCourses())
+                .failedCourses(registration.getAllFailedCourses())
+                .canceledCourses(registration.getAllCanceledCourses())
+                .steps(registration.getSteps().stream()
+                        .map(RegistrationStepResponse::from)
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
+    public static RegistrationResponse from(Registration registration, Map<Long, CourseSimpleResponse> courseMap) {
+        return RegistrationResponse.builder()
+                .id(registration.getId())
+                .userId(registration.getUserId())
+                .startScenario(ScenarioResponse.from(registration.getStartScenario(), courseMap))
+                .currentScenario(ScenarioResponse.from(registration.getCurrentScenario(), courseMap))
                 .status(registration.getStatus())
                 .startedAt(registration.getStartedAt())
                 .completedAt(registration.getCompletedAt())

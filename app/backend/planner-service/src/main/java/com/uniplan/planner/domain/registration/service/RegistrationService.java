@@ -8,6 +8,9 @@ import com.uniplan.planner.domain.registration.repository.RegistrationRepository
 import com.uniplan.planner.domain.registration.repository.RegistrationStepRepository;
 import com.uniplan.planner.domain.scenario.entity.Scenario;
 import com.uniplan.planner.domain.scenario.repository.ScenarioRepository;
+import com.uniplan.planner.domain.timetable.entity.TimetableItem;
+import com.uniplan.planner.global.client.CatalogClient;
+import com.uniplan.planner.global.client.dto.CourseSimpleResponse;
 import com.uniplan.planner.global.exception.RegistrationNotFoundException;
 import com.uniplan.planner.global.exception.ScenarioNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -15,8 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,6 +30,7 @@ public class RegistrationService {
     private final RegistrationRepository registrationRepository;
     private final RegistrationStepRepository registrationStepRepository;
     private final ScenarioRepository scenarioRepository;
+    private final CatalogClient catalogClient;
 
     @Transactional
     public RegistrationResponse startRegistration(Long userId, StartRegistrationRequest request) {
@@ -99,7 +102,16 @@ public class RegistrationService {
     public RegistrationResponse getRegistration(Long userId, Long registrationId) {
         Registration registration = registrationRepository.findByIdAndUserId(registrationId, userId)
                 .orElseThrow(() -> new RegistrationNotFoundException(registrationId));
-        return RegistrationResponse.from(registration);
+
+        // Collect all course IDs from start and current scenarios
+        Set<Long> allCourseIds = new HashSet<>();
+        collectCourseIdsFromScenario(registration.getStartScenario(), allCourseIds);
+        collectCourseIdsFromScenario(registration.getCurrentScenario(), allCourseIds);
+
+        // Fetch course details
+        Map<Long, CourseSimpleResponse> courseMap = catalogClient.getCoursesByIds(new ArrayList<>(allCourseIds));
+
+        return RegistrationResponse.from(registration, courseMap);
     }
 
     public List<RegistrationResponse> getUserRegistrations(Long userId) {
@@ -161,5 +173,16 @@ public class RegistrationService {
     public void deleteAllUserRegistrations(Long userId) {
         List<Registration> registrations = registrationRepository.findByUserId(userId);
         registrationRepository.deleteAll(registrations);
+    }
+
+    /**
+     * Helper method to collect course IDs from a scenario's timetable
+     */
+    private void collectCourseIdsFromScenario(Scenario scenario, Set<Long> courseIds) {
+        if (scenario != null && scenario.getTimetable() != null) {
+            scenario.getTimetable().getItems().stream()
+                    .map(TimetableItem::getCourseId)
+                    .forEach(courseIds::add);
+        }
     }
 }

@@ -5,6 +5,9 @@ import com.uniplan.planner.domain.timetable.entity.Timetable;
 import com.uniplan.planner.domain.timetable.entity.TimetableItem;
 import com.uniplan.planner.domain.timetable.repository.TimetableItemRepository;
 import com.uniplan.planner.domain.timetable.repository.TimetableRepository;
+import com.uniplan.planner.global.client.CatalogClient;
+import com.uniplan.planner.global.client.dto.CourseFullResponse;
+import com.uniplan.planner.global.client.dto.CourseSimpleResponse;
 import com.uniplan.planner.global.exception.DuplicateCourseException;
 import com.uniplan.planner.global.exception.ExcludedCourseException;
 import com.uniplan.planner.global.exception.TimetableNotFoundException;
@@ -13,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,6 +26,7 @@ public class TimetableService {
 
     private final TimetableRepository timetableRepository;
     private final TimetableItemRepository timetableItemRepository;
+    private final CatalogClient catalogClient;
 
     @Transactional
     public TimetableResponse createTimetable(Long userId, CreateTimetableRequest request) {
@@ -38,22 +43,49 @@ public class TimetableService {
 
     public List<TimetableResponse> getUserTimetables(Long userId) {
         List<Timetable> timetables = timetableRepository.findByUserId(userId);
+
+        // Collect all course IDs from all timetables
+        List<Long> allCourseIds = timetables.stream()
+                .flatMap(t -> t.getItems().stream())
+                .map(TimetableItem::getCourseId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        Map<Long, CourseSimpleResponse> courseMap = catalogClient.getCoursesByIds(allCourseIds);
+
         return timetables.stream()
-                .map(TimetableResponse::from)
+                .map(t -> TimetableResponse.from(t, courseMap))
                 .collect(Collectors.toList());
     }
 
     public List<TimetableResponse> getUserTimetablesBySemester(Long userId, Integer openingYear, String semester) {
         List<Timetable> timetables = timetableRepository.findByUserIdAndOpeningYearAndSemester(userId, openingYear, semester);
+
+        // Collect all course IDs from all timetables
+        List<Long> allCourseIds = timetables.stream()
+                .flatMap(t -> t.getItems().stream())
+                .map(TimetableItem::getCourseId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        Map<Long, CourseSimpleResponse> courseMap = catalogClient.getCoursesByIds(allCourseIds);
+
         return timetables.stream()
-                .map(TimetableResponse::from)
+                .map(t -> TimetableResponse.from(t, courseMap))
                 .collect(Collectors.toList());
     }
 
     public TimetableResponse getTimetable(Long userId, Long timetableId) {
         Timetable timetable = timetableRepository.findByIdAndUserId(timetableId, userId)
                 .orElseThrow(() -> new TimetableNotFoundException(timetableId));
-        return TimetableResponse.from(timetable);
+
+        // Fetch full course details for timetable view
+        List<Long> courseIds = timetable.getItems().stream()
+                .map(TimetableItem::getCourseId)
+                .collect(Collectors.toList());
+        Map<Long, CourseFullResponse> courseMap = catalogClient.getFullCoursesByIds(courseIds);
+
+        return TimetableResponse.fromWithFullCourses(timetable, courseMap);
     }
 
     @Transactional
@@ -62,7 +94,14 @@ public class TimetableService {
                 .orElseThrow(() -> new TimetableNotFoundException(timetableId));
 
         timetable.updateName(request.getName());
-        return TimetableResponse.from(timetable);
+
+        // Fetch course details
+        List<Long> courseIds = timetable.getItems().stream()
+                .map(TimetableItem::getCourseId)
+                .collect(Collectors.toList());
+        Map<Long, CourseSimpleResponse> courseMap = catalogClient.getCoursesByIds(courseIds);
+
+        return TimetableResponse.from(timetable, courseMap);
     }
 
     @Transactional
@@ -99,7 +138,14 @@ public class TimetableService {
         }
 
         Timetable savedTimetable = timetableRepository.save(alternativeTimetable);
-        return TimetableResponse.from(savedTimetable);
+
+        // Fetch course details
+        List<Long> courseIds = savedTimetable.getItems().stream()
+                .map(TimetableItem::getCourseId)
+                .collect(Collectors.toList());
+        Map<Long, CourseSimpleResponse> courseMap = catalogClient.getCoursesByIds(courseIds);
+
+        return TimetableResponse.from(savedTimetable, courseMap);
     }
 
     @Transactional
@@ -123,7 +169,14 @@ public class TimetableService {
                 .build();
 
         TimetableItem savedItem = timetableItemRepository.save(item);
-        return TimetableItemResponse.from(savedItem);
+
+        // Fetch course details
+        CourseSimpleResponse course = catalogClient.getCourseById(request.getCourseId());
+        if (course != null) {
+            return TimetableItemResponse.from(savedItem, course.getCourseName(), course.getProfessor());
+        } else {
+            return TimetableItemResponse.from(savedItem, null, null);
+        }
     }
 
     @Transactional

@@ -201,8 +201,12 @@ class ScenarioCommand {
     final response = await _apiClient.get(Endpoints.scenarioTree(scenarioId));
     final scenario = response.json;
 
+    // Build courseId -> courseName map from entire tree
+    final courseMap = <int, String>{};
+    _buildCourseMap(scenario, courseMap);
+
     TerminalUtils.printHeader('Scenario Tree');
-    _printScenarioTree(scenario, 0);
+    _printScenarioTree(scenario, 0, courseMap);
   }
 
   Future<void> _navigate(List<String> args) async {
@@ -295,21 +299,54 @@ class ScenarioCommand {
     }
   }
 
-  void _printScenarioTree(Map<String, dynamic> scenario, int level) {
+  void _buildCourseMap(Map<String, dynamic> scenario, Map<int, String> courseMap) {
+    // Add courses from current scenario's timetable
+    final timetable = scenario['timetable'] as Map<String, dynamic>?;
+    if (timetable != null) {
+      final items = timetable['items'] as List?;
+      if (items != null) {
+        for (final item in items) {
+          final i = item as Map<String, dynamic>;
+          final courseId = i['courseId'] as int?;
+          final courseName = i['courseName']?.toString();
+          if (courseId != null && courseName != null) {
+            courseMap[courseId] = courseName;
+          }
+        }
+      }
+    }
+
+    // Recursively build from children
+    final children = scenario['childScenarios'] as List?;
+    if (children != null) {
+      for (final child in children) {
+        _buildCourseMap(child as Map<String, dynamic>, courseMap);
+      }
+    }
+  }
+
+  void _printScenarioTree(Map<String, dynamic> scenario, int level, Map<int, String> courseMap) {
     final indent = '  ' * level;
     final marker = level == 0 ? '' : '└─ ';
 
-    final failedCourseIds = scenario['failedCourseIds'] as List?;
-    final failedInfo = (failedCourseIds != null && failedCourseIds.isNotEmpty)
-        ? ' (Courses ${failedCourseIds.join(', ')} fail)'
-        : '';
+    final timetable = scenario['timetable'] as Map<String, dynamic>?;
+    final timetableName = timetable?['name']?.toString() ?? 'Unknown';
 
-    print('$indent$marker${scenario['name']}$failedInfo (ID: ${scenario['id']})');
+    final failedCourseIds = scenario['failedCourseIds'] as List?;
+    String failedInfo = '';
+    if (failedCourseIds != null && failedCourseIds.isNotEmpty) {
+      final failedCourseNames = failedCourseIds
+          .map((id) => courseMap[id] ?? 'Course $id')
+          .join(', ');
+      failedInfo = ' (${failedCourseNames} 실패 → $timetableName)';
+    }
+
+    print('$indent$marker${scenario['name']}$failedInfo');
 
     final children = scenario['childScenarios'] as List?;
     if (children != null && children.isNotEmpty) {
       for (final child in children) {
-        _printScenarioTree(child as Map<String, dynamic>, level + 1);
+        _printScenarioTree(child as Map<String, dynamic>, level + 1, courseMap);
       }
     }
   }

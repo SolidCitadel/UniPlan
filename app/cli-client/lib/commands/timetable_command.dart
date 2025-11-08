@@ -254,32 +254,17 @@ class TimetableCommand {
       return;
     }
 
-    TerminalUtils.printInfo('\nFetching course details...');
+    // Course details are already included in items from backend
+    final courseDetails = items.cast<Map<String, dynamic>>();
 
-    // Fetch course details for each item
-    final courseDetails = <Map<String, dynamic>>[];
-    for (final item in items) {
-      final i = item as Map<String, dynamic>;
-      final courseId = i['courseId'];
-      try {
-        final courseResponse = await _apiClient.get('${Endpoints.courses}/$courseId');
-        final course = courseResponse.json;
-
-        if (debug) {
-          print('\n--- DEBUG: Course $courseId ---');
-          print('classTimes: ${course['classTimes']}');
-          print('classTimes type: ${course['classTimes'].runtimeType}');
-        }
-
-        courseDetails.add(course);
-      } catch (e) {
-        TerminalUtils.printWarning('Failed to fetch course $courseId: $e');
+    if (debug) {
+      for (final course in courseDetails) {
+        print('\n--- DEBUG: Course ${course['courseId']} ---');
+        print('courseName: ${course['courseName']}');
+        print('professor: ${course['professor']}');
+        print('classTimes: ${course['classTimes']}');
+        print('classTimes type: ${course['classTimes'].runtimeType}');
       }
-    }
-
-    if (courseDetails.isEmpty) {
-      TerminalUtils.printError('No course details could be fetched.');
-      return;
     }
 
     // Determine which columns to display
@@ -512,7 +497,9 @@ class TimetableCommand {
       print('\n${TerminalUtils.bold('Courses')} (${items.length}):');
       for (final item in items) {
         final i = item as Map<String, dynamic>;
-        print('  - Course ID: ${i['courseId']}');
+        final courseName = i['courseName'] ?? 'N/A';
+        final professor = i['professor'] ?? 'N/A';
+        print('  - ${i['courseId']}: $courseName ($professor)');
       }
     } else {
       print('\n${TerminalUtils.gray('No courses in this timetable.')}');

@@ -20,6 +20,11 @@ spring:
         order_updates: true
     open-in-view: false
 
+# 외부 서비스 URL
+services:
+  catalog:
+    url: http://localhost:8083
+
 # 로깅
 logging:
   level:

@@ -17,6 +17,8 @@ public class WishlistItemResponse {
     private Long id;
     private Long userId;
     private Long courseId;
+    private String courseName;
+    private String professor;
     private Integer priority;
     private LocalDateTime addedAt;
 
@@ -25,6 +27,18 @@ public class WishlistItemResponse {
                 .id(item.getId())
                 .userId(item.getUserId())
                 .courseId(item.getCourseId())
+                .priority(item.getPriority())
+                .addedAt(item.getAddedAt())
+                .build();
+    }
+
+    public static WishlistItemResponse from(WishlistItem item, String courseName, String professor) {
+        return WishlistItemResponse.builder()
+                .id(item.getId())
+                .userId(item.getUserId())
+                .courseId(item.getCourseId())
+                .courseName(courseName)
+                .professor(professor)
                 .priority(item.getPriority())
                 .addedAt(item.getAddedAt())
                 .build();

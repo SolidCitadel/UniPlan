@@ -77,8 +77,8 @@ class WishlistCommand {
     TerminalUtils.printSuccess('Course added to wishlist!');
     TerminalUtils.printKeyValue('Course ID', item['courseId'].toString());
     TerminalUtils.printKeyValue('Priority', item['priority'].toString());
-    if (item.containsKey('createdAt')) {
-      TerminalUtils.printKeyValue('Added At', item['createdAt'].toString());
+    if (item.containsKey('addedAt')) {
+      TerminalUtils.printKeyValue('Added At', item['addedAt'].toString());
     }
   }
 
@@ -100,12 +100,13 @@ class WishlistCommand {
       return {
         'ID': i['id']?.toString() ?? '',
         'Course ID': i['courseId']?.toString() ?? '',
+        'Course Name': i['courseName']?.toString() ?? 'N/A',
+        'Professor': i['professor']?.toString() ?? 'N/A',
         'Priority': i['priority']?.toString() ?? '',
-        'Added At': i['createdAt']?.toString() ?? '',
       };
     }).toList();
 
-    TerminalUtils.printTable(rows, ['ID', 'Course ID', 'Priority', 'Added At']);
+    TerminalUtils.printTable(rows, ['ID', 'Course ID', 'Course Name', 'Professor', 'Priority']);
   }
 
   Future<void> _remove(List<String> args) async {

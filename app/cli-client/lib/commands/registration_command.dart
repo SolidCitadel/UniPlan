@@ -143,25 +143,26 @@ class RegistrationCommand {
     // Check for flags
     final isManual = args.contains('--manual');
 
-    TerminalUtils.printInfo('Resuming registration $registrationId...');
-
-    final response = await _apiClient.get(Endpoints.registration(registrationId));
-    final registration = response.json;
-
-    // Check if registration is still in progress
-    final status = registration['status'] as String?;
-    if (status != 'IN_PROGRESS') {
-      TerminalUtils.printError('Cannot resume registration: status is $status');
-      TerminalUtils.printInfo('Only IN_PROGRESS registrations can be resumed.');
-      return;
-    }
-
-    // Initialize session
-    _session.start(registrationId);
-
-    TerminalUtils.printSuccess('Registration session resumed!');
-
     if (isManual) {
+      // Manual mode: fetch full registration details for display
+      TerminalUtils.printInfo('Resuming registration $registrationId...');
+
+      final response = await _apiClient.get(Endpoints.registration(registrationId));
+      final registration = response.json;
+
+      // Check if registration is still in progress
+      final status = registration['status'] as String?;
+      if (status != 'IN_PROGRESS') {
+        TerminalUtils.printError('Cannot resume registration: status is $status');
+        TerminalUtils.printInfo('Only IN_PROGRESS registrations can be resumed.');
+        return;
+      }
+
+      // Initialize session
+      _session.start(registrationId);
+
+      TerminalUtils.printSuccess('Registration session resumed!');
+
       // Manual mode: show detailed information and instructions
       _printRegistrationDetails(registration);
       print('\n${TerminalUtils.bold('Manual Mode')}:');
@@ -169,7 +170,11 @@ class RegistrationCommand {
       print('  2. Check status: ${TerminalUtils.gray('status')}');
       print('  3. Submit to backend: ${TerminalUtils.gray('submit')}');
     } else {
-      // Auto-launch interactive mode - no detailed output, all info shown in interactive UI
+      // Interactive mode: don't fetch data here, let interactive menu fetch it
+      // Initialize session first
+      _session.start(registrationId);
+
+      TerminalUtils.printSuccess('Registration session resumed!');
       print('\n${TerminalUtils.gray('Launching interactive mode...')}');
       await Future.delayed(Duration(milliseconds: 500));
 
@@ -303,13 +308,14 @@ class RegistrationCommand {
     final failedCourses = (registration['failedCourses'] as List? ?? []).cast<int>().toSet();
     final canceledCourses = (registration['canceledCourses'] as List? ?? []).cast<int>().toSet();
 
-    // Fetch course details
-    TerminalUtils.printInfo('Fetching course details...');
+    // Course details are already included in items from backend
     final courses = <CourseItem>[];
     final initialMarks = <int, String>{};
 
     for (final item in items) {
-      final courseId = (item as Map<String, dynamic>)['courseId'] as int;
+      final i = item as Map<String, dynamic>;
+      final courseId = i['courseId'] as int;
+      final courseName = i['courseName']?.toString() ?? 'Course $courseId';
 
       String category;
       // Determine category based on current state
@@ -327,24 +333,11 @@ class RegistrationCommand {
         category = 'pending';
       }
 
-      try {
-        final courseResponse = await _apiClient.get('${Endpoints.courses}/$courseId');
-        final course = courseResponse.json;
-        final courseName = course['courseName']?.toString() ?? 'Unknown Course';
-
-        courses.add(CourseItem(
-          courseId: courseId,
-          courseName: courseName,
-          category: category,
-        ));
-      } catch (e) {
-        TerminalUtils.printWarning('Failed to fetch course $courseId, using ID only');
-        courses.add(CourseItem(
-          courseId: courseId,
-          courseName: 'Course $courseId',
-          category: category,
-        ));
-      }
+      courses.add(CourseItem(
+        courseId: courseId,
+        courseName: courseName,
+        category: category,
+      ));
     }
 
     // Add courses to cancel (registered but not in current timetable)
@@ -352,7 +345,8 @@ class RegistrationCommand {
     final coursesToCancel = succeededCourses.where((courseId) => !timetableCourseIds.contains(courseId)).toList();
 
     if (coursesToCancel.isNotEmpty) {
-      for (final courseId in coursesToCancel) {
+      // Fetch all courses to cancel in parallel to minimize latency
+      final cancelFutures = coursesToCancel.map((courseId) async {
         initialMarks[courseId] = 'SUCCESS'; // Start as SUCCESS, can change to CANCELED
 
         try {
@@ -360,19 +354,22 @@ class RegistrationCommand {
           final course = courseResponse.json;
           final courseName = course['courseName']?.toString() ?? 'Unknown Course';
 
-          courses.add(CourseItem(
+          return CourseItem(
             courseId: courseId,
             courseName: courseName,
             category: 'toCancel',
-          ));
+          );
         } catch (e) {
-          courses.add(CourseItem(
+          return CourseItem(
             courseId: courseId,
             courseName: 'Course $courseId',
             category: 'toCancel',
-          ));
+          );
         }
-      }
+      }).toList();
+
+      final cancelCourses = await Future.wait(cancelFutures);
+      courses.addAll(cancelCourses);
     }
 
     // Override with session marks if any
@@ -753,12 +750,13 @@ class RegistrationCommand {
           for (final item in items) {
             final i = item as Map<String, dynamic>;
             final courseId = i['courseId'];
+            final courseName = i['courseName']?.toString() ?? 'Course $courseId';
             final isRegistered = succeededCourses.contains(courseId);
 
             if (isRegistered) {
-              print('  ${TerminalUtils.green('✓')} Course ID: $courseId ${TerminalUtils.gray('(already registered)')}');
+              print('  ${TerminalUtils.green('✓')} $courseId: $courseName ${TerminalUtils.gray('(already registered)')}');
             } else {
-              print('  ${TerminalUtils.yellow('○')} Course ID: $courseId ${TerminalUtils.yellow('(pending)')}');
+              print('  ${TerminalUtils.yellow('○')} $courseId: $courseName ${TerminalUtils.yellow('(pending)')}');
             }
           }
         }

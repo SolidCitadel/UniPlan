@@ -2,6 +2,8 @@ package com.uniplan.planner.domain.scenario.dto;
 
 import com.uniplan.planner.domain.scenario.entity.Scenario;
 import com.uniplan.planner.domain.timetable.dto.TimetableResponse;
+import com.uniplan.planner.global.client.dto.CourseFullResponse;
+import com.uniplan.planner.global.client.dto.CourseSimpleResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,6 +11,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -68,6 +71,70 @@ public class ScenarioResponse {
                 .timetable(TimetableResponse.from(scenario.getTimetable()))
                 .childScenarios(scenario.getChildScenarios().stream()
                         .map(ScenarioResponse::fromWithFullTree)  // 재귀적으로 모든 자식 포함
+                        .collect(Collectors.toList()))
+                .createdAt(scenario.getCreatedAt())
+                .updatedAt(scenario.getUpdatedAt())
+                .build();
+    }
+
+    // Overloaded methods with course details
+    public static ScenarioResponse from(Scenario scenario, Map<Long, CourseSimpleResponse> courseMap) {
+        return from(scenario, courseMap, true);
+    }
+
+    public static ScenarioResponse from(Scenario scenario, Map<Long, CourseSimpleResponse> courseMap, boolean includeChildren) {
+        ScenarioResponseBuilder builder = ScenarioResponse.builder()
+                .id(scenario.getId())
+                .userId(scenario.getUserId())
+                .name(scenario.getName())
+                .description(scenario.getDescription())
+                .parentScenarioId(scenario.getParentScenario() != null ? scenario.getParentScenario().getId() : null)
+                .failedCourseIds(scenario.getFailedCourseIds())
+                .orderIndex(scenario.getOrderIndex())
+                .timetable(TimetableResponse.from(scenario.getTimetable(), courseMap))
+                .createdAt(scenario.getCreatedAt())
+                .updatedAt(scenario.getUpdatedAt());
+
+        if (includeChildren && scenario.getChildScenarios() != null) {
+            builder.childScenarios(scenario.getChildScenarios().stream()
+                    .map(child -> ScenarioResponse.from(child, courseMap, false))
+                    .collect(Collectors.toList()));
+        }
+
+        return builder.build();
+    }
+
+    public static ScenarioResponse fromWithFullTree(Scenario scenario, Map<Long, CourseSimpleResponse> courseMap) {
+        return ScenarioResponse.builder()
+                .id(scenario.getId())
+                .userId(scenario.getUserId())
+                .name(scenario.getName())
+                .description(scenario.getDescription())
+                .parentScenarioId(scenario.getParentScenario() != null ? scenario.getParentScenario().getId() : null)
+                .failedCourseIds(scenario.getFailedCourseIds())
+                .orderIndex(scenario.getOrderIndex())
+                .timetable(TimetableResponse.from(scenario.getTimetable(), courseMap))
+                .childScenarios(scenario.getChildScenarios().stream()
+                        .map(child -> ScenarioResponse.fromWithFullTree(child, courseMap))
+                        .collect(Collectors.toList()))
+                .createdAt(scenario.getCreatedAt())
+                .updatedAt(scenario.getUpdatedAt())
+                .build();
+    }
+
+    // Full course details version
+    public static ScenarioResponse fromWithFullTreeAndCourses(Scenario scenario, Map<Long, CourseFullResponse> courseMap) {
+        return ScenarioResponse.builder()
+                .id(scenario.getId())
+                .userId(scenario.getUserId())
+                .name(scenario.getName())
+                .description(scenario.getDescription())
+                .parentScenarioId(scenario.getParentScenario() != null ? scenario.getParentScenario().getId() : null)
+                .failedCourseIds(scenario.getFailedCourseIds())
+                .orderIndex(scenario.getOrderIndex())
+                .timetable(TimetableResponse.fromWithFullCourses(scenario.getTimetable(), courseMap))
+                .childScenarios(scenario.getChildScenarios().stream()
+                        .map(child -> ScenarioResponse.fromWithFullTreeAndCourses(child, courseMap))
                         .collect(Collectors.toList()))
                 .createdAt(scenario.getCreatedAt())
                 .updatedAt(scenario.getUpdatedAt())

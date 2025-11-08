@@ -5,14 +5,18 @@ import com.uniplan.planner.domain.scenario.dto.*;
 import com.uniplan.planner.domain.scenario.entity.Scenario;
 import com.uniplan.planner.domain.scenario.repository.ScenarioRepository;
 import com.uniplan.planner.domain.timetable.entity.Timetable;
+import com.uniplan.planner.domain.timetable.entity.TimetableItem;
 import com.uniplan.planner.domain.timetable.repository.TimetableRepository;
+import com.uniplan.planner.global.client.CatalogClient;
+import com.uniplan.planner.global.client.dto.CourseFullResponse;
+import com.uniplan.planner.global.client.dto.CourseSimpleResponse;
 import com.uniplan.planner.global.exception.ScenarioNotFoundException;
 import com.uniplan.planner.global.exception.TimetableNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,6 +27,7 @@ public class ScenarioService {
     private final ScenarioRepository scenarioRepository;
     private final TimetableRepository timetableRepository;
     private final RegistrationRepository registrationRepository;
+    private final CatalogClient catalogClient;
 
     @Transactional
     public ScenarioResponse createRootScenario(Long userId, CreateScenarioRequest request) {
@@ -99,7 +104,15 @@ public class ScenarioService {
     public ScenarioResponse getScenarioWithFullTree(Long userId, Long scenarioId) {
         Scenario scenario = scenarioRepository.findByIdAndUserId(scenarioId, userId)
                 .orElseThrow(() -> new ScenarioNotFoundException(scenarioId));
-        return ScenarioResponse.fromWithFullTree(scenario);
+
+        // Collect all course IDs from the entire scenario tree
+        Set<Long> allCourseIds = new HashSet<>();
+        collectCourseIds(scenario, allCourseIds);
+
+        // Fetch all courses with full details at once
+        Map<Long, CourseFullResponse> courseMap = catalogClient.getFullCoursesByIds(new ArrayList<>(allCourseIds));
+
+        return ScenarioResponse.fromWithFullTreeAndCourses(scenario, courseMap);
     }
 
     @Transactional
@@ -185,5 +198,22 @@ public class ScenarioService {
                 .semester(request.getSemester())
                 .build();
         return timetableRepository.save(timetable);
+    }
+
+    /**
+     * Recursively collect all course IDs from scenario tree
+     */
+    private void collectCourseIds(Scenario scenario, Set<Long> courseIds) {
+        // Add course IDs from current scenario's timetable
+        scenario.getTimetable().getItems().stream()
+                .map(TimetableItem::getCourseId)
+                .forEach(courseIds::add);
+
+        // Recursively collect from child scenarios
+        if (scenario.getChildScenarios() != null) {
+            for (Scenario child : scenario.getChildScenarios()) {
+                collectCourseIds(child, courseIds);
+            }
+        }
     }
 }

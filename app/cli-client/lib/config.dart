@@ -10,6 +10,7 @@ class Config {
   String apiUrl = 'http://localhost:8080';
   bool showDetails = false;
   bool clearScreen = false;
+  bool autoClear = false;
 
   String get configDir {
     final home = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '';

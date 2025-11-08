@@ -78,39 +78,81 @@ class TerminalUtils {
     print('${bold(key)}: $value');
   }
 
-  static void printTable(List<Map<String, String>> rows, List<String> headers) {
+  /// Calculate display width of a string (CJK characters count as 2, others as 1)
+  static int displayWidth(String text) {
+    var width = 0;
+    for (var i = 0; i < text.length; i++) {
+      final code = text.codeUnitAt(i);
+      // CJK Unified Ideographs, Hangul, Hiragana, Katakana, etc.
+      if ((code >= 0x1100 && code <= 0x11FF) ||   // Hangul Jamo
+          (code >= 0x2E80 && code <= 0x9FFF) ||   // CJK
+          (code >= 0xAC00 && code <= 0xD7AF) ||   // Hangul Syllables
+          (code >= 0xFF00 && code <= 0xFFEF)) {   // Fullwidth Forms
+        width += 2;
+      } else {
+        width += 1;
+      }
+    }
+    return width;
+  }
+
+  /// Pad string to target display width (considering CJK characters)
+  static String padToWidth(String text, int targetWidth) {
+    final currentWidth = displayWidth(text);
+    if (currentWidth >= targetWidth) {
+      return text;
+    }
+    final padding = ' ' * (targetWidth - currentWidth);
+    return text + padding;
+  }
+
+  static void printTable(
+    List<Map<String, String>> rows,
+    List<String> headers, {
+    Map<String, int>? minWidths,
+  }) {
     if (rows.isEmpty) {
       print(gray('No data to display.'));
       return;
     }
 
-    // Calculate column widths
+    // Calculate column widths using display width (CJK-aware)
     final widths = <String, int>{};
     for (final header in headers) {
-      widths[header] = header.length;
+      widths[header] = displayWidth(header);
     }
 
     for (final row in rows) {
       for (final header in headers) {
         final value = row[header] ?? '';
-        if (value.length > widths[header]!) {
-          widths[header] = value.length;
+        final valueWidth = displayWidth(value);
+        if (valueWidth > widths[header]!) {
+          widths[header] = valueWidth;
         }
       }
     }
 
+    // Apply minimum widths
+    if (minWidths != null) {
+      minWidths.forEach((header, minWidth) {
+        if (widths.containsKey(header) && widths[header]! < minWidth) {
+          widths[header] = minWidth;
+        }
+      });
+    }
+
     // Print header
-    final headerLine = headers
-        .map((h) => h.padRight(widths[h]!))
-        .join(' | ');
+    final headerParts = headers.map((h) => padToWidth(h, widths[h]!)).toList();
+    final headerLine = headerParts.join(' | ');
     print(bold(headerLine));
-    print(bold('-' * headerLine.length));
+    print(bold('-' * displayWidth(headerLine)));
 
     // Print rows
     for (final row in rows) {
-      final line = headers
-          .map((h) => (row[h] ?? '').padRight(widths[h]!))
-          .join(' | ');
+      final rowParts = headers
+          .map((h) => padToWidth(row[h] ?? '', widths[h]!))
+          .toList();
+      final line = rowParts.join(' | ');
       print(line);
     }
   }

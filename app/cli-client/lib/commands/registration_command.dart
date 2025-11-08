@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:uniplan_cli/api/api_client.dart';
 import 'package:uniplan_cli/api/endpoints.dart';
 import 'package:uniplan_cli/session/registration_session.dart';
 import 'package:uniplan_cli/utils/terminal_utils.dart';
+import 'package:uniplan_cli/utils/simple_menu.dart';
 
 class RegistrationCommand {
   final ApiClient _apiClient = ApiClient();
@@ -22,6 +24,9 @@ class RegistrationCommand {
           break;
         case 'resume':
           await _resume(args);
+          break;
+        case 'interactive':
+          await _interactive();
           break;
         case 'mark':
           _mark(args);
@@ -56,17 +61,29 @@ class RegistrationCommand {
       }
     } on ApiException catch (e) {
       TerminalUtils.printError(e.toString());
+      _ensureTerminalRestored();
     } on StateError catch (e) {
       TerminalUtils.printError(e.message);
+      _ensureTerminalRestored();
     } catch (e) {
       TerminalUtils.printError('Unexpected error: $e');
+      _ensureTerminalRestored();
+    }
+  }
+
+  void _ensureTerminalRestored() {
+    try {
+      if (!stdin.echoMode) stdin.echoMode = true;
+      if (!stdin.lineMode) stdin.lineMode = true;
+    } catch (e) {
+      // Ignore restoration errors
     }
   }
 
   Future<void> _start(List<String> args) async {
     if (args.length < 2) {
       TerminalUtils.printError(
-        'Usage: uniplan registration start <scenarioId>',
+        'Usage: uniplan registration start <scenarioId> [--manual]',
       );
       return;
     }
@@ -76,6 +93,9 @@ class RegistrationCommand {
       TerminalUtils.printError('Invalid scenario ID: ${args[1]}');
       return;
     }
+
+    // Check for flags
+    final isManual = args.contains('--manual');
 
     TerminalUtils.printInfo('Starting registration with scenario $scenarioId...');
 
@@ -91,17 +111,26 @@ class RegistrationCommand {
     _session.start(registrationId);
 
     TerminalUtils.printSuccess('Registration started!');
-    _printRegistrationDetails(registration);
 
-    print('\n${TerminalUtils.bold('Next Steps')}:');
-    print('  1. Mark courses as SUCCESS or FAILED: ${TerminalUtils.gray('mark <courseId> <SUCCESS|FAILED>')}');
-    print('  2. Check status: ${TerminalUtils.gray('status')}');
-    print('  3. Submit to backend: ${TerminalUtils.gray('submit')}');
+    if (isManual) {
+      // Manual mode: show detailed information and instructions
+      _printRegistrationDetails(registration);
+      print('\n${TerminalUtils.bold('Manual Mode')}:');
+      print('  1. Mark courses as SUCCESS or FAILED: ${TerminalUtils.gray('mark <courseId> <SUCCESS|FAILED>')}');
+      print('  2. Check status: ${TerminalUtils.gray('status')}');
+      print('  3. Submit to backend: ${TerminalUtils.gray('submit')}');
+    } else {
+      // Auto-launch interactive mode - no detailed output, all info shown in interactive UI
+      print('\n${TerminalUtils.gray('Launching interactive mode...')}');
+      await Future.delayed(Duration(milliseconds: 500));
+
+      await _interactiveWithAutoSubmit();
+    }
   }
 
   Future<void> _resume(List<String> args) async {
     if (args.length < 2) {
-      TerminalUtils.printError('Usage: uniplan registration resume <registrationId>');
+      TerminalUtils.printError('Usage: uniplan registration resume <registrationId> [--manual]');
       return;
     }
 
@@ -110,6 +139,9 @@ class RegistrationCommand {
       TerminalUtils.printError('Invalid registration ID: ${args[1]}');
       return;
     }
+
+    // Check for flags
+    final isManual = args.contains('--manual');
 
     TerminalUtils.printInfo('Resuming registration $registrationId...');
 
@@ -128,12 +160,253 @@ class RegistrationCommand {
     _session.start(registrationId);
 
     TerminalUtils.printSuccess('Registration session resumed!');
-    _printRegistrationDetails(registration);
 
-    print('\n${TerminalUtils.bold('Next Steps')}:');
-    print('  1. Mark courses as SUCCESS or FAILED: ${TerminalUtils.gray('mark <courseId> <SUCCESS|FAILED>')}');
-    print('  2. Check status: ${TerminalUtils.gray('status')}');
-    print('  3. Submit to backend: ${TerminalUtils.gray('submit')}');
+    if (isManual) {
+      // Manual mode: show detailed information and instructions
+      _printRegistrationDetails(registration);
+      print('\n${TerminalUtils.bold('Manual Mode')}:');
+      print('  1. Mark courses as SUCCESS or FAILED: ${TerminalUtils.gray('mark <courseId> <SUCCESS|FAILED>')}');
+      print('  2. Check status: ${TerminalUtils.gray('status')}');
+      print('  3. Submit to backend: ${TerminalUtils.gray('submit')}');
+    } else {
+      // Auto-launch interactive mode - no detailed output, all info shown in interactive UI
+      print('\n${TerminalUtils.gray('Launching interactive mode...')}');
+      await Future.delayed(Duration(milliseconds: 500));
+
+      await _interactiveWithAutoSubmit();
+    }
+  }
+
+  Future<void> _interactive() async {
+    if (!_session.isActive) {
+      TerminalUtils.printError('No active registration session.');
+      TerminalUtils.printInfo('Use "registration start <scenarioId>" or "registration resume <id>" first.');
+      return;
+    }
+
+    final selectedMarks = await _runInteractiveMenu();
+    if (selectedMarks == null) {
+      return;
+    }
+
+    TerminalUtils.printSuccess('Marks updated!');
+    print('\n${_session.getSummary()}');
+    print('\n${TerminalUtils.gray('Use "submit" to send to backend.')}');
+  }
+
+  Future<void> _interactiveWithAutoSubmit() async {
+    if (!_session.isActive) {
+      TerminalUtils.printError('No active registration session.');
+      return;
+    }
+
+    // Loop until user quits or registration is complete
+    while (true) {
+      final selectedMarks = await _runInteractiveMenu();
+      if (selectedMarks == null) {
+        // User quit with 'Q' - session remains active
+        TerminalUtils.printWarning('Registration paused. Session is still active.');
+        print('Use ${TerminalUtils.cyan('registration interactive')} to continue later.');
+        return;
+      }
+
+      // Auto-submit (silent mode for interactive)
+      if (_session.markedCourses.isEmpty) {
+        // No changes - just continue to next iteration (re-open interactive menu)
+        continue;
+      }
+
+      // Submit marked courses to backend
+      final registrationId = _session.registrationId!;
+      final submitData = _session.getSubmitData();
+
+      try {
+        await _apiClient.post(
+          Endpoints.registrationSteps(registrationId),
+          body: submitData,
+        );
+
+        // Clear marks after successful submit
+        _session.clearMarks();
+
+        // Check if registration is still in progress
+        final response = await _apiClient.get(Endpoints.registration(registrationId));
+        final registration = response.json;
+        final status = registration['status'] as String?;
+
+        if (status != 'IN_PROGRESS') {
+          // Registration completed automatically by backend
+          TerminalUtils.clearScreen();
+          TerminalUtils.printSuccess('Registration completed!');
+          _printRegistrationSummary(registration);
+          _session.end();
+          return;
+        }
+
+        // Continue to next scenario automatically - no prompt
+        // Loop will re-open interactive menu with new scenario
+      } catch (e) {
+        TerminalUtils.clearScreen();
+        TerminalUtils.printError('Failed to submit: $e');
+        print('Use ${TerminalUtils.cyan('registration interactive')} to try again.');
+        return;
+      }
+    }
+  }
+
+  Future<void> _completeCurrentRegistration() async {
+    final registrationId = _session.registrationId!;
+    try {
+      TerminalUtils.printInfo('Completing registration $registrationId...');
+
+      final response = await _apiClient.post(
+        Endpoints.registrationComplete(registrationId),
+      );
+
+      final registration = response.json;
+      TerminalUtils.printSuccess('Registration completed!');
+      _printRegistrationSummary(registration);
+
+      _session.end();
+    } catch (e) {
+      TerminalUtils.printError('Failed to complete registration: $e');
+    }
+  }
+
+  Future<Map<int, String>?> _runInteractiveMenu() async {
+    final registrationId = _session.registrationId!;
+    TerminalUtils.printInfo('Fetching registration details...');
+
+    final response = await _apiClient.get(Endpoints.registration(registrationId));
+    final registration = response.json;
+
+    final currentScenario = registration['currentScenario'] as Map<String, dynamic>?;
+    if (currentScenario == null) {
+      TerminalUtils.printError('No current scenario found.');
+      return null;
+    }
+
+    final timetable = currentScenario['timetable'] as Map<String, dynamic>?;
+    if (timetable == null) {
+      TerminalUtils.printError('No timetable found in current scenario.');
+      return null;
+    }
+
+    final items = timetable['items'] as List?;
+    if (items == null || items.isEmpty) {
+      TerminalUtils.printWarning('No courses in current timetable.');
+      return null;
+    }
+
+    // Get succeeded/failed/canceled courses
+    final succeededCourses = (registration['succeededCourses'] as List? ?? []).cast<int>().toSet();
+    final failedCourses = (registration['failedCourses'] as List? ?? []).cast<int>().toSet();
+    final canceledCourses = (registration['canceledCourses'] as List? ?? []).cast<int>().toSet();
+
+    // Fetch course details
+    TerminalUtils.printInfo('Fetching course details...');
+    final courses = <CourseItem>[];
+    final initialMarks = <int, String>{};
+
+    for (final item in items) {
+      final courseId = (item as Map<String, dynamic>)['courseId'] as int;
+
+      String category;
+      // Determine category based on current state
+      if (succeededCourses.contains(courseId)) {
+        initialMarks[courseId] = 'SUCCESS';
+        category = 'registered';
+      } else if (failedCourses.contains(courseId)) {
+        initialMarks[courseId] = 'FAILED';
+        category = 'failed';
+      } else if (canceledCourses.contains(courseId)) {
+        initialMarks[courseId] = 'CANCELED';
+        category = 'failed'; // Canceled courses treated as failed
+      } else {
+        // PENDING (not in initialMarks)
+        category = 'pending';
+      }
+
+      try {
+        final courseResponse = await _apiClient.get('${Endpoints.courses}/$courseId');
+        final course = courseResponse.json;
+        final courseName = course['courseName']?.toString() ?? 'Unknown Course';
+
+        courses.add(CourseItem(
+          courseId: courseId,
+          courseName: courseName,
+          category: category,
+        ));
+      } catch (e) {
+        TerminalUtils.printWarning('Failed to fetch course $courseId, using ID only');
+        courses.add(CourseItem(
+          courseId: courseId,
+          courseName: 'Course $courseId',
+          category: category,
+        ));
+      }
+    }
+
+    // Add courses to cancel (registered but not in current timetable)
+    final timetableCourseIds = items.map((item) => (item as Map<String, dynamic>)['courseId'] as int).toSet();
+    final coursesToCancel = succeededCourses.where((courseId) => !timetableCourseIds.contains(courseId)).toList();
+
+    if (coursesToCancel.isNotEmpty) {
+      for (final courseId in coursesToCancel) {
+        initialMarks[courseId] = 'SUCCESS'; // Start as SUCCESS, can change to CANCELED
+
+        try {
+          final courseResponse = await _apiClient.get('${Endpoints.courses}/$courseId');
+          final course = courseResponse.json;
+          final courseName = course['courseName']?.toString() ?? 'Unknown Course';
+
+          courses.add(CourseItem(
+            courseId: courseId,
+            courseName: courseName,
+            category: 'toCancel',
+          ));
+        } catch (e) {
+          courses.add(CourseItem(
+            courseId: courseId,
+            courseName: 'Course $courseId',
+            category: 'toCancel',
+          ));
+        }
+      }
+    }
+
+    // Override with session marks if any
+    final currentMarks = Map<int, String>.from(initialMarks);
+    currentMarks.addAll(_session.markedCourses);
+
+    // Prepare context info for display
+    final contextInfo = {
+      'scenarioName': currentScenario['name']?.toString() ?? 'Unknown Scenario',
+      'timetableName': timetable['name']?.toString() ?? 'Unknown Timetable',
+      'registrationId': registrationId.toString(),
+      'totalSucceeded': succeededCourses.length.toString(),
+      'totalFailed': failedCourses.length.toString(),
+      'totalCanceled': canceledCourses.length.toString(),
+    };
+
+    // Launch simple menu (number-based, Windows-compatible)
+    final selectedMarks = await SimpleMenu.selectCourseStatuses(
+      courses: courses,
+      initialMarks: currentMarks,
+      contextInfo: contextInfo,
+    );
+
+    if (selectedMarks.isEmpty) {
+      return null;
+    }
+
+    // Apply marks to session
+    _session.clearMarks();
+    for (final entry in selectedMarks.entries) {
+      _session.mark(entry.key, entry.value);
+    }
+
+    return selectedMarks;
   }
 
   void _mark(List<String> args) {
@@ -553,12 +826,13 @@ class RegistrationCommand {
     print('''
 Registration Commands:
 
-  start <scenarioId>                            Start registration with a scenario
-  resume <registrationId>                       Resume an existing registration session
-  mark <courseId> <SUCCESS|FAILED|CANCELED>     Mark a course result (local)
-  unmark <courseId>                             Unmark a course
+  start <scenarioId> [--manual]                 Start registration (auto-launches interactive mode)
+  resume <registrationId> [--manual]            Resume an existing registration session
+  interactive                                   Re-open interactive UI to mark courses
+  mark <courseId> <SUCCESS|FAILED|CANCELED>     Mark a course result (manual mode only)
+  unmark <courseId>                             Unmark a course (manual mode only)
   status                                         Show current session status
-  submit                                         Submit marked courses to backend
+  submit                                         Submit marked courses to backend (manual mode only)
   get <registrationId>                          Get registration details
   list                                           List all registrations
   complete <registrationId>                     Complete a registration
@@ -570,32 +844,44 @@ Status types:
   FAILED    - Tried to register but failed
   CANCELED  - Previously registered, now canceled
 
-Workflow:
-  1. uniplan registration start 1           # Start with scenario 1
+Interactive UI Instructions:
+  - Press number keys (1-N) to cycle course status
+  - Status cycles: PENDING → SUCCESS → FAILED → CANCELED → PENDING
+  - Press 'D' to submit and continue to next scenario, 'Q' to pause
+
+Default Workflow (Interactive - Recommended):
+  1. uniplan registration start 1           # Launches interactive UI automatically
+  2. [Press number keys to cycle statuses, e.g., 1, 1, 2, 3, 3]
+  3. [Press 'D' to submit results]
+  4. [System navigates to next scenario automatically]
+  5. [Repeat steps 2-4 until all scenarios are done]
+  6. [Choose 'complete' when satisfied with results]
+
+Manual Workflow (for scripting):
+  1. uniplan registration start 1 --manual  # Start in manual mode
   2. uniplan registration mark 101 SUCCESS  # Mark course 101 as success
   3. uniplan registration mark 102 FAILED   # Mark course 102 as failed
-  4. uniplan registration mark 103 CANCELED # Mark course 103 as canceled
-  5. uniplan registration status            # Check current marks
-  6. uniplan registration submit            # Submit to backend
-  7. uniplan registration complete 1        # Complete registration
+  4. uniplan registration status            # Check current marks
+  5. uniplan registration submit            # Submit to backend
+  6. uniplan registration complete 1        # Complete registration
 
 Resume workflow (after CLI restart):
   1. uniplan registration list              # Find your IN_PROGRESS registration
   2. uniplan registration resume 1          # Resume registration with ID 1
-  3. uniplan registration mark 103 SUCCESS  # Continue marking courses
-  4. uniplan registration submit            # Submit to backend
+  3. uniplan registration interactive       # Re-open interactive UI
+  4. [Press ENTER to confirm and auto-submit]
 
 Examples:
-  uniplan registration start 1
+  uniplan registration start 1              # Auto-launches interactive mode
+  uniplan registration start 1 --manual     # Manual mode
   uniplan registration resume 1
-  uniplan registration mark 123 SUCCESS
-  uniplan registration mark 456 FAILED
-  uniplan registration mark 789 CANCELED
+  uniplan registration interactive          # Re-open interactive UI
+  uniplan registration mark 123 SUCCESS     # Manual mode only
   uniplan registration status
-  uniplan registration submit
+  uniplan registration submit               # Manual mode only
   uniplan registration get 1
   uniplan registration complete 1
-  uniplan registration delete-all          # Delete all registrations
+  uniplan registration delete-all
 ''');
   }
 }

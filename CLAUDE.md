@@ -1,409 +1,68 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 ## Project Overview
 
-**UniPlan** is a scenario-based university course registration planner web application. It helps students manage uncertainty during course registration by building decision trees of alternative timetables (Plan A, B, C...) and provides real-time navigation during actual registration.
+**UniPlan**: Scenario-based university course registration planner with decision tree timetables (Plan A/B/C) and real-time registration navigation.
 
-- **Tech Stack**: Spring Boot 3.x microservices (Java 21) + Flutter web client
-- **Architecture**: Microservices Architecture (MSA) with API Gateway
-- **Build Tool**: Gradle with Kotlin DSL
-- **Database**: MySQL (production), H2 (development/testing)
+**Tech Stack**: Spring Boot 3.x (Java 21) + Flutter web + Gradle (Kotlin DSL)
+**Architecture**: MSA with API Gateway
+**Database**: MySQL (prod), H2 (dev/test)
 
 ## Project Structure
 
 ```
 UniPlan/
 ├── app/
-│   ├── backend/           # Spring Boot microservices
-│   │   ├── api-gateway/
-│   │   ├── user-service/
-│   │   ├── catalog-service/
-│   │   ├── planner-service/  (planned)
-│   │   └── common-lib/
-│   ├── frontend/          # Flutter web client (planned)
-│   └── cli-client/        # CLI client for testing/admin (planned)
+│   ├── backend/           # Spring Boot MSA → See app/backend/CLAUDE.md
+│   ├── frontend/          # Flutter web (planned)
+│   └── cli-client/        # Dart CLI → See app/cli-client/CLAUDE.md
 ├── scripts/
-│   └── crawler/           # Python course data crawler
-└── docs/                  # Additional documentation
+│   └── crawler/           # Python course crawler → See scripts/crawler/CLAUDE.md
+└── docs/
 ```
 
-## Microservices Architecture
+## Module Documentation
 
-The backend follows MSA principles with domain-driven design:
+- **Backend (MSA)**: `app/backend/CLAUDE.md`
+- **Course Crawler**: `scripts/crawler/CLAUDE.md`
+- **CLI Client**: `app/cli-client/CLAUDE.md`
 
-```
-app/backend/
-├── api-gateway/        # Spring Cloud Gateway - single entry point (port 8080)
-├── user-service/       # Authentication & user management (port 8081)
-├── catalog-service/    # Course catalog & search (port 8083)
-├── planner-service/    # Core: decision tree scenarios (planned)
-└── common-lib/         # Shared JWT utilities, DTOs, constants
-```
+## Common Conventions
 
-### Key Architectural Principles
+### Java Coding Style
 
-1. **Path Mapping**: API Gateway strips `/api/v1` prefix before routing to services
-   - External: `POST /api/v1/auth/login` → Internal: `POST /auth/login`
-   - Services use simple paths (`/users`, `/auth`), Gateway handles versioning
-   - See `app/backend/API_PATH_MAPPING.md` for details
+- Package: `com.uniplan.<service-name>`
+- Classes: PascalCase
+- Methods/variables: camelCase
+- Constants: UPPER_SNAKE_CASE
+- DTOs: Lombok `@Data` or `@Value`
+- Null safety: `Optional<T>`, `@NotNull`
 
-2. **JWT Authentication Flow**:
-   - User Service issues JWT tokens (access + refresh)
-   - API Gateway validates JWT and adds headers: `X-User-Id`, `X-User-Email`, `X-User-Role`
-   - Downstream services trust these headers (no JWT validation needed)
-   - JWT secret must match between Gateway and User Service
-   - Common JWT utilities live in `common-lib` package
+### Database
 
-3. **Service Independence**:
-   - Each service has its own Swagger documentation (port-specific)
-   - API Gateway provides unified Swagger at http://localhost:8080/swagger-ui.html
-   - Services must not directly access other services' databases
-   - Use REST APIs for inter-service communication
+- Tables: plural, snake_case (`users`, `courses`)
+- Columns: snake_case (`user_id`, `created_at`)
+- Entities: PascalCase (`User`, `Course`)
 
-## Domain-Driven Package Structure
+### API
 
-Services follow **domain-based** organization (not layer-based):
-
-```
-com.uniplan.<service-name>/
-├── domain/
-│   ├── auth/              # Authentication domain
-│   │   ├── controller/
-│   │   ├── service/
-│   │   ├── repository/
-│   │   ├── entity/
-│   │   └── dto/
-│   └── user/              # User management domain
-│       └── (same structure)
-└── global/                # Cross-cutting concerns
-    ├── config/            # SecurityConfig, OpenApiConfig
-    ├── exception/         # GlobalExceptionHandler, custom exceptions
-    └── util/
-```
-
-**Rationale**: Domain cohesion over layer separation. Related functionality stays together.
-
-## Common Development Commands
-
-### Build & Run
-
-```bash
-# Navigate to backend directory
-cd app/backend
-
-# Build all services
-./gradlew clean build
-
-# Build specific service
-./gradlew :user-service:build
-./gradlew :api-gateway:build
-
-# Run specific service
-./gradlew :user-service:bootRun
-./gradlew :api-gateway:bootRun
-
-# Run tests
-./gradlew test
-./gradlew :user-service:test
-
-# Run single test class
-./gradlew :user-service:test --tests "com.uniplan.user.domain.auth.service.AuthServiceTest"
-```
-
-### Service Ports
-
-- API Gateway: 8080 (main entry point)
-- User Service: 8081
-- Planner Service: 8082 (planned)
-- Catalog Service: 8083
-
-### Swagger Documentation
-
-- Unified (all services): http://localhost:8080/swagger-ui.html
-- User Service only: http://localhost:8081/swagger-ui.html
-- Catalog Service only: http://localhost:8083/swagger-ui.html
-
-## Core Domain Model: Decision Tree
-
-The **planner-service** implements a decision tree structure for course registration scenarios:
-
-- **Nodes**: Timetables (base + alternatives)
-- **Edges**: Failure scenarios (if course X fails → go to alternative timetable Y)
-- **Navigation**: Real-time input of success/failure during registration → tree traversal
-
-**Example**:
-```
-Base Timetable (CS101, CS102, CS103)
-  ├─ CS101 fails → Alt 1 (CS104, CS102, CS103)
-  │   └─ CS104 fails → Alt 1a (CS105, CS102, CS103)
-  └─ CS102 fails → Alt 2 (CS101, CS106, CS103)
-```
-
-## Key Entities
-
-- **User**: User accounts with email/password authentication (OAuth2 ready for future)
-- **Course**: Course information (code, name, professor, time, credits, department, etc.)
-- **Timetable**: Collection of courses for a specific plan
-- **Scenario**: Decision tree node linking timetables with failure conditions
-
-## Database Conventions
-
-- **Table names**: Plural, snake_case (`users`, `courses`, `timetables`)
-- **Column names**: snake_case (`user_id`, `course_code`, `created_at`)
-- **Entity classes**: PascalCase (`User`, `Course`)
-- **JPA Repositories**: Spring Data JPA with standard naming
-
-## API Conventions
-
-- **URL format**: kebab-case (`/course-catalog`, `/user-info`)
-- **HTTP methods**: GET (read), POST (create), PUT (full update), PATCH (partial), DELETE
-- **Response wrapper**: JSON with common structure (or Spring Boot defaults)
-- **Status codes**: 200 (OK), 201 (Created), 400 (Bad Request), 401 (Unauthorized), 404 (Not Found), 409 (Conflict), 500 (Internal Error)
-
-## Coding Style (Java)
-
-- **Package naming**: `com.uniplan.<service-name>`
-- **Class names**: PascalCase
-- **Methods/variables**: camelCase
-- **Constants**: UPPER_SNAKE_CASE
-- **Immutability**: Prefer final fields, use Lombok `@Data` or `@Value` for DTOs
-- **Null safety**: Use `Optional<T>` for repository queries, `@NotNull` annotations
-
-## When Adding a New Service
-
-1. Add module to `settings.gradle.kts`: `include("new-service")`
-2. Create `build.gradle.kts` with Spring Boot plugin and dependencies
-3. Add Swagger dependency: `implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")`
-4. Create domain packages: `domain/<domain-name>/{controller,service,repository,entity,dto}`
-5. Add `OpenApiConfig.java` in `global/config/`
-6. Update API Gateway routes in `application-local.yml`
-7. Add GroupedOpenApi bean in Gateway's `OpenApiConfig.java` for unified docs
+- URLs: kebab-case (`/course-catalog`, `/user-info`)
+- HTTP: GET, POST, PUT, PATCH, DELETE
+- Status: 200, 201, 400, 401, 404, 409, 500
 
 ## Environment Variables
 
-- `JWT_SECRET`: JWT signing key (minimum 256 bits). Must be identical for API Gateway and User Service
-- Database credentials should be in `application-local.yml` (local) or environment variables (production)
+- `JWT_SECRET`: 256-bit minimum, identical across API Gateway and User Service
+- DB credentials: `application-local.yml` (local) or env vars (prod)
 
 ## Testing Strategy
 
-- Unit tests: Service layer with mocked repositories
-- Integration tests: Controller layer with `@SpringBootTest` and `@AutoConfigureMockMvc`
-- Test DB: H2 in-memory database (configured in test resources)
+- Unit: Service layer with mocked repositories
+- Integration: Controller layer with `@SpringBootTest` + `@AutoConfigureMockMvc`
+- Test DB: H2 in-memory
 
-## Important Notes
+## Security
 
-- **Never commit secrets**: Use `.gitignore` for `.env`, `application-local.yml`, credentials files
-- **Service isolation**: Each service should be independently deployable
-- **Gateway routing**: All client traffic goes through API Gateway (port 8080)
-- **JWT consistency**: `common-lib` centralizes JWT logic; User Service issues tokens, Gateway validates them
-
-## Course Data Crawler (Python)
-
-The `scripts/crawler/` directory contains a Python-based web crawler for fetching course data from university registration systems.
-
-### Architecture: 3-Step Independent Workflow
-
-```
-Step 1: Metadata Crawling (~1 second)
-  python crawl_metadata.py --year 2025 --semester 1
-  → metadata_2025_1.json
-  - colleges, departments, courseTypes (extracted from data.js)
-  - No hardcoded mappings!
-
-Step 2: Courses Crawling (~4 minutes, run once!)
-  python run_crawler.py --year 2025 --semester 1
-  → courses_raw_2025_1.json
-  - Raw API responses saved as-is
-  - Each course references department via class_cd
-
-Step 3: Transformation (~1 second, repeatable!)
-  python transformer.py \
-    --metadata output/metadata_2025_1.json \
-    --courses output/courses_raw_2025_1.json
-  → transformed_2025_1.json
-  - catalog-service compatible format
-  - classTime as structured List: [{"day":"월","startTime":"15:00","endTime":"16:15"}]
-  - Auto-mapped: college, department, courseType from metadata
-```
-
-### Key Design Principles
-
-1. **Metadata Separation**: Extract colleges, departments, courseTypes from data.js (no hardcoding!)
-2. **Crawl Once**: Minimize server load (~4 minutes → run once only!)
-3. **Transform Repeatedly**: Modify data_parser.py → re-run Step 3 only (~1 second)
-4. **Service Simplicity**: catalog-service does NO transformation, only stores data
-5. **DB-Friendly**: classTime is structured List, easy to store as separate table or JSON
-
-### Output Format (Code-based, DB Normalized)
-
-```json
-{
-  "openingYear": 2025,
-  "semester": "1학기",
-  "courseCode": "CSE302",
-  "courseName": "컴퓨터네트워크",
-  "professor": "이성원",
-  "credits": 3,
-  "classTime": [
-    {"day": "월", "startTime": "15:00", "endTime": "16:15"},
-    {"day": "수", "startTime": "15:00", "endTime": "16:15"}
-  ],
-  "classroom": "B01",
-  "courseTypeCode": "04",
-  "departmentCode": "A10627",
-  "campus": "국제"
-}
-```
-
-Uses codes instead of names for DB normalization. Metadata mapping via join queries.
-
-### Importing to catalog-service
-
-The transformed data can be directly imported via REST API:
-
-```bash
-curl -X POST http://localhost:8080/api/courses/import \
-  -H "Content-Type: application/json" \
-  -d @output/transformed_2025_1.json
-```
-
-catalog-service simply stores the data without any transformation logic.
-
-### Setup & Usage
-
-```bash
-cd scripts/crawler
-
-# Create virtual environment (first time only)
-python -m venv venv
-venv\Scripts\activate  # Windows
-# source venv/bin/activate  # Mac/Linux
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run crawler (see README.md for details)
-python crawl_metadata.py --year 2025 --semester 1
-python run_crawler.py --year 2025 --semester 1 --limit 5
-python transformer.py --metadata output/metadata_2025_1.json \
-  --courses output/courses_raw_2025_1.json
-```
-
-### Documentation
-
-- Main Guide: `scripts/crawler/README.md`
-- Transformation Details: `scripts/crawler/TRANSFORMATION_GUIDE.md`
-- Field Mapping: `scripts/crawler/FIELD_MAPPING.md`
-
-## Client Applications
-
-### Frontend (Planned)
-
-**Tech Stack**: Flutter web
-
-**Location**: `app/frontend/`
-
-**Purpose**: Web-based UI for students to create and manage timetable scenarios with decision trees.
-
-**Key Features** (planned):
-- User authentication (JWT-based)
-- Course search and filtering
-- Visual timetable builder with drag-and-drop
-- Decision tree editor (Plan A, B, C with failure conditions)
-- Real-time navigation during registration
-
-### CLI Client
-
-**Tech Stack**: Dart
-
-**Location**: `app/cli-client/`
-
-**Purpose**: Command-line interface for testing backend APIs before frontend completion.
-
-**Development Order**: Backend → CLI Client → Frontend
-
-**Key Features**:
-- **Interactive Mode**: Shell-like interface for continuous command execution
-- **Authentication**: Login, signup, token refresh, logout
-- **Course Management**: List, search, get details, import from JSON
-- **User Management**: Get profile
-- **Wishlist**: Add/remove courses with priority levels
-- **Timetable**: Create, manage, and link courses to timetables
-- **Scenarios**: Build decision trees for registration alternatives
-- **Registration**: Real-time simulation with mark-and-submit workflow
-  - Mark course results (SUCCESS/FAILED/CANCELED) locally before submitting
-  - Resume sessions after CLI restart
-  - Automatic navigation to alternative scenarios
-- **HTTP Debugging**: `--details` flag shows full request/response
-- **Terminal Control**: `--clear` flag clears screen before output
-- **Token Management**: Automatic JWT token storage and injection
-
-**Project Structure**:
-```
-app/cli-client/
-├── bin/
-│   └── uniplan.dart          # Main entry point
-├── lib/
-│   ├── commands/             # Command implementations
-│   │   ├── auth_command.dart
-│   │   ├── courses_command.dart
-│   │   └── user_command.dart
-│   ├── api/
-│   │   ├── api_client.dart   # HTTP client with logging
-│   │   └── endpoints.dart    # API endpoint constants
-│   ├── utils/
-│   │   ├── token_manager.dart    # JWT token storage
-│   │   ├── output_formatter.dart # Output formatting
-│   │   └── terminal_utils.dart   # Terminal control & colors
-│   └── config.dart           # Configuration management
-└── pubspec.yaml
-```
-
-**Usage Examples**:
-```bash
-# Install dependencies
-cd app/cli-client && dart pub get
-
-# Authentication
-dart run bin/uniplan.dart auth login test@test.com password123
-dart run bin/uniplan.dart auth signup new@test.com pass123 "Name"
-
-# Courses (with debugging)
-dart run bin/uniplan.dart courses list --details
-dart run bin/uniplan.dart courses search "컴퓨터" --clear
-dart run bin/uniplan.dart courses import output/transformed_2025_1.json
-
-# User profile
-dart run bin/uniplan.dart user profile
-
-# Compile to executable (optional)
-dart compile exe bin/uniplan.dart -o uniplan
-```
-
-**Documentation**: See `app/cli-client/USAGE_GUIDE.md` for detailed usage instructions.
-
-**Token Storage**: Tokens are stored in `~/.uniplan/token.json` and automatically included in authenticated requests.
-
-## Reference Documentation
-
-### Backend
-
-- Requirements: `요구사항명세서.md`
-- API Path Mapping: `app/backend/API_PATH_MAPPING.md`
-- JWT Authentication Guide: `app/backend/JWT_AUTH_GUIDE.md`
-- Swagger Architecture: `app/backend/SWAGGER_ARCHITECTURE.md`
-- User Service README: `app/backend/user-service/README.md`
-- Catalog Service README: `app/backend/catalog-service/README.md`
-
-### Scripts
-
-- Course Crawler Guide: `scripts/crawler/README.md`
-- Transformation Guide: `scripts/crawler/TRANSFORMATION_GUIDE.md`
-- Field Mapping: `scripts/crawler/FIELD_MAPPING.md`
-
-### CLI Client
-
-- README: `app/cli-client/README.md`
-- Usage Guide: `app/cli-client/USAGE_GUIDE.md`
+- Never commit: `.env`, `application-local.yml`, credentials
+- All traffic via API Gateway (port 8080)
+- JWT flow: User Service issues → Gateway validates → Downstream trusts headers

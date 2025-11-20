@@ -14,7 +14,7 @@
 UniPlan/
 ├── app/
 │   ├── backend/           # Spring Boot MSA → See app/backend/CLAUDE.md
-│   ├── frontend/          # Flutter web (planned)
+│   ├── frontend/          # Flutter web → See app/frontend/CLAUDE.md
 │   └── cli-client/        # Dart CLI → See app/cli-client/CLAUDE.md
 ├── scripts/
 │   └── crawler/           # Python course crawler → See scripts/crawler/CLAUDE.md
@@ -24,6 +24,7 @@ UniPlan/
 ## Module Documentation
 
 - **Backend (MSA)**: `app/backend/CLAUDE.md`
+- **Frontend (Web)**: `app/frontend/CLAUDE.md`
 - **Course Crawler**: `scripts/crawler/CLAUDE.md`
 - **CLI Client**: `app/cli-client/CLAUDE.md`
 

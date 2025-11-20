@@ -70,3 +70,16 @@ pubspec.lock
 
 # Module-specific
 /app/backend/bff/HELP.md
+
+# Additional Flutter/Dart ignores
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+app.*.symbols
+app.*.map.json
+
+# Android Studio build artifacts
+**/android/app/debug
+**/android/app/profile
+**/android/app/release

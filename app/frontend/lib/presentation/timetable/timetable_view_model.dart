@@ -3,62 +3,54 @@ import '../../domain/entities/timetable.dart';
 import '../../domain/entities/course.dart';
 import '../../data/repositories/timetable_repository_impl.dart';
 
-final timetableProvider = StateNotifierProvider<TimetableViewModel, AsyncValue<List<Timetable>>>((ref) {
-  return TimetableViewModel(ref);
+final timetableProvider = AsyncNotifierProvider<TimetableViewModel, List<Timetable>>(() {
+  return TimetableViewModel();
 });
 
-class TimetableViewModel extends StateNotifier<AsyncValue<List<Timetable>>> {
-  final Ref _ref;
+class TimetableViewModel extends AsyncNotifier<List<Timetable>> {
+  @override
+  Future<List<Timetable>> build() async {
+    return _fetchTimetables();
+  }
 
-  TimetableViewModel(this._ref) : super(const AsyncValue.loading()) {
-    fetchTimetables();
+  Future<List<Timetable>> _fetchTimetables() async {
+    return await ref.read(timetableRepositoryProvider).getTimetables();
   }
 
   Future<void> fetchTimetables() async {
     state = const AsyncValue.loading();
-    try {
-      final timetables = await _ref.read(timetableRepositoryProvider).getTimetables();
-      state = AsyncValue.data(timetables);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
-    }
+    state = await AsyncValue.guard(() => _fetchTimetables());
   }
 
   Future<void> createTimetable(String name, {String? parentId}) async {
-    try {
-      await _ref.read(timetableRepositoryProvider).createTimetable(name, parentId: parentId);
-      await fetchTimetables();
-    } catch (e) {
-      print('Error creating timetable: $e');
-    }
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(timetableRepositoryProvider).createTimetable(name, parentId: parentId);
+      return _fetchTimetables();
+    });
   }
 
   Future<void> addCourseToTimetable(String timetableId, Course course) async {
-    try {
-      await _ref.read(timetableRepositoryProvider).addCourseToTimetable(timetableId, course);
-      await fetchTimetables();
-    } catch (e) {
-      // In a real app, we'd expose this error to the UI
-      print('Error adding course to timetable: $e');
-      throw e; // Rethrow to let UI handle it if needed
-    }
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(timetableRepositoryProvider).addCourseToTimetable(timetableId, course);
+      return _fetchTimetables();
+    });
   }
 
   Future<void> removeCourseFromTimetable(String timetableId, String courseId) async {
-    try {
-      await _ref.read(timetableRepositoryProvider).removeCourseFromTimetable(timetableId, courseId);
-      await fetchTimetables();
-    } catch (e) {
-      print('Error removing course from timetable: $e');
-    }
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(timetableRepositoryProvider).removeCourseFromTimetable(timetableId, courseId);
+      return _fetchTimetables();
+    });
   }
 
   Future<void> deleteTimetable(String timetableId) async {
-    try {
-      await _ref.read(timetableRepositoryProvider).deleteTimetable(timetableId);
-      await fetchTimetables();
-    } catch (e) {
-      print('Error deleting timetable: $e');
-    }
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(timetableRepositoryProvider).deleteTimetable(timetableId);
+      return _fetchTimetables();
+    });
   }
 }

@@ -5,7 +5,7 @@ part 'wishlist_item.freezed.dart';
 part 'wishlist_item.g.dart';
 
 @freezed
-class WishlistItem with _$WishlistItem {
+abstract class WishlistItem with _$WishlistItem {
   const factory WishlistItem({
     required String id,
     required Course course,

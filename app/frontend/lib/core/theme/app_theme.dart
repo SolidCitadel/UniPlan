@@ -5,13 +5,13 @@ import 'package:google_fonts/google_fonts.dart';
 class AppTheme {
   static ThemeData get light {
     return FlexThemeData.light(
-      scheme: FlexScheme.material3,
+      scheme: FlexScheme.indigo,
       surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
       blendLevel: 7,
       subThemesData: const FlexSubThemesData(
         blendOnLevel: 10,
         blendOnColors: false,
-        useTextTheme: true,
+        useMaterial3Typography: true,
         useM2StyleDividerInM3: true,
         alignedDropdown: true,
         useInputDecoratorThemeInDialogs: true,
@@ -25,12 +25,12 @@ class AppTheme {
 
   static ThemeData get dark {
     return FlexThemeData.dark(
-      scheme: FlexScheme.material3,
+      scheme: FlexScheme.indigo,
       surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
       blendLevel: 13,
       subThemesData: const FlexSubThemesData(
         blendOnLevel: 20,
-        useTextTheme: true,
+        useMaterial3Typography: true,
         useM2StyleDividerInM3: true,
         alignedDropdown: true,
         useInputDecoratorThemeInDialogs: true,

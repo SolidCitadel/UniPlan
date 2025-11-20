@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'course_list_view_model.dart';
 import '../wishlist/wishlist_view_model.dart';
@@ -96,7 +97,7 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
                       IconButton(
                         icon: const Icon(Icons.calendar_today),
                         onPressed: () async {
-                          final timetables = ref.read(timetableProvider).valueOrNull ?? [];
+                          final timetables = ref.read(timetableProvider).asData?.value ?? [];
                           if (timetables.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('No timetables found. Create one in Planner first.')),

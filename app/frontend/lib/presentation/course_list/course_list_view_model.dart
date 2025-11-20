@@ -2,30 +2,29 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/course.dart';
 import '../../data/repositories/course_repository_impl.dart';
 
-final courseListProvider = StateNotifierProvider<CourseListViewModel, AsyncValue<List<Course>>>((ref) {
-  return CourseListViewModel(ref);
+final courseListProvider = AsyncNotifierProvider<CourseListViewModel, List<Course>>(() {
+  return CourseListViewModel();
 });
 
-class CourseListViewModel extends StateNotifier<AsyncValue<List<Course>>> {
-  final Ref _ref;
+class CourseListViewModel extends AsyncNotifier<List<Course>> {
   String? _searchQuery;
   String? _departmentFilter;
 
-  CourseListViewModel(this._ref) : super(const AsyncValue.loading()) {
-    fetchCourses();
+  @override
+  Future<List<Course>> build() async {
+    return _fetchCourses();
+  }
+
+  Future<List<Course>> _fetchCourses() async {
+    return await ref.read(courseRepositoryProvider).getCourses(
+      search: _searchQuery,
+      department: _departmentFilter,
+    );
   }
 
   Future<void> fetchCourses() async {
     state = const AsyncValue.loading();
-    try {
-      final courses = await _ref.read(courseRepositoryProvider).getCourses(
-        search: _searchQuery,
-        department: _departmentFilter,
-      );
-      state = AsyncValue.data(courses);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
-    }
+    state = await AsyncValue.guard(() => _fetchCourses());
   }
 
   void setSearchQuery(String query) {

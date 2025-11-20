@@ -45,7 +45,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     final authState = ref.watch(authStateProvider);
 
     ref.listen(authStateProvider, (previous, next) {
-      if (next.value != null) {
+      if (next.asData?.value != null) {
         context.go('/');
       }
       if (next.hasError) {

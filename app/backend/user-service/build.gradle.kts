@@ -33,7 +33,7 @@ dependencies {
 	implementation("io.github.cdimascio:dotenv-java:3.0.0")
 
 	// Swagger (SpringDoc OpenAPI)
-	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.0")
 
 	// JWT (토큰 발급 및 검증)
 	implementation("io.jsonwebtoken:jjwt-api:0.12.3")

@@ -37,7 +37,7 @@ dependencies {
     implementation("org.springframework.cloud:spring-cloud-starter-gateway-server-webflux")
 
     // Swagger for API Gateway (통합 문서)
-    implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.3.0")
+    implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.0")
 
     // JWT 검증 (User Service와 동일한 시크릿 키 사용)
     implementation("io.jsonwebtoken:jjwt-api:0.12.3")

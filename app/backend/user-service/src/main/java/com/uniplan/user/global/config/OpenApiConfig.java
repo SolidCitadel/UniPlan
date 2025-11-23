@@ -21,7 +21,18 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("UniPlan User Service API")
-                        .description("사용자 인증 및 계정 관리 API - Google OAuth2 기반 소셜 로그인 및 JWT 토큰 발급")
+                        .description("""
+                            사용자 인증 및 계정 관리 API
+
+                            ## Gateway를 통한 접근
+                            - Gateway(8080)를 통해 접근 시 `/api/v1` prefix가 자동으로 제거됩니다.
+                            - 예: `GET /api/v1/auth/login` → `GET /auth/login`
+
+                            ## 인증
+                            - Google OAuth2 기반 소셜 로그인
+                            - JWT 토큰 발급 및 검증
+                            - Authorization 헤더에 `Bearer {token}` 형식으로 전달
+                            """)
                         .version("v1.0.0")
                         .contact(new Contact()
                                 .name("UniPlan Team")
@@ -30,9 +41,8 @@ public class OpenApiConfig {
                                 .name("MIT License")
                                 .url("https://opensource.org/licenses/MIT")))
                 .servers(List.of(
-                        new Server().url("http://localhost:8081").description("로컬 개발 서버"),
-                        new Server().url("http://localhost:8080").description("API Gateway (로컬)"),
-                        new Server().url("https://api.uniplan.com").description("운영 서버")
+                        new Server().url("http://localhost:8080/api/v1").description("API Gateway (로컬)"),
+                        new Server().url("http://localhost:8081").description("Direct Access (로컬)")
                 ))
                 .components(new Components()
                         .addSecuritySchemes("bearer-jwt", new SecurityScheme()

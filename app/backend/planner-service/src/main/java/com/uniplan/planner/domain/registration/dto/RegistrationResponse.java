@@ -3,7 +3,7 @@ package com.uniplan.planner.domain.registration.dto;
 import com.uniplan.planner.domain.registration.entity.Registration;
 import com.uniplan.planner.domain.registration.entity.RegistrationStatus;
 import com.uniplan.planner.domain.scenario.dto.ScenarioResponse;
-import com.uniplan.planner.global.client.dto.CourseSimpleResponse;
+import com.uniplan.planner.global.client.dto.CourseFullResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -32,25 +32,7 @@ public class RegistrationResponse {
     private List<Long> canceledCourses;
     private List<RegistrationStepResponse> steps;
 
-    public static RegistrationResponse from(Registration registration) {
-        return RegistrationResponse.builder()
-                .id(registration.getId())
-                .userId(registration.getUserId())
-                .startScenario(ScenarioResponse.from(registration.getStartScenario()))
-                .currentScenario(ScenarioResponse.from(registration.getCurrentScenario()))
-                .status(registration.getStatus())
-                .startedAt(registration.getStartedAt())
-                .completedAt(registration.getCompletedAt())
-                .succeededCourses(registration.getAllSucceededCourses())
-                .failedCourses(registration.getAllFailedCourses())
-                .canceledCourses(registration.getAllCanceledCourses())
-                .steps(registration.getSteps().stream()
-                        .map(RegistrationStepResponse::from)
-                        .collect(Collectors.toList()))
-                .build();
-    }
-
-    public static RegistrationResponse from(Registration registration, Map<Long, CourseSimpleResponse> courseMap) {
+    public static RegistrationResponse from(Registration registration, Map<Long, CourseFullResponse> courseMap) {
         return RegistrationResponse.builder()
                 .id(registration.getId())
                 .userId(registration.getUserId())

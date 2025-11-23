@@ -9,7 +9,6 @@ import com.uniplan.planner.domain.timetable.entity.TimetableItem;
 import com.uniplan.planner.domain.timetable.repository.TimetableRepository;
 import com.uniplan.planner.global.client.CatalogClient;
 import com.uniplan.planner.global.client.dto.CourseFullResponse;
-import com.uniplan.planner.global.client.dto.CourseSimpleResponse;
 import com.uniplan.planner.global.exception.ScenarioNotFoundException;
 import com.uniplan.planner.global.exception.TimetableNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -50,7 +49,13 @@ public class ScenarioService {
                 .build();
 
         Scenario savedScenario = scenarioRepository.save(scenario);
-        return ScenarioResponse.from(savedScenario);
+
+        // Fetch course details
+        Set<Long> courseIds = new HashSet<>();
+        collectCourseIds(savedScenario, courseIds);
+        Map<Long, CourseFullResponse> courseMap = catalogClient.getFullCoursesByIds(new ArrayList<>(courseIds));
+
+        return ScenarioResponse.from(savedScenario, courseMap);
     }
 
     @Transactional
@@ -85,20 +90,39 @@ public class ScenarioService {
                 .build();
 
         Scenario savedScenario = scenarioRepository.save(alternativeScenario);
-        return ScenarioResponse.from(savedScenario);
+
+        // Fetch course details
+        Set<Long> courseIds = new HashSet<>();
+        collectCourseIds(savedScenario, courseIds);
+        Map<Long, CourseFullResponse> courseMap = catalogClient.getFullCoursesByIds(new ArrayList<>(courseIds));
+
+        return ScenarioResponse.from(savedScenario, courseMap);
     }
 
     public List<ScenarioResponse> getRootScenarios(Long userId) {
         List<Scenario> rootScenarios = scenarioRepository.findByUserIdAndParentScenarioIsNull(userId);
+
+        // Collect all course IDs
+        Set<Long> allCourseIds = new HashSet<>();
+        for (Scenario scenario : rootScenarios) {
+            collectCourseIds(scenario, allCourseIds);
+        }
+        Map<Long, CourseFullResponse> courseMap = catalogClient.getFullCoursesByIds(new ArrayList<>(allCourseIds));
+
         return rootScenarios.stream()
-                .map(ScenarioResponse::from)
+                .map(s -> ScenarioResponse.from(s, courseMap))
                 .collect(Collectors.toList());
     }
 
     public ScenarioResponse getScenario(Long userId, Long scenarioId) {
         Scenario scenario = scenarioRepository.findByIdAndUserId(scenarioId, userId)
                 .orElseThrow(() -> new ScenarioNotFoundException(scenarioId));
-        return ScenarioResponse.from(scenario);
+
+        Set<Long> courseIds = new HashSet<>();
+        collectCourseIds(scenario, courseIds);
+        Map<Long, CourseFullResponse> courseMap = catalogClient.getFullCoursesByIds(new ArrayList<>(courseIds));
+
+        return ScenarioResponse.from(scenario, courseMap);
     }
 
     public ScenarioResponse getScenarioWithFullTree(Long userId, Long scenarioId) {
@@ -112,7 +136,7 @@ public class ScenarioService {
         // Fetch all courses with full details at once
         Map<Long, CourseFullResponse> courseMap = catalogClient.getFullCoursesByIds(new ArrayList<>(allCourseIds));
 
-        return ScenarioResponse.fromWithFullTreeAndCourses(scenario, courseMap);
+        return ScenarioResponse.fromWithFullTree(scenario, courseMap);
     }
 
     @Transactional
@@ -121,7 +145,12 @@ public class ScenarioService {
                 .orElseThrow(() -> new ScenarioNotFoundException(scenarioId));
 
         scenario.updateInfo(request.getName(), request.getDescription());
-        return ScenarioResponse.from(scenario);
+
+        Set<Long> courseIds = new HashSet<>();
+        collectCourseIds(scenario, courseIds);
+        Map<Long, CourseFullResponse> courseMap = catalogClient.getFullCoursesByIds(new ArrayList<>(courseIds));
+
+        return ScenarioResponse.from(scenario, courseMap);
     }
 
     @Transactional
@@ -163,7 +192,11 @@ public class ScenarioService {
                 "강의 " + request.getFailedCourseIds() + " 실패에 대한 대안 시나리오가 없습니다"
         ));
 
-        return ScenarioResponse.from(nextScenario);
+        Set<Long> courseIds = new HashSet<>();
+        collectCourseIds(nextScenario, courseIds);
+        Map<Long, CourseFullResponse> courseMap = catalogClient.getFullCoursesByIds(new ArrayList<>(courseIds));
+
+        return ScenarioResponse.from(nextScenario, courseMap);
     }
 
     /**
@@ -175,8 +208,16 @@ public class ScenarioService {
                 .orElseThrow(() -> new ScenarioNotFoundException(parentScenarioId));
 
         List<Scenario> children = scenarioRepository.findByParentScenarioIdOrderByOrderIndexAsc(parentScenarioId);
+
+        // Collect all course IDs
+        Set<Long> allCourseIds = new HashSet<>();
+        for (Scenario child : children) {
+            collectCourseIds(child, allCourseIds);
+        }
+        Map<Long, CourseFullResponse> courseMap = catalogClient.getFullCoursesByIds(new ArrayList<>(allCourseIds));
+
         return children.stream()
-                .map(ScenarioResponse::from)
+                .map(c -> ScenarioResponse.from(c, courseMap))
                 .collect(Collectors.toList());
     }
 
@@ -201,13 +242,16 @@ public class ScenarioService {
     }
 
     /**
-     * Recursively collect all course IDs from scenario tree
+     * Recursively collect all course IDs from scenario tree (items + excluded)
      */
     private void collectCourseIds(Scenario scenario, Set<Long> courseIds) {
         // Add course IDs from current scenario's timetable
         scenario.getTimetable().getItems().stream()
                 .map(TimetableItem::getCourseId)
                 .forEach(courseIds::add);
+
+        // Add excluded course IDs
+        courseIds.addAll(scenario.getTimetable().getExcludedCourseIds());
 
         // Recursively collect from child scenarios
         if (scenario.getChildScenarios() != null) {

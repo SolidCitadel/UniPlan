@@ -10,7 +10,7 @@ abstract class TimetableDto with _$TimetableDto {
     required String name,
     required int openingYear,
     required String semester,
-    @Default([]) List<int> excludedCourseIds,
+    @Default([]) List<TimetableCourseDto> excludedCourses,
     @Default([]) List<TimetableItemDto> items,
   }) = _TimetableDto;
 
@@ -40,4 +40,17 @@ abstract class ClassTimeDto with _$ClassTimeDto {
   }) = _ClassTimeDto;
 
   factory ClassTimeDto.fromJson(Map<String, dynamic> json) => _$ClassTimeDtoFromJson(json);
+}
+
+@freezed
+abstract class TimetableCourseDto with _$TimetableCourseDto {
+  const factory TimetableCourseDto({
+    required int courseId,
+    required String courseName,
+    required String professor,
+    String? classroom,
+    @Default([]) List<ClassTimeDto> classTimes,
+  }) = _TimetableCourseDto;
+
+  factory TimetableCourseDto.fromJson(Map<String, dynamic> json) => _$TimetableCourseDtoFromJson(json);
 }

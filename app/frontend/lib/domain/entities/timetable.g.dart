@@ -11,9 +11,9 @@ _Timetable _$TimetableFromJson(Map<String, dynamic> json) => _Timetable(
   name: json['name'] as String,
   openingYear: (json['openingYear'] as num).toInt(),
   semester: json['semester'] as String,
-  excludedCourseIds:
-      (json['excludedCourseIds'] as List<dynamic>?)
-          ?.map((e) => (e as num).toInt())
+  excludedCourses:
+      (json['excludedCourses'] as List<dynamic>?)
+          ?.map((e) => TimetableCourse.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const [],
   items:
@@ -29,7 +29,7 @@ Map<String, dynamic> _$TimetableToJson(_Timetable instance) =>
       'name': instance.name,
       'openingYear': instance.openingYear,
       'semester': instance.semester,
-      'excludedCourseIds': instance.excludedCourseIds,
+      'excludedCourses': instance.excludedCourses,
       'items': instance.items,
     };
 
@@ -68,4 +68,26 @@ Map<String, dynamic> _$ClassTimeToJson(_ClassTime instance) =>
       'day': instance.day,
       'startTime': instance.startTime,
       'endTime': instance.endTime,
+    };
+
+_TimetableCourse _$TimetableCourseFromJson(Map<String, dynamic> json) =>
+    _TimetableCourse(
+      courseId: (json['courseId'] as num).toInt(),
+      courseName: json['courseName'] as String,
+      professor: json['professor'] as String,
+      classroom: json['classroom'] as String?,
+      classTimes:
+          (json['classTimes'] as List<dynamic>?)
+              ?.map((e) => ClassTime.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+    );
+
+Map<String, dynamic> _$TimetableCourseToJson(_TimetableCourse instance) =>
+    <String, dynamic>{
+      'courseId': instance.courseId,
+      'courseName': instance.courseName,
+      'professor': instance.professor,
+      'classroom': instance.classroom,
+      'classTimes': instance.classTimes,
     };

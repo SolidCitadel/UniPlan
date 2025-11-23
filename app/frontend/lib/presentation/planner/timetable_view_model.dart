@@ -21,19 +21,23 @@ class TimetableViewModel extends AsyncNotifier<List<Timetable>> {
     state = await AsyncValue.guard(_fetch);
   }
 
-  Future<void> create({
+  Future<Timetable?> create({
     required String name,
     required int openingYear,
     required String semester,
   }) async {
-    state = await AsyncValue.guard(() async {
-      await ref.read(timetableRepositoryProvider).createTimetable(
+    try {
+      final created = await ref.read(timetableRepositoryProvider).createTimetable(
             name: name,
             openingYear: openingYear,
             semester: semester,
           );
-      return _fetch();
-    });
+      state = await AsyncValue.guard(_fetch);
+      return created;
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      return null;
+    }
   }
 
   Future<void> addCourse(int timetableId, int courseId) async {

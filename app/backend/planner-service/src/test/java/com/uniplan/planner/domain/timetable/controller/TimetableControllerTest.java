@@ -10,18 +10,28 @@ import com.uniplan.planner.domain.timetable.entity.Timetable;
 import com.uniplan.planner.domain.timetable.entity.TimetableItem;
 import com.uniplan.planner.domain.timetable.repository.TimetableItemRepository;
 import com.uniplan.planner.domain.timetable.repository.TimetableRepository;
+import com.uniplan.planner.global.client.CatalogClient;
+import com.uniplan.planner.global.client.dto.CourseFullResponse;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -45,6 +55,9 @@ class TimetableControllerTest {
     @Autowired
     private ScenarioRepository scenarioRepository;
 
+    @MockBean
+    private CatalogClient catalogClient;
+
     private static final Long TEST_USER_ID = 1L;
     private static final Long OTHER_USER_ID = 2L;
 
@@ -53,6 +66,34 @@ class TimetableControllerTest {
         scenarioRepository.deleteAll();  // Scenario가 Timetable을 참조하므로 먼저 삭제
         timetableItemRepository.deleteAll();
         timetableRepository.deleteAll();
+
+        // Mock CatalogClient to return course info
+        when(catalogClient.getFullCoursesByIds(anyList())).thenAnswer(invocation -> {
+            List<Long> courseIds = invocation.getArgument(0);
+            return courseIds.stream()
+                    .collect(Collectors.toMap(
+                            Function.identity(),
+                            this::createMockCourse
+                    ));
+        });
+
+        when(catalogClient.getFullCourseById(anyLong())).thenAnswer(invocation -> {
+            Long courseId = invocation.getArgument(0);
+            return createMockCourse(courseId);
+        });
+    }
+
+    private CourseFullResponse createMockCourse(Long id) {
+        return CourseFullResponse.builder()
+                .id(id)
+                .courseCode("CS" + id)
+                .courseName("Course " + id)
+                .professor("Professor " + id)
+                .credits(3)
+                .classroom("Room " + id)
+                .campus("Main")
+                .classTimes(List.of())
+                .build();
     }
 
     @Test
@@ -303,8 +344,8 @@ class TimetableControllerTest {
                 .andExpect(jsonPath("$.openingYear").value(2025))
                 .andExpect(jsonPath("$.semester").value("1학기"))
                 .andExpect(jsonPath("$.items", hasSize(2)))  // CS102, CS103만 복사됨
-                .andExpect(jsonPath("$.excludedCourseIds", hasSize(1)))  // CS101 제외됨
-                .andExpect(jsonPath("$.excludedCourseIds[0]").value(101L));
+                .andExpect(jsonPath("$.excludedCourses", hasSize(1)))  // CS101 제외됨
+                .andExpect(jsonPath("$.excludedCourses[0].courseId").value(101L));
     }
 
     @Test
@@ -330,7 +371,7 @@ class TimetableControllerTest {
                 .andDo(print())
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.items", hasSize(2)))  // CS103, CS104만 복사됨
-                .andExpect(jsonPath("$.excludedCourseIds", hasSize(2)));
+                .andExpect(jsonPath("$.excludedCourses", hasSize(2)));
     }
 
     @Test

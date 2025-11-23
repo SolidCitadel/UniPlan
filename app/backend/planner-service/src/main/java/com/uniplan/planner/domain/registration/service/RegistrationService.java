@@ -10,7 +10,7 @@ import com.uniplan.planner.domain.scenario.entity.Scenario;
 import com.uniplan.planner.domain.scenario.repository.ScenarioRepository;
 import com.uniplan.planner.domain.timetable.entity.TimetableItem;
 import com.uniplan.planner.global.client.CatalogClient;
-import com.uniplan.planner.global.client.dto.CourseSimpleResponse;
+import com.uniplan.planner.global.client.dto.CourseFullResponse;
 import com.uniplan.planner.global.exception.RegistrationNotFoundException;
 import com.uniplan.planner.global.exception.ScenarioNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -47,7 +47,12 @@ public class RegistrationService {
                 .build();
 
         Registration savedRegistration = registrationRepository.save(registration);
-        return RegistrationResponse.from(savedRegistration);
+
+        Set<Long> courseIds = new HashSet<>();
+        collectCourseIdsFromScenario(savedRegistration.getStartScenario(), courseIds);
+        Map<Long, CourseFullResponse> courseMap = catalogClient.getFullCoursesByIds(new ArrayList<>(courseIds));
+
+        return RegistrationResponse.from(savedRegistration, courseMap);
     }
 
     @Transactional
@@ -96,7 +101,12 @@ public class RegistrationService {
         registration.addStep(step);
         registrationStepRepository.save(step);
 
-        return RegistrationResponse.from(registration);
+        Set<Long> courseIds = new HashSet<>();
+        collectCourseIdsFromScenario(registration.getStartScenario(), courseIds);
+        collectCourseIdsFromScenario(registration.getCurrentScenario(), courseIds);
+        Map<Long, CourseFullResponse> courseMap = catalogClient.getFullCoursesByIds(new ArrayList<>(courseIds));
+
+        return RegistrationResponse.from(registration, courseMap);
     }
 
     public RegistrationResponse getRegistration(Long userId, Long registrationId) {
@@ -109,22 +119,40 @@ public class RegistrationService {
         collectCourseIdsFromScenario(registration.getCurrentScenario(), allCourseIds);
 
         // Fetch course details
-        Map<Long, CourseSimpleResponse> courseMap = catalogClient.getCoursesByIds(new ArrayList<>(allCourseIds));
+        Map<Long, CourseFullResponse> courseMap = catalogClient.getFullCoursesByIds(new ArrayList<>(allCourseIds));
 
         return RegistrationResponse.from(registration, courseMap);
     }
 
     public List<RegistrationResponse> getUserRegistrations(Long userId) {
         List<Registration> registrations = registrationRepository.findByUserId(userId);
+
+        // Collect all course IDs
+        Set<Long> allCourseIds = new HashSet<>();
+        for (Registration reg : registrations) {
+            collectCourseIdsFromScenario(reg.getStartScenario(), allCourseIds);
+            collectCourseIdsFromScenario(reg.getCurrentScenario(), allCourseIds);
+        }
+        Map<Long, CourseFullResponse> courseMap = catalogClient.getFullCoursesByIds(new ArrayList<>(allCourseIds));
+
         return registrations.stream()
-                .map(RegistrationResponse::from)
+                .map(r -> RegistrationResponse.from(r, courseMap))
                 .collect(Collectors.toList());
     }
 
     public List<RegistrationResponse> getUserRegistrationsByStatus(Long userId, RegistrationStatus status) {
         List<Registration> registrations = registrationRepository.findByUserIdAndStatus(userId, status);
+
+        // Collect all course IDs
+        Set<Long> allCourseIds = new HashSet<>();
+        for (Registration reg : registrations) {
+            collectCourseIdsFromScenario(reg.getStartScenario(), allCourseIds);
+            collectCourseIdsFromScenario(reg.getCurrentScenario(), allCourseIds);
+        }
+        Map<Long, CourseFullResponse> courseMap = catalogClient.getFullCoursesByIds(new ArrayList<>(allCourseIds));
+
         return registrations.stream()
-                .map(RegistrationResponse::from)
+                .map(r -> RegistrationResponse.from(r, courseMap))
                 .collect(Collectors.toList());
     }
 
@@ -138,7 +166,13 @@ public class RegistrationService {
         }
 
         registration.complete();
-        return RegistrationResponse.from(registration);
+
+        Set<Long> courseIds = new HashSet<>();
+        collectCourseIdsFromScenario(registration.getStartScenario(), courseIds);
+        collectCourseIdsFromScenario(registration.getCurrentScenario(), courseIds);
+        Map<Long, CourseFullResponse> courseMap = catalogClient.getFullCoursesByIds(new ArrayList<>(courseIds));
+
+        return RegistrationResponse.from(registration, courseMap);
     }
 
     @Transactional
@@ -176,13 +210,14 @@ public class RegistrationService {
     }
 
     /**
-     * Helper method to collect course IDs from a scenario's timetable
+     * Helper method to collect course IDs from a scenario's timetable (items + excluded)
      */
     private void collectCourseIdsFromScenario(Scenario scenario, Set<Long> courseIds) {
         if (scenario != null && scenario.getTimetable() != null) {
             scenario.getTimetable().getItems().stream()
                     .map(TimetableItem::getCourseId)
                     .forEach(courseIds::add);
+            courseIds.addAll(scenario.getTimetable().getExcludedCourseIds());
         }
     }
 }

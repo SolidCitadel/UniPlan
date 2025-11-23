@@ -8,6 +8,7 @@ import '../../presentation/auth/signup_screen.dart';
 import '../../presentation/courses/course_list_screen.dart';
 import '../../presentation/help/help_screen.dart';
 import '../../presentation/planner/timetable_screen.dart';
+import '../../presentation/planner/timetable_edit_screen.dart';
 import '../../presentation/registration/course_registration_screen.dart';
 import '../../presentation/scenario/scenario_screen.dart';
 import '../../presentation/wishlist/wishlist_screen.dart';
@@ -49,8 +50,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const WishlistScreen(),
           ),
           GoRoute(
-            path: '/app/planner',
+            path: '/app/timetables',
             builder: (context, state) => const TimetableScreen(),
+          ),
+          GoRoute(
+            path: '/app/timetables/:id',
+            builder: (context, state) {
+              final id = int.tryParse(state.pathParameters['id'] ?? '');
+              return id == null ? const TimetableScreen() : TimetableEditScreen(timetableId: id);
+            },
           ),
           GoRoute(
             path: '/app/scenario',

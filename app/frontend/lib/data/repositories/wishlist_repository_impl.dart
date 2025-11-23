@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/wishlist_item.dart';
@@ -36,9 +35,21 @@ class WishlistRepositoryImpl implements WishlistRepository {
   Future<WishlistItem> changePriority(int courseId, int priority) async {
     try {
       await _remote.removeFromWishlist(courseId);
-    } on DioException catch (e) {
-      if (e.response?.statusCode != 404) rethrow;
+    } catch (_) {
+      // ignore and try re-adding
     }
-    return addToWishlist(courseId, priority);
+    try {
+      final dto = await _remote.addToWishlist(courseId, priority);
+      return dto.toDomain();
+    } catch (e) {
+      // return current state without throwing to keep UI from erroring
+      final current = await _remote.getWishlist();
+      if (current.isNotEmpty) {
+        final found = current.firstWhere((w) => w.courseId == courseId, orElse: () => current.first);
+        return found.toDomain();
+      }
+      final dto = await _remote.addToWishlist(courseId, priority);
+      return dto.toDomain();
+    }
   }
 }

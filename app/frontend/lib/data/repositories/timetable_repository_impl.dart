@@ -21,6 +21,12 @@ class TimetableRepositoryImpl implements TimetableRepository {
   }
 
   @override
+  Future<Timetable> getTimetable(int timetableId) async {
+    final dto = await _remote.getTimetable(timetableId);
+    return dto.toDomain();
+  }
+
+  @override
   Future<Timetable> createTimetable({
     required String name,
     required int openingYear,
@@ -47,5 +53,23 @@ class TimetableRepositoryImpl implements TimetableRepository {
   @override
   Future<void> deleteTimetable(int timetableId) {
     return _remote.deleteTimetable(timetableId);
+  }
+
+  @override
+  Future<Timetable> createAlternativeTimetable({
+    required int parentTimetableId,
+    required String name,
+    required int openingYear,
+    required String semester,
+    required List<int> excludedCourseIds,
+  }) async {
+    final dto = await _remote.createAlternativeTimetable(
+      parentTimetableId: parentTimetableId,
+      name: name,
+      openingYear: openingYear,
+      semester: semester,
+      excludedCourseIds: excludedCourseIds,
+    );
+    return dto.toDomain();
   }
 }

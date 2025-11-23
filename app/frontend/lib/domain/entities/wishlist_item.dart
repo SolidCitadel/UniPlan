@@ -11,7 +11,20 @@ abstract class WishlistItem with _$WishlistItem {
     required String courseName,
     required String professor,
     required int priority,
+    String? classroom,
+    @Default([]) List<ClassTime> classTimes,
   }) = _WishlistItem;
 
   factory WishlistItem.fromJson(Map<String, dynamic> json) => _$WishlistItemFromJson(json);
+}
+
+@freezed
+abstract class ClassTime with _$ClassTime {
+  const factory ClassTime({
+    required String day,
+    required String startTime,
+    required String endTime,
+  }) = _ClassTime;
+
+  factory ClassTime.fromJson(Map<String, dynamic> json) => _$ClassTimeFromJson(json);
 }

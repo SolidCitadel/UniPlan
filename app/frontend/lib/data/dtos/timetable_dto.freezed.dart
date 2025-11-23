@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TimetableDto {
 
- int get id; String get name; int get openingYear; String get semester; List<TimetableItemDto> get items;
+ int get id; String get name; int get openingYear; String get semester; List<int> get excludedCourseIds; List<TimetableItemDto> get items;
 /// Create a copy of TimetableDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $TimetableDtoCopyWith<TimetableDto> get copyWith => _$TimetableDtoCopyWithImpl<T
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TimetableDto&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.openingYear, openingYear) || other.openingYear == openingYear)&&(identical(other.semester, semester) || other.semester == semester)&&const DeepCollectionEquality().equals(other.items, items));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TimetableDto&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.openingYear, openingYear) || other.openingYear == openingYear)&&(identical(other.semester, semester) || other.semester == semester)&&const DeepCollectionEquality().equals(other.excludedCourseIds, excludedCourseIds)&&const DeepCollectionEquality().equals(other.items, items));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,openingYear,semester,const DeepCollectionEquality().hash(items));
+int get hashCode => Object.hash(runtimeType,id,name,openingYear,semester,const DeepCollectionEquality().hash(excludedCourseIds),const DeepCollectionEquality().hash(items));
 
 @override
 String toString() {
-  return 'TimetableDto(id: $id, name: $name, openingYear: $openingYear, semester: $semester, items: $items)';
+  return 'TimetableDto(id: $id, name: $name, openingYear: $openingYear, semester: $semester, excludedCourseIds: $excludedCourseIds, items: $items)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $TimetableDtoCopyWith<$Res>  {
   factory $TimetableDtoCopyWith(TimetableDto value, $Res Function(TimetableDto) _then) = _$TimetableDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, String name, int openingYear, String semester, List<TimetableItemDto> items
+ int id, String name, int openingYear, String semester, List<int> excludedCourseIds, List<TimetableItemDto> items
 });
 
 
@@ -65,13 +65,14 @@ class _$TimetableDtoCopyWithImpl<$Res>
 
 /// Create a copy of TimetableDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? openingYear = null,Object? semester = null,Object? items = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? openingYear = null,Object? semester = null,Object? excludedCourseIds = null,Object? items = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,openingYear: null == openingYear ? _self.openingYear : openingYear // ignore: cast_nullable_to_non_nullable
 as int,semester: null == semester ? _self.semester : semester // ignore: cast_nullable_to_non_nullable
-as String,items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
+as String,excludedCourseIds: null == excludedCourseIds ? _self.excludedCourseIds : excludedCourseIds // ignore: cast_nullable_to_non_nullable
+as List<int>,items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
 as List<TimetableItemDto>,
   ));
 }
@@ -157,10 +158,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String name,  int openingYear,  String semester,  List<TimetableItemDto> items)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String name,  int openingYear,  String semester,  List<int> excludedCourseIds,  List<TimetableItemDto> items)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TimetableDto() when $default != null:
-return $default(_that.id,_that.name,_that.openingYear,_that.semester,_that.items);case _:
+return $default(_that.id,_that.name,_that.openingYear,_that.semester,_that.excludedCourseIds,_that.items);case _:
   return orElse();
 
 }
@@ -178,10 +179,10 @@ return $default(_that.id,_that.name,_that.openingYear,_that.semester,_that.items
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String name,  int openingYear,  String semester,  List<TimetableItemDto> items)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String name,  int openingYear,  String semester,  List<int> excludedCourseIds,  List<TimetableItemDto> items)  $default,) {final _that = this;
 switch (_that) {
 case _TimetableDto():
-return $default(_that.id,_that.name,_that.openingYear,_that.semester,_that.items);case _:
+return $default(_that.id,_that.name,_that.openingYear,_that.semester,_that.excludedCourseIds,_that.items);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -198,10 +199,10 @@ return $default(_that.id,_that.name,_that.openingYear,_that.semester,_that.items
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String name,  int openingYear,  String semester,  List<TimetableItemDto> items)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String name,  int openingYear,  String semester,  List<int> excludedCourseIds,  List<TimetableItemDto> items)?  $default,) {final _that = this;
 switch (_that) {
 case _TimetableDto() when $default != null:
-return $default(_that.id,_that.name,_that.openingYear,_that.semester,_that.items);case _:
+return $default(_that.id,_that.name,_that.openingYear,_that.semester,_that.excludedCourseIds,_that.items);case _:
   return null;
 
 }
@@ -213,13 +214,20 @@ return $default(_that.id,_that.name,_that.openingYear,_that.semester,_that.items
 @JsonSerializable()
 
 class _TimetableDto implements TimetableDto {
-  const _TimetableDto({required this.id, required this.name, required this.openingYear, required this.semester, final  List<TimetableItemDto> items = const []}): _items = items;
+  const _TimetableDto({required this.id, required this.name, required this.openingYear, required this.semester, final  List<int> excludedCourseIds = const [], final  List<TimetableItemDto> items = const []}): _excludedCourseIds = excludedCourseIds,_items = items;
   factory _TimetableDto.fromJson(Map<String, dynamic> json) => _$TimetableDtoFromJson(json);
 
 @override final  int id;
 @override final  String name;
 @override final  int openingYear;
 @override final  String semester;
+ final  List<int> _excludedCourseIds;
+@override@JsonKey() List<int> get excludedCourseIds {
+  if (_excludedCourseIds is EqualUnmodifiableListView) return _excludedCourseIds;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_excludedCourseIds);
+}
+
  final  List<TimetableItemDto> _items;
 @override@JsonKey() List<TimetableItemDto> get items {
   if (_items is EqualUnmodifiableListView) return _items;
@@ -241,16 +249,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TimetableDto&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.openingYear, openingYear) || other.openingYear == openingYear)&&(identical(other.semester, semester) || other.semester == semester)&&const DeepCollectionEquality().equals(other._items, _items));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TimetableDto&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.openingYear, openingYear) || other.openingYear == openingYear)&&(identical(other.semester, semester) || other.semester == semester)&&const DeepCollectionEquality().equals(other._excludedCourseIds, _excludedCourseIds)&&const DeepCollectionEquality().equals(other._items, _items));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,openingYear,semester,const DeepCollectionEquality().hash(_items));
+int get hashCode => Object.hash(runtimeType,id,name,openingYear,semester,const DeepCollectionEquality().hash(_excludedCourseIds),const DeepCollectionEquality().hash(_items));
 
 @override
 String toString() {
-  return 'TimetableDto(id: $id, name: $name, openingYear: $openingYear, semester: $semester, items: $items)';
+  return 'TimetableDto(id: $id, name: $name, openingYear: $openingYear, semester: $semester, excludedCourseIds: $excludedCourseIds, items: $items)';
 }
 
 
@@ -261,7 +269,7 @@ abstract mixin class _$TimetableDtoCopyWith<$Res> implements $TimetableDtoCopyWi
   factory _$TimetableDtoCopyWith(_TimetableDto value, $Res Function(_TimetableDto) _then) = __$TimetableDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String name, int openingYear, String semester, List<TimetableItemDto> items
+ int id, String name, int openingYear, String semester, List<int> excludedCourseIds, List<TimetableItemDto> items
 });
 
 
@@ -278,13 +286,14 @@ class __$TimetableDtoCopyWithImpl<$Res>
 
 /// Create a copy of TimetableDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? openingYear = null,Object? semester = null,Object? items = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? openingYear = null,Object? semester = null,Object? excludedCourseIds = null,Object? items = null,}) {
   return _then(_TimetableDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,openingYear: null == openingYear ? _self.openingYear : openingYear // ignore: cast_nullable_to_non_nullable
 as int,semester: null == semester ? _self.semester : semester // ignore: cast_nullable_to_non_nullable
-as String,items: null == items ? _self._items : items // ignore: cast_nullable_to_non_nullable
+as String,excludedCourseIds: null == excludedCourseIds ? _self._excludedCourseIds : excludedCourseIds // ignore: cast_nullable_to_non_nullable
+as List<int>,items: null == items ? _self._items : items // ignore: cast_nullable_to_non_nullable
 as List<TimetableItemDto>,
   ));
 }
@@ -296,7 +305,7 @@ as List<TimetableItemDto>,
 /// @nodoc
 mixin _$TimetableItemDto {
 
- int get id; int get courseId; String get courseName; String get professor; List<ClassTimeDto> get classTimes;
+ int get id; int get courseId; String get courseName; String get professor; String? get classroom; List<ClassTimeDto> get classTimes;
 /// Create a copy of TimetableItemDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -309,16 +318,16 @@ $TimetableItemDtoCopyWith<TimetableItemDto> get copyWith => _$TimetableItemDtoCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TimetableItemDto&&(identical(other.id, id) || other.id == id)&&(identical(other.courseId, courseId) || other.courseId == courseId)&&(identical(other.courseName, courseName) || other.courseName == courseName)&&(identical(other.professor, professor) || other.professor == professor)&&const DeepCollectionEquality().equals(other.classTimes, classTimes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TimetableItemDto&&(identical(other.id, id) || other.id == id)&&(identical(other.courseId, courseId) || other.courseId == courseId)&&(identical(other.courseName, courseName) || other.courseName == courseName)&&(identical(other.professor, professor) || other.professor == professor)&&(identical(other.classroom, classroom) || other.classroom == classroom)&&const DeepCollectionEquality().equals(other.classTimes, classTimes));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,courseId,courseName,professor,const DeepCollectionEquality().hash(classTimes));
+int get hashCode => Object.hash(runtimeType,id,courseId,courseName,professor,classroom,const DeepCollectionEquality().hash(classTimes));
 
 @override
 String toString() {
-  return 'TimetableItemDto(id: $id, courseId: $courseId, courseName: $courseName, professor: $professor, classTimes: $classTimes)';
+  return 'TimetableItemDto(id: $id, courseId: $courseId, courseName: $courseName, professor: $professor, classroom: $classroom, classTimes: $classTimes)';
 }
 
 
@@ -329,7 +338,7 @@ abstract mixin class $TimetableItemDtoCopyWith<$Res>  {
   factory $TimetableItemDtoCopyWith(TimetableItemDto value, $Res Function(TimetableItemDto) _then) = _$TimetableItemDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, int courseId, String courseName, String professor, List<ClassTimeDto> classTimes
+ int id, int courseId, String courseName, String professor, String? classroom, List<ClassTimeDto> classTimes
 });
 
 
@@ -346,13 +355,14 @@ class _$TimetableItemDtoCopyWithImpl<$Res>
 
 /// Create a copy of TimetableItemDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? courseId = null,Object? courseName = null,Object? professor = null,Object? classTimes = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? courseId = null,Object? courseName = null,Object? professor = null,Object? classroom = freezed,Object? classTimes = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,courseId: null == courseId ? _self.courseId : courseId // ignore: cast_nullable_to_non_nullable
 as int,courseName: null == courseName ? _self.courseName : courseName // ignore: cast_nullable_to_non_nullable
 as String,professor: null == professor ? _self.professor : professor // ignore: cast_nullable_to_non_nullable
-as String,classTimes: null == classTimes ? _self.classTimes : classTimes // ignore: cast_nullable_to_non_nullable
+as String,classroom: freezed == classroom ? _self.classroom : classroom // ignore: cast_nullable_to_non_nullable
+as String?,classTimes: null == classTimes ? _self.classTimes : classTimes // ignore: cast_nullable_to_non_nullable
 as List<ClassTimeDto>,
   ));
 }
@@ -438,10 +448,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  int courseId,  String courseName,  String professor,  List<ClassTimeDto> classTimes)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  int courseId,  String courseName,  String professor,  String? classroom,  List<ClassTimeDto> classTimes)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TimetableItemDto() when $default != null:
-return $default(_that.id,_that.courseId,_that.courseName,_that.professor,_that.classTimes);case _:
+return $default(_that.id,_that.courseId,_that.courseName,_that.professor,_that.classroom,_that.classTimes);case _:
   return orElse();
 
 }
@@ -459,10 +469,10 @@ return $default(_that.id,_that.courseId,_that.courseName,_that.professor,_that.c
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  int courseId,  String courseName,  String professor,  List<ClassTimeDto> classTimes)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  int courseId,  String courseName,  String professor,  String? classroom,  List<ClassTimeDto> classTimes)  $default,) {final _that = this;
 switch (_that) {
 case _TimetableItemDto():
-return $default(_that.id,_that.courseId,_that.courseName,_that.professor,_that.classTimes);case _:
+return $default(_that.id,_that.courseId,_that.courseName,_that.professor,_that.classroom,_that.classTimes);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -479,10 +489,10 @@ return $default(_that.id,_that.courseId,_that.courseName,_that.professor,_that.c
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  int courseId,  String courseName,  String professor,  List<ClassTimeDto> classTimes)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  int courseId,  String courseName,  String professor,  String? classroom,  List<ClassTimeDto> classTimes)?  $default,) {final _that = this;
 switch (_that) {
 case _TimetableItemDto() when $default != null:
-return $default(_that.id,_that.courseId,_that.courseName,_that.professor,_that.classTimes);case _:
+return $default(_that.id,_that.courseId,_that.courseName,_that.professor,_that.classroom,_that.classTimes);case _:
   return null;
 
 }
@@ -494,13 +504,14 @@ return $default(_that.id,_that.courseId,_that.courseName,_that.professor,_that.c
 @JsonSerializable()
 
 class _TimetableItemDto implements TimetableItemDto {
-  const _TimetableItemDto({required this.id, required this.courseId, required this.courseName, required this.professor, final  List<ClassTimeDto> classTimes = const []}): _classTimes = classTimes;
+  const _TimetableItemDto({required this.id, required this.courseId, required this.courseName, required this.professor, this.classroom, final  List<ClassTimeDto> classTimes = const []}): _classTimes = classTimes;
   factory _TimetableItemDto.fromJson(Map<String, dynamic> json) => _$TimetableItemDtoFromJson(json);
 
 @override final  int id;
 @override final  int courseId;
 @override final  String courseName;
 @override final  String professor;
+@override final  String? classroom;
  final  List<ClassTimeDto> _classTimes;
 @override@JsonKey() List<ClassTimeDto> get classTimes {
   if (_classTimes is EqualUnmodifiableListView) return _classTimes;
@@ -522,16 +533,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TimetableItemDto&&(identical(other.id, id) || other.id == id)&&(identical(other.courseId, courseId) || other.courseId == courseId)&&(identical(other.courseName, courseName) || other.courseName == courseName)&&(identical(other.professor, professor) || other.professor == professor)&&const DeepCollectionEquality().equals(other._classTimes, _classTimes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TimetableItemDto&&(identical(other.id, id) || other.id == id)&&(identical(other.courseId, courseId) || other.courseId == courseId)&&(identical(other.courseName, courseName) || other.courseName == courseName)&&(identical(other.professor, professor) || other.professor == professor)&&(identical(other.classroom, classroom) || other.classroom == classroom)&&const DeepCollectionEquality().equals(other._classTimes, _classTimes));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,courseId,courseName,professor,const DeepCollectionEquality().hash(_classTimes));
+int get hashCode => Object.hash(runtimeType,id,courseId,courseName,professor,classroom,const DeepCollectionEquality().hash(_classTimes));
 
 @override
 String toString() {
-  return 'TimetableItemDto(id: $id, courseId: $courseId, courseName: $courseName, professor: $professor, classTimes: $classTimes)';
+  return 'TimetableItemDto(id: $id, courseId: $courseId, courseName: $courseName, professor: $professor, classroom: $classroom, classTimes: $classTimes)';
 }
 
 
@@ -542,7 +553,7 @@ abstract mixin class _$TimetableItemDtoCopyWith<$Res> implements $TimetableItemD
   factory _$TimetableItemDtoCopyWith(_TimetableItemDto value, $Res Function(_TimetableItemDto) _then) = __$TimetableItemDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, int courseId, String courseName, String professor, List<ClassTimeDto> classTimes
+ int id, int courseId, String courseName, String professor, String? classroom, List<ClassTimeDto> classTimes
 });
 
 
@@ -559,13 +570,14 @@ class __$TimetableItemDtoCopyWithImpl<$Res>
 
 /// Create a copy of TimetableItemDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? courseId = null,Object? courseName = null,Object? professor = null,Object? classTimes = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? courseId = null,Object? courseName = null,Object? professor = null,Object? classroom = freezed,Object? classTimes = null,}) {
   return _then(_TimetableItemDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,courseId: null == courseId ? _self.courseId : courseId // ignore: cast_nullable_to_non_nullable
 as int,courseName: null == courseName ? _self.courseName : courseName // ignore: cast_nullable_to_non_nullable
 as String,professor: null == professor ? _self.professor : professor // ignore: cast_nullable_to_non_nullable
-as String,classTimes: null == classTimes ? _self._classTimes : classTimes // ignore: cast_nullable_to_non_nullable
+as String,classroom: freezed == classroom ? _self.classroom : classroom // ignore: cast_nullable_to_non_nullable
+as String?,classTimes: null == classTimes ? _self._classTimes : classTimes // ignore: cast_nullable_to_non_nullable
 as List<ClassTimeDto>,
   ));
 }

@@ -12,6 +12,11 @@ _TimetableDto _$TimetableDtoFromJson(Map<String, dynamic> json) =>
       name: json['name'] as String,
       openingYear: (json['openingYear'] as num).toInt(),
       semester: json['semester'] as String,
+      excludedCourseIds:
+          (json['excludedCourseIds'] as List<dynamic>?)
+              ?.map((e) => (e as num).toInt())
+              .toList() ??
+          const [],
       items:
           (json['items'] as List<dynamic>?)
               ?.map((e) => TimetableItemDto.fromJson(e as Map<String, dynamic>))
@@ -25,6 +30,7 @@ Map<String, dynamic> _$TimetableDtoToJson(_TimetableDto instance) =>
       'name': instance.name,
       'openingYear': instance.openingYear,
       'semester': instance.semester,
+      'excludedCourseIds': instance.excludedCourseIds,
       'items': instance.items,
     };
 
@@ -34,6 +40,7 @@ _TimetableItemDto _$TimetableItemDtoFromJson(Map<String, dynamic> json) =>
       courseId: (json['courseId'] as num).toInt(),
       courseName: json['courseName'] as String,
       professor: json['professor'] as String,
+      classroom: json['classroom'] as String?,
       classTimes:
           (json['classTimes'] as List<dynamic>?)
               ?.map((e) => ClassTimeDto.fromJson(e as Map<String, dynamic>))
@@ -47,6 +54,7 @@ Map<String, dynamic> _$TimetableItemDtoToJson(_TimetableItemDto instance) =>
       'courseId': instance.courseId,
       'courseName': instance.courseName,
       'professor': instance.professor,
+      'classroom': instance.classroom,
       'classTimes': instance.classTimes,
     };
 

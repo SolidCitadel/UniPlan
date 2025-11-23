@@ -8,5 +8,15 @@ extension WishlistItemDtoMapper on WishlistItemDto {
         courseName: courseName,
         professor: professor,
         priority: priority,
+        classroom: classroom,
+        classTimes: classTimes.map((e) => e.toDomain()).toList(),
+      );
+}
+
+extension WishlistClassTimeDtoMapper on WishlistClassTimeDto {
+  ClassTime toDomain() => ClassTime(
+        day: day,
+        startTime: startTime,
+        endTime: endTime,
       );
 }

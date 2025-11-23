@@ -10,6 +10,7 @@ abstract class Timetable with _$Timetable {
     required String name,
     required int openingYear,
     required String semester,
+    @Default([]) List<int> excludedCourseIds,
     @Default([]) List<TimetableItem> items,
   }) = _Timetable;
 
@@ -23,6 +24,7 @@ abstract class TimetableItem with _$TimetableItem {
     required int courseId,
     required String courseName,
     required String professor,
+    String? classroom,
     @Default([]) List<ClassTime> classTimes,
   }) = _TimetableItem;
 

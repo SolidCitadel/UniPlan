@@ -10,4 +10,12 @@ abstract class TimetableRepository {
   Future<void> addCourseToTimetable(int timetableId, int courseId);
   Future<void> removeCourseFromTimetable(int timetableId, int courseId);
   Future<void> deleteTimetable(int timetableId);
+  Future<Timetable> getTimetable(int timetableId);
+  Future<Timetable> createAlternativeTimetable({
+    required int parentTimetableId,
+    required String name,
+    required int openingYear,
+    required String semester,
+    required List<int> excludedCourseIds,
+  });
 }

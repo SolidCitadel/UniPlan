@@ -10,6 +10,7 @@ abstract class TimetableDto with _$TimetableDto {
     required String name,
     required int openingYear,
     required String semester,
+    @Default([]) List<int> excludedCourseIds,
     @Default([]) List<TimetableItemDto> items,
   }) = _TimetableDto;
 
@@ -23,6 +24,7 @@ abstract class TimetableItemDto with _$TimetableItemDto {
     required int courseId,
     required String courseName,
     required String professor,
+    String? classroom,
     @Default([]) List<ClassTimeDto> classTimes,
   }) = _TimetableItemDto;
 

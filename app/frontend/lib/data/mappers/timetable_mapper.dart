@@ -7,6 +7,7 @@ extension TimetableDtoMapper on TimetableDto {
         name: name,
         openingYear: openingYear,
         semester: semester,
+        excludedCourseIds: excludedCourseIds,
         items: items.map((e) => e.toDomain()).toList(),
       );
 }
@@ -17,6 +18,7 @@ extension TimetableItemDtoMapper on TimetableItemDto {
         courseId: courseId,
         courseName: courseName,
         professor: professor,
+        classroom: classroom,
         classTimes: classTimes.map((e) => e.toDomain()).toList(),
       );
 }

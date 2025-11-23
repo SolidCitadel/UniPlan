@@ -5,7 +5,7 @@ import com.uniplan.planner.domain.wishlist.dto.WishlistItemResponse;
 import com.uniplan.planner.domain.wishlist.entity.WishlistItem;
 import com.uniplan.planner.domain.wishlist.repository.WishlistItemRepository;
 import com.uniplan.planner.global.client.CatalogClient;
-import com.uniplan.planner.global.client.dto.CourseSimpleResponse;
+import com.uniplan.planner.global.client.dto.CourseFullResponse;
 import com.uniplan.planner.global.exception.DuplicateWishlistItemException;
 import com.uniplan.planner.global.exception.WishlistItemNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -49,23 +49,18 @@ public class WishlistService {
             return List.of();
         }
 
-        // Extract course IDs and fetch course details from catalog-service
+        // Extract course IDs and fetch full course details from catalog-service
         List<Long> courseIds = items.stream()
                 .map(WishlistItem::getCourseId)
                 .collect(Collectors.toList());
 
-        Map<Long, CourseSimpleResponse> courseMap = catalogClient.getCoursesByIds(courseIds);
+        Map<Long, CourseFullResponse> courseMap = catalogClient.getFullCoursesByIds(courseIds);
 
         // Combine wishlist items with course information
         return items.stream()
                 .map(item -> {
-                    CourseSimpleResponse course = courseMap.get(item.getCourseId());
-                    if (course != null) {
-                        return WishlistItemResponse.from(item, course.getCourseName(), course.getProfessor());
-                    } else {
-                        // If course not found, return without course details
-                        return WishlistItemResponse.from(item, null, null);
-                    }
+                    CourseFullResponse course = courseMap.get(item.getCourseId());
+                    return WishlistItemResponse.from(item, course);
                 })
                 .collect(Collectors.toList());
     }

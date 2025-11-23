@@ -4,9 +4,7 @@ import '../../domain/entities/timetable.dart';
 import '../../data/repositories/timetable_repository_impl.dart';
 
 final timetableViewModelProvider =
-    AsyncNotifierProvider<TimetableViewModel, List<Timetable>>(
-  TimetableViewModel.new,
-);
+    AsyncNotifierProvider<TimetableViewModel, List<Timetable>>(TimetableViewModel.new);
 
 class TimetableViewModel extends AsyncNotifier<List<Timetable>> {
   @override
@@ -57,5 +55,29 @@ class TimetableViewModel extends AsyncNotifier<List<Timetable>> {
       await ref.read(timetableRepositoryProvider).deleteTimetable(timetableId);
       return _fetch();
     });
+  }
+
+  Future<Timetable?> fetchOne(int timetableId) async {
+    try {
+      return await ref.read(timetableRepositoryProvider).getTimetable(timetableId);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<Timetable?> createAlternative({
+    required int parentTimetableId,
+    required String name,
+    required int openingYear,
+    required String semester,
+    required List<int> excludedCourseIds,
+  }) async {
+    return ref.read(timetableRepositoryProvider).createAlternativeTimetable(
+          parentTimetableId: parentTimetableId,
+          name: name,
+          openingYear: openingYear,
+          semester: semester,
+          excludedCourseIds: excludedCourseIds,
+        );
   }
 }

@@ -20,6 +20,11 @@ class TimetableRemoteDataSource {
     return data.map((e) => TimetableDto.fromJson(e as Map<String, dynamic>)).toList();
   }
 
+  Future<TimetableDto> getTimetable(int timetableId) async {
+    final resp = await _dio.get('${ApiEndpoints.timetables}/$timetableId');
+    return TimetableDto.fromJson(resp.data);
+  }
+
   Future<TimetableDto> createTimetable({
     required String name,
     required int openingYear,
@@ -45,5 +50,24 @@ class TimetableRemoteDataSource {
 
   Future<void> deleteTimetable(int timetableId) async {
     await _dio.delete('${ApiEndpoints.timetables}/$timetableId');
+  }
+
+  Future<TimetableDto> createAlternativeTimetable({
+    required int parentTimetableId,
+    required String name,
+    required int openingYear,
+    required String semester,
+    required List<int> excludedCourseIds,
+  }) async {
+    final resp = await _dio.post(
+      '${ApiEndpoints.timetables}/$parentTimetableId/alternatives',
+      data: {
+        'name': name,
+        'openingYear': openingYear,
+        'semester': semester,
+        'excludedCourseIds': excludedCourseIds,
+      },
+    );
+    return TimetableDto.fromJson(resp.data);
   }
 }

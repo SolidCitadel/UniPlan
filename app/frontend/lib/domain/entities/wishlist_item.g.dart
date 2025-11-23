@@ -13,6 +13,12 @@ _WishlistItem _$WishlistItemFromJson(Map<String, dynamic> json) =>
       courseName: json['courseName'] as String,
       professor: json['professor'] as String,
       priority: (json['priority'] as num).toInt(),
+      classroom: json['classroom'] as String?,
+      classTimes:
+          (json['classTimes'] as List<dynamic>?)
+              ?.map((e) => ClassTime.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
     );
 
 Map<String, dynamic> _$WishlistItemToJson(_WishlistItem instance) =>
@@ -22,4 +28,19 @@ Map<String, dynamic> _$WishlistItemToJson(_WishlistItem instance) =>
       'courseName': instance.courseName,
       'professor': instance.professor,
       'priority': instance.priority,
+      'classroom': instance.classroom,
+      'classTimes': instance.classTimes,
+    };
+
+_ClassTime _$ClassTimeFromJson(Map<String, dynamic> json) => _ClassTime(
+  day: json['day'] as String,
+  startTime: json['startTime'] as String,
+  endTime: json['endTime'] as String,
+);
+
+Map<String, dynamic> _$ClassTimeToJson(_ClassTime instance) =>
+    <String, dynamic>{
+      'day': instance.day,
+      'startTime': instance.startTime,
+      'endTime': instance.endTime,
     };

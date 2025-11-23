@@ -9,7 +9,6 @@ abstract class Course with _$Course {
     required int id,
     required int openingYear,
     required String semester,
-    int? targetGrade,
     required String courseCode,
     String? section,
     required String courseName,
@@ -17,13 +16,10 @@ abstract class Course with _$Course {
     required int credits,
     String? classroom,
     required String campus,
-    String? notes,
     String? departmentCode,
     String? departmentName,
     String? collegeCode,
     String? collegeName,
-    String? courseTypeCode,
-    String? courseTypeName,
     @Default([]) List<ClassTime> classTimes,
   }) = _Course;
 

@@ -1,12 +1,11 @@
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-final tokenStorageProvider = Provider<TokenStorage>((ref) {
-  return TokenStorage();
-});
-
+/// Web-safe token storage using SharedPreferences (backed by localStorage on web).
 class TokenStorage {
-  final _storage = const FlutterSecureStorage();
+  TokenStorage(this._prefs);
+
+  final SharedPreferences _prefs;
   static const _accessTokenKey = 'access_token';
   static const _refreshTokenKey = 'refresh_token';
 
@@ -14,22 +13,21 @@ class TokenStorage {
     required String accessToken,
     required String refreshToken,
   }) async {
-    await _storage.write(key: _accessTokenKey, value: accessToken);
-    await _storage.write(key: _refreshTokenKey, value: refreshToken);
+    await _prefs.setString(_accessTokenKey, accessToken);
+    await _prefs.setString(_refreshTokenKey, refreshToken);
   }
 
-  Future<String?> getAccessToken() async {
-    final token = await _storage.read(key: _accessTokenKey);
-    // print('[TokenStorage] Get access token: ${token != null ? "Found" : "Not found"}');
-    return token;
-  }
+  Future<String?> getAccessToken() async => _prefs.getString(_accessTokenKey);
+  Future<String?> getRefreshToken() async => _prefs.getString(_refreshTokenKey);
 
-  Future<String?> getRefreshToken() async {
-    return await _storage.read(key: _refreshTokenKey);
-  }
+  Future<bool> hasAccessToken() async => _prefs.containsKey(_accessTokenKey);
 
   Future<void> clearTokens() async {
-    await _storage.delete(key: _accessTokenKey);
-    await _storage.delete(key: _refreshTokenKey);
+    await _prefs.remove(_accessTokenKey);
+    await _prefs.remove(_refreshTokenKey);
   }
 }
+
+final tokenStorageProvider = Provider<TokenStorage>((ref) {
+  throw UnimplementedError('tokenStorageProvider must be overridden in main.dart');
+});

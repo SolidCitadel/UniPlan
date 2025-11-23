@@ -1,21 +1,23 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../domain/entities/timetable.dart';
 import '../../domain/repositories/timetable_repository.dart';
 import '../datasources/timetable_remote_data_source.dart';
+import '../mappers/timetable_mapper.dart';
 
 final timetableRepositoryProvider = Provider<TimetableRepository>((ref) {
-  final remoteDataSource = ref.watch(timetableRemoteDataSourceProvider);
-  return TimetableRepositoryImpl(remoteDataSource);
+  return TimetableRepositoryImpl(ref.watch(timetableRemoteDataSourceProvider));
 });
 
 class TimetableRepositoryImpl implements TimetableRepository {
-  final TimetableRemoteDataSource _remoteDataSource;
+  TimetableRepositoryImpl(this._remote);
 
-  TimetableRepositoryImpl(this._remoteDataSource);
+  final TimetableRemoteDataSource _remote;
 
   @override
   Future<List<Timetable>> getTimetables() async {
-    return await _remoteDataSource.getTimetables();
+    final dtos = await _remote.getTimetables();
+    return dtos.map((e) => e.toDomain()).toList();
   }
 
   @override
@@ -24,25 +26,26 @@ class TimetableRepositoryImpl implements TimetableRepository {
     required int openingYear,
     required String semester,
   }) async {
-    return await _remoteDataSource.createTimetable(
+    final dto = await _remote.createTimetable(
       name: name,
       openingYear: openingYear,
       semester: semester,
     );
+    return dto.toDomain();
   }
 
   @override
-  Future<void> addCourseToTimetable(int timetableId, int courseId) async {
-    return await _remoteDataSource.addCourseToTimetable(timetableId, courseId);
+  Future<void> addCourseToTimetable(int timetableId, int courseId) {
+    return _remote.addCourseToTimetable(timetableId, courseId);
   }
 
   @override
-  Future<void> removeCourseFromTimetable(int timetableId, int courseId) async {
-    return await _remoteDataSource.removeCourseFromTimetable(timetableId, courseId);
+  Future<void> removeCourseFromTimetable(int timetableId, int courseId) {
+    return _remote.removeCourseFromTimetable(timetableId, courseId);
   }
 
   @override
-  Future<void> deleteTimetable(int timetableId) async {
-    return await _remoteDataSource.deleteTimetable(timetableId);
+  Future<void> deleteTimetable(int timetableId) {
+    return _remote.deleteTimetable(timetableId);
   }
 }

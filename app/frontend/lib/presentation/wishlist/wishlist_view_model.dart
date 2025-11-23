@@ -1,47 +1,50 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../domain/entities/wishlist_item.dart';
 import '../../data/repositories/wishlist_repository_impl.dart';
 
-final wishlistProvider = AsyncNotifierProvider<WishlistViewModel, List<WishlistItem>>(() {
-  return WishlistViewModel();
-});
+final wishlistViewModelProvider =
+    AsyncNotifierProvider<WishlistViewModel, List<WishlistItem>>(
+  WishlistViewModel.new,
+);
 
 class WishlistViewModel extends AsyncNotifier<List<WishlistItem>> {
   @override
   Future<List<WishlistItem>> build() async {
-    return _fetchWishlist();
+    return _fetch();
   }
 
-  Future<List<WishlistItem>> _fetchWishlist() async {
-    return await ref.read(wishlistRepositoryProvider).getWishlist();
+  Future<List<WishlistItem>> _fetch() async {
+    return ref.read(wishlistRepositoryProvider).getWishlist();
   }
 
-  Future<void> fetchWishlist() async {
+  Future<void> refresh() async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => _fetchWishlist());
+    state = await AsyncValue.guard(_fetch);
   }
 
-  Future<void> addToWishlist(int courseId, int priority) async {
-    state = const AsyncValue.loading();
+  Future<void> add(int courseId, int priority) async {
     state = await AsyncValue.guard(() async {
-      await ref.read(wishlistRepositoryProvider).addToWishlist(courseId, priority);
-      return _fetchWishlist();
+      final repo = ref.read(wishlistRepositoryProvider);
+      await repo.addToWishlist(courseId, priority);
+      return _fetch();
     });
   }
 
-  Future<void> removeFromWishlist(int itemId) async {
-    state = const AsyncValue.loading();
+  Future<void> remove(int courseId) async {
     state = await AsyncValue.guard(() async {
-      await ref.read(wishlistRepositoryProvider).removeFromWishlist(itemId);
-      return _fetchWishlist();
+      final repo = ref.read(wishlistRepositoryProvider);
+      await repo.removeFromWishlist(courseId);
+      return _fetch();
     });
   }
 
-  Future<void> updatePriority(int itemId, int priority) async {
-    state = const AsyncValue.loading();
+  Future<void> movePriority(WishlistItem item, int priority) async {
+    if (item.priority == priority) return;
     state = await AsyncValue.guard(() async {
-      await ref.read(wishlistRepositoryProvider).updatePriority(itemId, priority);
-      return _fetchWishlist();
+      final repo = ref.read(wishlistRepositoryProvider);
+      await repo.changePriority(item.courseId, priority);
+      return _fetch();
     });
   }
 }

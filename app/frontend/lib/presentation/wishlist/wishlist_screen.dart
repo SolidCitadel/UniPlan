@@ -1,228 +1,236 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../core/theme/tokens.dart';
+import '../../domain/entities/wishlist_item.dart';
 import 'wishlist_view_model.dart';
 
-class WishlistScreen extends ConsumerStatefulWidget {
+class WishlistScreen extends ConsumerWidget {
   const WishlistScreen({super.key});
 
   @override
-  ConsumerState<WishlistScreen> createState() => _WishlistScreenState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final vm = ref.watch(wishlistViewModelProvider);
+
+    return Padding(
+      padding: const EdgeInsets.all(AppTokens.space4),
+      child: vm.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => _ErrorView(
+          error: e.toString(),
+          onRetry: () => ref.read(wishlistViewModelProvider.notifier).refresh(),
+        ),
+        data: (items) {
+          final grouped = {for (var i = 1; i <= 5; i++) i: <WishlistItem>[]};
+          for (final item in items) {
+            grouped[item.priority]?.add(item);
+          }
+          for (final entry in grouped.entries) {
+            entry.value.sort((a, b) => a.courseName.compareTo(b.courseName));
+          }
+
+          return RefreshIndicator(
+            onRefresh: () => ref.read(wishlistViewModelProvider.notifier).refresh(),
+            child: ListView.builder(
+              itemCount: 5,
+              itemBuilder: (context, index) {
+                final priority = index + 1;
+                final list = grouped[priority] ?? [];
+                return Padding(
+                  padding: EdgeInsets.only(bottom: index == 4 ? 0 : AppTokens.space3),
+                  child: _PrioritySection(
+                    priority: priority,
+                    items: list,
+                    onRemove: (item) =>
+                        ref.read(wishlistViewModelProvider.notifier).remove(item.courseId),
+                    onChangePriority: (item, p) =>
+                        ref.read(wishlistViewModelProvider.notifier).movePriority(item, p),
+                  ),
+                );
+              },
+            ),
+          );
+        },
+      ),
+    );
+  }
 }
 
-class _WishlistScreenState extends ConsumerState<WishlistScreen> {
-  void _showPriorityDialog(int itemId, String courseName, int currentPriority) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('우선순위 변경'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
+class _PrioritySection extends StatelessWidget {
+  const _PrioritySection({
+    required this.priority,
+    required this.items,
+    required this.onRemove,
+    required this.onChangePriority,
+  });
+
+  final int priority;
+  final List<WishlistItem> items;
+  final ValueChanged<WishlistItem> onRemove;
+  final void Function(WishlistItem item, int newPriority) onChangePriority;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTokens.radius5)),
+      child: Padding(
+        padding: const EdgeInsets.all(AppTokens.space4),
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('$courseName의 우선순위를 변경해주세요'),
-            const SizedBox(height: 16),
-            ...List.generate(5, (index) {
-              final priority = index + 1;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: OutlinedButton(
-                  onPressed: () {
-                    ref.read(wishlistProvider.notifier).updatePriority(itemId, priority);
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('우선순위가 $priority로 변경되었습니다.')),
-                    );
-                  },
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: currentPriority == priority ? Colors.blue[50] : null,
-                    side: BorderSide(
-                      color: currentPriority == priority ? Colors.blue : Colors.grey[300]!,
-                    ),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppTokens.primaryMuted,
+                    borderRadius: BorderRadius.circular(99),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('우선순위 $priority'),
-                      if (currentPriority == priority)
-                        Text('현재', style: TextStyle(color: Colors.blue[600], fontSize: 12)),
-                    ],
-                  ),
+                  child: Text('우선순위 $priority', style: AppTokens.body),
                 ),
-              );
-            }),
+                const SizedBox(width: AppTokens.space2),
+                Text('프로토타입: 우선순위별 그룹', style: AppTokens.caption),
+              ],
+            ),
+            const SizedBox(height: AppTokens.space3),
+            if (items.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppTokens.space2),
+                child: Text('아직 담긴 강의가 없습니다.', style: AppTokens.caption),
+              )
+            else
+              Column(
+                children: items
+                    .map((item) => Padding(
+                          padding: const EdgeInsets.only(bottom: AppTokens.space2),
+                          child: _WishlistTile(
+                            item: item,
+                            onRemove: () => onRemove(item),
+                            onChangePriority: (p) => onChangePriority(item, p),
+                          ),
+                        ))
+                    .toList(),
+              ),
           ],
         ),
       ),
     );
   }
+}
+
+class _WishlistTile extends StatelessWidget {
+  const _WishlistTile({
+    required this.item,
+    required this.onRemove,
+    required this.onChangePriority,
+  });
+
+  final WishlistItem item;
+  final VoidCallback onRemove;
+  final ValueChanged<int> onChangePriority;
 
   @override
   Widget build(BuildContext context) {
-    final wishlistState = ref.watch(wishlistProvider);
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: AppTokens.border),
+        borderRadius: BorderRadius.circular(AppTokens.radius4),
+      ),
+      padding: const EdgeInsets.all(AppTokens.space3),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(item.courseName, style: AppTokens.body.copyWith(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 4),
+                Text(item.professor, style: AppTokens.caption),
+              ],
+            ),
+          ),
+          _PriorityMenu(
+            current: item.priority,
+            onSelected: onChangePriority,
+          ),
+          IconButton(
+            onPressed: onRemove,
+            icon: const Icon(Icons.delete_outline, color: AppTokens.error),
+            tooltip: '삭제',
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      body: wishlistState.when(
-        data: (items) {
-          if (items.isEmpty) {
-            return Center(
-              child: Container(
-                padding: const EdgeInsets.all(48),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: const Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '아직 추가된 희망과목이 없습니다.',
-                      style: TextStyle(color: Colors.grey, fontSize: 16),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      '강의 목록 조회에서 과목을 추가해보세요.',
-                      style: TextStyle(color: Colors.grey, fontSize: 14),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
+class _PriorityMenu extends StatelessWidget {
+  const _PriorityMenu({required this.current, required this.onSelected});
 
-          // Group by priority
-          final groupedByPriority = <int, List>{};
-          for (final item in items) {
-            groupedByPriority.putIfAbsent(item.priority, () => []).add(item);
-          }
+  final int current;
+  final ValueChanged<int> onSelected;
 
-          final priorities = groupedByPriority.keys.toList()..sort();
-
-          return SingleChildScrollView(
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 1280),
-              margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 32),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header
-                  const Text(
-                    '희망과목',
-                    style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '우선순위별로 정리된 희망과목 목록입니다. 우선순위 변경 및 삭제가 가능합니다.',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-
-                  // Priority Groups
-                  ...priorities.map((priority) {
-                    final courses = groupedByPriority[priority]!;
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey[300]!),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Priority Header
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[50],
-                              border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
-                            ),
-                            child: Text(
-                              '우선순위 $priority (${courses.length}개)',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-
-                          // Table
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: DataTable(
-                              columnSpacing: 24,
-                              headingRowHeight: 48,
-                              dataRowMinHeight: 56,
-                              headingRowColor: WidgetStateProperty.all(Colors.grey[50]),
-                              columns: const [
-                                DataColumn(label: Text('강좌코드', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500))),
-                                DataColumn(label: Text('강좌명', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500))),
-                                DataColumn(label: Text('교수명', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500))),
-                                DataColumn(label: Text('관리', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500))),
-                              ],
-                              rows: courses.map((item) {
-                                return DataRow(
-                                  color: WidgetStateProperty.resolveWith<Color?>((states) {
-                                    if (states.contains(WidgetState.hovered)) {
-                                      return Colors.grey[50];
-                                    }
-                                    return null;
-                                  }),
-                                  cells: [
-                                    DataCell(Text(item.courseId?.toString() ?? '-', style: TextStyle(fontSize: 14, color: Colors.grey[600]))),
-                                    DataCell(Text(item.courseName ?? 'Unknown', style: const TextStyle(fontSize: 14))),
-                                    DataCell(Text(item.professor ?? '-', style: TextStyle(fontSize: 14, color: Colors.grey[600]))),
-                                    DataCell(
-                                      Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          IconButton(
-                                            icon: const Icon(Icons.edit, size: 18),
-                                            color: Colors.blue[600],
-                                            tooltip: '우선순위 변경',
-                                            onPressed: () => _showPriorityDialog(
-                                              item.id,
-                                              item.courseName ?? 'Unknown',
-                                              item.priority,
-                                            ),
-                                          ),
-                                          IconButton(
-                                            icon: const Icon(Icons.delete, size: 18),
-                                            color: Colors.red[600],
-                                            tooltip: '삭제',
-                                            onPressed: () {
-                                              ref.read(wishlistProvider.notifier).removeFromWishlist(item.id);
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(content: Text('${item.courseName}이(가) 삭제되었습니다.')),
-                                              );
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
-                ],
-              ),
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<int>(
+      tooltip: '우선순위 변경',
+      onSelected: onSelected,
+      itemBuilder: (context) => List.generate(
+        5,
+        (index) {
+          final value = index + 1;
+          return PopupMenuItem(
+            value: value,
+            enabled: value != current,
+            child: Row(
+              children: [
+                if (value == current) const Icon(Icons.check, size: 16),
+                if (value == current) const SizedBox(width: 6),
+                Text('우선순위 $value'),
+              ],
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: AppTokens.primaryMuted,
+          borderRadius: BorderRadius.circular(99),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('P$current', style: AppTokens.body),
+            const Icon(Icons.expand_more, size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ErrorView extends StatelessWidget {
+  const _ErrorView({required this.error, required this.onRetry});
+
+  final String error;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('오류가 발생했습니다\n$error', textAlign: TextAlign.center),
+          const SizedBox(height: AppTokens.space3),
+          OutlinedButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh),
+            label: const Text('다시 시도'),
+          ),
+        ],
       ),
     );
   }

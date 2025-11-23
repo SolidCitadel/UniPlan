@@ -1,78 +1,49 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
-import '../../core/constants/api_constants.dart';
-import '../../core/network/dio_provider.dart';
-import '../../domain/entities/timetable.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../core/network/api_endpoints.dart';
+import '../../core/network/dio_client.dart';
+import '../dtos/timetable_dto.dart';
 
 final timetableRemoteDataSourceProvider = Provider<TimetableRemoteDataSource>((ref) {
   return TimetableRemoteDataSource(ref.watch(dioProvider));
 });
 
 class TimetableRemoteDataSource {
-  final Dio _dio;
-
   TimetableRemoteDataSource(this._dio);
 
-  Future<List<Timetable>> getTimetables() async {
-    try {
-      final response = await _dio.get(ApiConstants.timetables);
-      
-      final data = response.data as List;
-      return data.map((json) => Timetable.fromJson(json)).toList();
-    } catch (e) {
-      throw Exception('Failed to load timetables: $e');
-    }
+  final Dio _dio;
+
+  Future<List<TimetableDto>> getTimetables() async {
+    final resp = await _dio.get(ApiEndpoints.timetables);
+    final data = resp.data as List;
+    return data.map((e) => TimetableDto.fromJson(e as Map<String, dynamic>)).toList();
   }
 
-  Future<Timetable> createTimetable({
+  Future<TimetableDto> createTimetable({
     required String name,
     required int openingYear,
     required String semester,
   }) async {
-    try {
-      final response = await _dio.post(
-        ApiConstants.timetables,
-        data: {
-          'name': name,
-          'openingYear': openingYear,
-          'semester': semester,
-        },
-      );
-      
-      return Timetable.fromJson(response.data);
-    } catch (e) {
-      throw Exception('Failed to create timetable: $e');
-    }
+    final resp = await _dio.post(ApiEndpoints.timetables, data: {
+      'name': name,
+      'openingYear': openingYear,
+      'semester': semester,
+    });
+    return TimetableDto.fromJson(resp.data);
   }
 
   Future<void> addCourseToTimetable(int timetableId, int courseId) async {
-    try {
-      await _dio.post(
-        '${ApiConstants.timetables}/$timetableId/courses',
-        data: {'courseId': courseId},
-      );
-    } catch (e) {
-      throw Exception('Failed to add course: $e');
-    }
+    await _dio.post('${ApiEndpoints.timetables}/$timetableId/courses', data: {
+      'courseId': courseId,
+    });
   }
 
   Future<void> removeCourseFromTimetable(int timetableId, int courseId) async {
-    try {
-      await _dio.delete(
-        '${ApiConstants.timetables}/$timetableId/courses/$courseId',
-      );
-    } catch (e) {
-      throw Exception('Failed to remove course: $e');
-    }
+    await _dio.delete('${ApiEndpoints.timetables}/$timetableId/courses/$courseId');
   }
 
   Future<void> deleteTimetable(int timetableId) async {
-    try {
-      await _dio.delete(
-        '${ApiConstants.timetables}/$timetableId',
-      );
-    } catch (e) {
-      throw Exception('Failed to delete timetable: $e');
-    }
+    await _dio.delete('${ApiEndpoints.timetables}/$timetableId');
   }
 }

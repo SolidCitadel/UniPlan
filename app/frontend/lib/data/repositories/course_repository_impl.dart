@@ -1,28 +1,30 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../domain/entities/course.dart';
+import '../../domain/entities/page.dart';
 import '../../domain/repositories/course_repository.dart';
 import '../datasources/course_remote_data_source.dart';
+import '../mappers/course_mapper.dart';
 
 final courseRepositoryProvider = Provider<CourseRepository>((ref) {
-  final remoteDataSource = ref.watch(courseRemoteDataSourceProvider);
-  return CourseRepositoryImpl(remoteDataSource);
+  return CourseRepositoryImpl(ref.watch(courseRemoteDataSourceProvider));
 });
 
 class CourseRepositoryImpl implements CourseRepository {
-  final CourseRemoteDataSource _remoteDataSource;
+  CourseRepositoryImpl(this._remote);
 
-  CourseRepositoryImpl(this._remoteDataSource);
+  final CourseRemoteDataSource _remote;
 
   @override
-  Future<List<Course>> getCourses({
+  Future<PageEnvelope<Course>> getCourses({
     String? courseName,
     String? professor,
     String? departmentCode,
     String? campus,
-    int? page,
-    int? size,
+    int page = 0,
+    int size = 20,
   }) async {
-    return await _remoteDataSource.getCourses(
+    final dto = await _remote.getCourses(
       courseName: courseName,
       professor: professor,
       departmentCode: departmentCode,
@@ -30,10 +32,12 @@ class CourseRepositoryImpl implements CourseRepository {
       page: page,
       size: size,
     );
+    return dto.toDomain();
   }
 
   @override
   Future<Course> getCourseDetail(int courseId) async {
-    return await _remoteDataSource.getCourseDetail(courseId);
+    final dto = await _remote.getCourseDetail(courseId);
+    return dto.toDomain();
   }
 }

@@ -1,190 +1,68 @@
 # UniPlan
 
-**시나리오 기반 대학교 수강신청 플래너**
+시나리오 기반 대학 수강 계획/실시간 등록 내비게이션 서비스입니다. Plan A/B/C로 시간표를 준비하고, 등록 시점에는 남은 선택지를 실시간으로 안내합니다.
 
-UniPlan은 학생들이 수강신청 시 발생하는 불확실성을 관리할 수 있도록 대체 시간표의 의사결정 트리(플랜 A, B, C...)를 구축하고, 실제 수강신청 중 실시간 네비게이션을 제공합니다.
+## 현재 상태
+- 백엔드(Spring Boot MSA)와 CLI 클라이언트는 동작 가능.
+- TS/Vite 프로토타입(`Uniplanprototype`)을 참고해 `app/frontend`에 Flutter Web 앱 골격을 만들었으나, 오류가 많아 전면 리팩토링 필요.
+- 목표: 프로토타입과 동일한 디자인/UX로 Flutter Web을 완성 → 백엔드 API 연동 → 통합 검증.
 
-## 아키텍처 개요
-
+## 디렉터리 구조
 ```
 UniPlan/
-├── app/
-│   ├── backend/           # Spring Boot 마이크로서비스 (MSA)
-│   │   ├── api-gateway/   # 진입점 (port 8080)
-│   │   ├── user-service/  # 인증 & 사용자 관리
-│   │   ├── catalog-service/ # 강의 카탈로그 & 검색
-│   │   ├── planner-service/ # 의사결정 트리 시나리오 (계획중)
-│   │   └── common-lib/    # 공유 JWT 유틸리티
-│   ├── cli-client/        # CLI 클라이언트 (Dart, 진행중)
-│   └── frontend/          # Flutter 웹 클라이언트 (계획중)
-├── scripts/
-│   └── crawler/           # Python 강의 데이터 크롤러
-└── docs/                  # 추가 문서
+├─ app/
+│  ├─ backend/          # Spring Boot MSA (api-gateway, user, catalog, planner, common-lib)
+│  ├─ cli-client/       # Dart CLI 클라이언트
+│  └─ frontend/         # Flutter Web 앱(리팩토링 대상)
+├─ scripts/
+│  └─ crawler/          # 강의 메타데이터 크롤러
+└─ Uniplanprototype/    # TS/Vite 프로토타입 (디자인/플로우 참고)
 ```
 
-## 기술 스택
+## 주요 스택
+- Backend: Spring Boot 3.x (Java 21), Gradle(Kotlin DSL), MySQL(prod)/H2(dev), JWT, Swagger/OpenAPI
+- Frontend: Flutter Web, Riverpod, GoRouter, Dio, Freezed/JSON Serializable, FlexColorScheme, Hooks
+- CLI: Dart
+- Scripts: Python 3.x
 
-### Backend
-- **프레임워크**: Spring Boot 3.x with Java 21
-- **아키텍처**: 마이크로서비스 (MSA) with API Gateway
-- **빌드**: Gradle with Kotlin DSL
-- **데이터베이스**: MySQL (운영), H2 (개발/테스트)
-- **인증**: JWT (access + refresh tokens)
-- **API 문서**: Swagger/OpenAPI 3.0
+## 우선 로드맵 (프런트 중심)
+1) **베이스 정리**: Flutter stable 고정, `flutter pub get`, `build_runner` 재생성, `flutter analyze` 경고 제거.  
+2) **UI 패리티**: 프로토타입의 색/타이포/레이아웃/컴포넌트를 추출해 Flutter 테마/공용 위젯에 반영. 화면별(로그인/회원가입, 과목 검색, 위시리스트, 시나리오·시간표, 등록 지원, 도움말) UI 정비.  
+3) **백엔드 연동**: 컨트롤러·DTO·응답 형태 확인 후 파라미터/모델 매핑. Dio 인터셉터로 토큰 주입·401 처리. 로딩/에러/빈 상태를 UI에 명시.  
+4) **품질/검증**: 핵심 뷰모델/유틸 테스트, 필요한 골든 테스트, 회귀 체크리스트(로그인→검색→위시리스트→시간표 배치→시나리오 전환).
 
-### Scripts
-- **언어**: Python 3.x
-- **목적**: 대학교 강의 데이터 크롤링 및 catalog-service용 변환
-- **아키텍처**: 3단계 독립 워크플로우 (메타데이터 → 크롤링 → 변환)
+## 실행/개발 요약
+- Backend 빌드/실행  
+  ```bash
+  cd app/backend
+  ./gradlew clean build
+  ./gradlew :api-gateway:bootRun      # 8080
+  ./gradlew :user-service:bootRun     # 8081
+  ./gradlew :catalog-service:bootRun  # 8083
+  ```
+  Swagger: http://localhost:8080/swagger-ui.html
 
-### CLI Client (진행중)
-- **언어**: Dart
-- **목적**: Frontend 완성 전 Backend API 테스트
-- **개발 순서**: Backend → CLI Client → Frontend
+- Crawler 예시  
+  ```bash
+  cd scripts/crawler
+  python -m venv venv && venv\Scripts\activate
+  pip install -r requirements.txt
+  python crawl_metadata.py --year 2025 --semester 1
+  python run_crawler.py --year 2025 --semester 1
+  python transformer.py --metadata ... --courses ...
+  ```
 
-### Frontend (계획중)
-- **프레임워크**: Flutter web
-- **기능**: 시간표 빌더, 의사결정 트리 편집기, 실시간 네비게이션
+- Frontend 준비/실행(웹)  
+  ```bash
+  cd app/frontend
+  flutter pub get
+  flutter pub run build_runner build --delete-conflicting-outputs
+  flutter run -d chrome
+  flutter analyze
+  flutter test
+  ```
 
-## 빠른 시작
-
-### Backend
-
-```bash
-cd app/backend
-
-# 모든 서비스 빌드
-./gradlew clean build
-
-# 서비스 실행 (각각 별도 터미널에서)
-./gradlew :api-gateway:bootRun      # Port 8080
-./gradlew :user-service:bootRun     # Port 8081
-./gradlew :catalog-service:bootRun  # Port 8083
-```
-
-**Swagger UI**: http://localhost:8080/swagger-ui.html
-
-### 강의 크롤러
-
-```bash
-cd scripts/crawler
-
-# 초기 설정 (최초 1회만)
-python -m venv venv
-venv\Scripts\activate  # Windows
-pip install -r requirements.txt
-
-# 강의 데이터 크롤링 (3단계 워크플로우)
-python crawl_metadata.py --year 2025 --semester 1
-python run_crawler.py --year 2025 --semester 1 --limit 5
-python transformer.py --metadata output/metadata_2025_1.json \
-  --courses output/courses_raw_2025_1.json
-
-# catalog-service로 import
-curl -X POST http://localhost:8080/api/courses/import \
-  -H "Content-Type: application/json" \
-  -d @output/transformed_2025_1.json
-```
-
-## 핵심 기능
-
-### 1. 의사결정 트리 시나리오
-
-학생들이 대체 시간표의 트리를 생성:
-
-```
-기본 시간표 (CS101, CS102, CS103)
-  ├─ CS101 실패 → 대안 1 (CS104, CS102, CS103)
-  │   └─ CS104 실패 → 대안 1a (CS105, CS102, CS103)
-  └─ CS102 실패 → 대안 2 (CS101, CS106, CS103)
-```
-
-### 2. 실시간 네비게이션
-
-수강신청 중 성공/실패 입력 → 시스템이 의사결정 트리 탐색 → 다음 대체 시간표 표시.
-
-### 3. 강의 카탈로그
-
-- 학과, 교수, 시간 등으로 강의 검색/필터링
-- 강의 상세정보 확인: 학점, 강의실, 선수과목
-- 시간표에 강의 추가 및 충돌 감지
-
-## 개발 순서
-
-1. ✅ **Backend**: API Gateway, User Service, Catalog Service 완료
-2. ✅ **Crawler**: 3단계 워크플로우 완료 (메타데이터, 크롤링, 변환)
-3. 🔄 **Planner Service**: 진행중 (의사결정 트리 구현)
-4. 📋 **CLI Client**: 다음 단계 (Backend API 테스트용, Dart)
-5. 📋 **Frontend**: 이후 단계 (Flutter web)
-
-**개발 우선순위**: Backend → CLI Client → Frontend
-
-## 프로젝트 상태
-
-- ✅ **Backend 서비스**
-  - API Gateway, User Service, Catalog Service 운영 중
-  - JWT 인증, Swagger 문서화 완료
-
-- ✅ **Crawler**
-  - 3단계 워크플로우 완료
-  - classTime DB 친화적 구조 (`[{day, startTime, endTime}]`)
-  - 하드코딩 제거 (메타데이터 기반 동적 매핑)
-
-- 🔄 **Planner Service**
-  - 의사결정 트리 구현 진행중
-
-- 📋 **CLI Client**
-  - Dart로 구현 예정
-  - Backend 테스트 및 검증용
-
-- 📋 **Frontend**
-  - Flutter web으로 구현 예정
-  - CLI Client 완성 후 시작
-
-## 문서
-
-### 시작하기
-- **CLAUDE.md**: AI 어시스턴트용 프로젝트 전체 가이드
-- **요구사항명세서.md**: 요구사항 명세서
-
-### Backend
-- **API 경로 매핑**: `app/backend/API_PATH_MAPPING.md`
-- **JWT 인증**: `app/backend/JWT_AUTH_GUIDE.md`
-- **Swagger 아키텍처**: `app/backend/SWAGGER_ARCHITECTURE.md`
-- **User Service**: `app/backend/user-service/README.md`
-- **Catalog Service**: `app/backend/catalog-service/README.md`
-
-### Scripts
-- **크롤러 가이드**: `scripts/crawler/README.md`
-- **변환 가이드**: `scripts/crawler/TRANSFORMATION_GUIDE.md`
-- **필드 매핑**: `scripts/crawler/FIELD_MAPPING.md`
-
-## 개발 환경
-
-### 서비스 포트
-- API Gateway: 8080 (메인 진입점)
-- User Service: 8081
-- Planner Service: 8082 (계획중)
-- Catalog Service: 8083
-
-### 환경 설정
-
-1. **Java 21**: Spring Boot 3.x 필수
-2. **MySQL**: 운영 데이터베이스용
-3. **Python 3.x**: 강의 크롤러용
-4. **Dart**: CLI Client용 (예정)
-5. **JWT_SECRET**: 환경변수 설정 필수 (최소 256비트)
-
-### 주요 명령어
-
-```bash
-# Backend
-./gradlew clean build
-./gradlew test
-./gradlew :user-service:bootRun
-
-# Crawler
-python crawl_metadata.py --year 2025 --semester 1
-python run_crawler.py --year 2025 --semester 1
-python transformer.py --metadata ... --courses ...
-```
+## 참고 문서
+- 작업 가이드(루트): `AGENT.md`
+- 프런트엔드 가이드: `app/frontend/AGENT.md`
+- TS 프로토타입: `Uniplanprototype/README.md` (Figma 링크 포함)

@@ -7,12 +7,10 @@ part 'wishlist_item.g.dart';
 abstract class WishlistItem with _$WishlistItem {
   const factory WishlistItem({
     required int id,
-    required int userId,
     required int courseId,
-    String? courseName,
-    String? professor,
+    required String courseName,
+    required String professor,
     required int priority,
-    DateTime? addedAt,
   }) = _WishlistItem;
 
   factory WishlistItem.fromJson(Map<String, dynamic> json) => _$WishlistItemFromJson(json);

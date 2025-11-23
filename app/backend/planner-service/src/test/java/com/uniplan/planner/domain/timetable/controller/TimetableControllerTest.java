@@ -12,6 +12,9 @@ import com.uniplan.planner.domain.timetable.repository.TimetableItemRepository;
 import com.uniplan.planner.domain.timetable.repository.TimetableRepository;
 import com.uniplan.planner.global.client.CatalogClient;
 import com.uniplan.planner.global.client.dto.CourseFullResponse;
+import org.mockito.Mockito;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 
 import java.util.List;
 import java.util.Map;
@@ -24,7 +27,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -55,7 +57,7 @@ class TimetableControllerTest {
     @Autowired
     private ScenarioRepository scenarioRepository;
 
-    @MockBean
+    @Autowired
     private CatalogClient catalogClient;
 
     private static final Long TEST_USER_ID = 1L;
@@ -486,5 +488,13 @@ class TimetableControllerTest {
                 .courseId(courseId)
                 .build();
         timetableItemRepository.save(item);
+    }
+
+    @TestConfiguration
+    static class MockitoConfig {
+        @Bean
+        CatalogClient catalogClient() {
+            return Mockito.mock(CatalogClient.class);
+        }
     }
 }

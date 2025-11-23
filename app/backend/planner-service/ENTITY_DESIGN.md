@@ -69,7 +69,7 @@ class ExcludedCourse {
 ```
 
 **용도**: 특정 학기의 강의 조합 (예: "2025-1학기 기본 계획")
-**제외 과목 관리**: 대안 시간표는 excludedCourseIds에 실패한 과목들을 저장하여 추가를 방지
+**제외 과목 관리**: DB에는 excludedCourseIds로 저장하지만, API 응답은 `excludedCourses`(각 항목에 `courseId`와 과목 상세 포함) 배열로 내려 클라이언트가 바로 활용 가능
 
 ### 3. Scenario (의사결정 트리 노드)
 ```java
@@ -232,7 +232,7 @@ POST /api/v1/timetables/1/alternatives
   "name": "Plan B - CS101 failed",
   "excludedCourseIds": [101]
 }
-→ Response: { "id": 2, "items": [102, 103], "excludedCourseIds": [101] }
+→ Response: { "id": 2, "items": [102, 103], "excludedCourses": [ { "courseId": 101, "courseName": "Course 101" } ] }
 
 // Plan B에 대체 과목 추가
 POST /api/v1/timetables/2/courses { "courseId": 104 }  # CS104 (CS101 대신)
@@ -269,7 +269,7 @@ POST /api/v1/timetables/1/alternatives
   "name": "Plan C - CS102 failed",
   "excludedCourseIds": [102]
 }
-→ Response: { "id": 3, "items": [101, 103], "excludedCourseIds": [102] }
+→ Response: { "id": 3, "items": [101, 103], "excludedCourses": [ { "courseId": 102, "courseName": "Course 102" } ] }
 
 POST /api/v1/timetables/3/courses { "courseId": 106 }  # CS106 (CS102 대신)
 

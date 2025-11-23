@@ -140,13 +140,13 @@
   Body `{ "courseId": number }` → `TimetableItemResponse`(id, courseId, courseName, professor, credits, department, classroom, classTimes[], addedAt)
 - DELETE `/timetables/{timetableId}/courses/{courseId}` → 204
 - POST `/timetables/{timetableId}/alternatives`  
-  Body `{ "name": string, "openingYear": number, "semester": string, "excludedCourseIds": [number] }` → `TimetableResponse`(alternatives 포함)
+  Body `{ "name": string, "openingYear": number, "semester": string, "excludedCourseIds": [number] }` → `TimetableResponse`(alternatives 포함, 응답은 `excludedCourses` 배열로 과목 정보를 내려줌)
 
 ### 시나리오(planner-service `/api/v1/scenarios`)
 - POST `/scenarios` (루트 생성)  
   Body `{ "name": string, "description": string?, "timetableId": number }` → `ScenarioResponse`
 - POST `/scenarios/{parentScenarioId}/alternatives`  
-  Body `{ "name": string, "description": string?, "timetableId": number, "excludedCourseIds": [number]? }` → `ScenarioResponse`(parentId 설정)
+  Body `{ "name": string, "description": string?, "timetableId": number, "excludedCourseIds": [number]? }` → `ScenarioResponse`(parentId 설정; 내포된 `timetable` 응답에서 `excludedCourses` 제공)
 - GET `/scenarios` → `ScenarioResponse[]`
 - GET `/scenarios/{scenarioId}` → 단일
 - GET `/scenarios/{scenarioId}/tree` → 해당 시나리오와 모든 하위 시나리오 트리

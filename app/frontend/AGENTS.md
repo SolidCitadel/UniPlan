@@ -5,6 +5,7 @@
 - 상태관리: **`flutter_riverpod`의 `AsyncNotifier` + `AsyncNotifierProvider`만 사용**. `StateNotifier`/`AutoDisposeAsyncNotifier`/별도 `riverpod` 패키지 사용 금지.
 - ViewModel/UI에서는 `package:flutter_riverpod/flutter_riverpod.dart`만 import.
 - 디자인: `AppTokens`(색/타이포/스페이싱/라운딩) 기반으로 UI 일관성 유지.
+- API 계약: planner-service 타임테이블/시나리오 응답은 제외 과목을 `excludedCourses`(courseId 포함 객체 배열)로 내려주고, 요청은 `excludedCourseIds`를 받습니다. DTO/매퍼를 이 형태로 맞춥니다.
 
 ## 현재 상태
 - TS/Vite 프로토타입 참고로 Flutter Web 골격 구성. Auth/코스 리스트/위시리스트/시간표 뷰모델/화면 뼈대 완료, 디자인 토큰 적용.

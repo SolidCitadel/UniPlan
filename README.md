@@ -38,6 +38,7 @@ UniPlan/
   ./gradlew clean build
   ./gradlew :api-gateway:bootRun      # 8080
   ./gradlew :user-service:bootRun     # 8081
+  ./gradlew :planner-service:bootRun  # 8082
   ./gradlew :catalog-service:bootRun  # 8083
   ```
   Swagger: http://localhost:8080/swagger-ui.html
@@ -63,6 +64,4 @@ UniPlan/
   ```
 
 ## 참고 문서
-- 작업 가이드(루트): `AGENT.md`
-- 프런트엔드 가이드: `app/frontend/AGENT.md`
 - TS 프로토타입: `Uniplanprototype/README.md` (Figma 링크 포함)

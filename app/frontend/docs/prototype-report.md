@@ -96,7 +96,7 @@
 - 인증: POST `/api/v1/auth/login|signup`, GET `/users/me`; Refresh 없음 → 401 시 로그아웃.
 - 강의: GET `/courses`(courseName/professor/departmentCode/campus/page/size), GET `/courses/{id}`.
 - 위시리스트: POST `/wishlist {courseId, priority}`, GET `/wishlist`, DELETE `/wishlist/{courseId}`, GET `/wishlist/check/{courseId}`; 우선순위 변경은 삭제+재추가.
-- 시간표: GET/POST/DELETE `/timetables`, GET `/timetables/{id}`, POST `/timetables/{id}/courses`, DELETE `/timetables/{id}/courses/{courseId}`, POST `/timetables/{id}/alternatives {excludedCourseIds}`.
+- 시간표: GET/POST/DELETE `/timetables`, GET `/timetables/{id}`, POST `/timetables/{id}/courses`, DELETE `/timetables/{id}/courses/{courseId}`, POST `/timetables/{id}/alternatives {excludedCourseIds}` (응답은 `excludedCourses` 배열로 과목 정보 반환).
 - 시나리오: POST `/scenarios`, POST `/scenarios/{parent}/alternatives`, GET `/scenarios`, GET `/scenarios/{id}`, GET `/scenarios/{id}/tree`, PUT `/scenarios/{id}`, DELETE `/scenarios/{id}`, POST `/scenarios/{id}/navigate`.
 - 수강신청: POST `/registrations`, POST `/registrations/{id}/steps`, GET `/registrations|/{id}`, POST `/registrations/{id}/complete`, DELETE `/registrations|/{id}`, GET `/registrations/{id}/succeeded-courses`.
 

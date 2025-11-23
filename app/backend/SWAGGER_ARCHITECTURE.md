@@ -18,12 +18,12 @@ backend/
 │   ├── 역할: 사용자 인증/계정 API
 │   └── URL: http://localhost:8081/swagger-ui.html
 │
-├── planner-service/          ← Swagger (독립) [향후 추가]
+├── planner-service/          ← Swagger (독립) ✅
 │   ├── Port: 8082
 │   ├── 역할: 시나리오/플랜 API
 │   └── URL: http://localhost:8082/swagger-ui.html
 │
-└── catalog-service/          ← Swagger (독립) [향후 추가]
+└── catalog-service/          ← Swagger (독립) ✅
     ├── Port: 8083
     ├── 역할: 강의 목록/검색 API
     └── URL: http://localhost:8083/swagger-ui.html

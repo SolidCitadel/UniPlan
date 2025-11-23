@@ -14,7 +14,7 @@ class AppShell extends ConsumerWidget {
     _NavTab(label: '위시리스트', path: '/app/wishlist', icon: Icons.bookmark_outline),
     _NavTab(label: '시간표', path: '/app/timetables', icon: Icons.calendar_month),
     _NavTab(label: '시나리오', path: '/app/scenario', icon: Icons.account_tree),
-    _NavTab(label: '등록 지원', path: '/app/course-registration', icon: Icons.flag_outlined),
+    _NavTab(label: '수강 신청', path: '/app/course-registration', icon: Icons.flag_outlined),
     _NavTab(label: '도움말', path: '/app/help', icon: Icons.help_outline),
   ];
 
@@ -27,15 +27,15 @@ class AppShell extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-          _AppHeader(
-            tabs: _tabs,
-            location: location,
-            onLogout: () async {
-              await ref.read(authStatusProvider.notifier).logout();
-              // ignore: use_build_context_synchronously
-              context.go('/login');
-            },
-          ),
+            _AppHeader(
+              tabs: _tabs,
+              location: location,
+              onLogout: () async {
+                await ref.read(authStatusProvider.notifier).logout();
+                // ignore: use_build_context_synchronously
+                context.go('/login');
+              },
+            ),
             const Divider(height: 1),
             Expanded(
               child: Padding(
@@ -85,7 +85,7 @@ class _AppHeader extends StatelessWidget {
                         padding: const EdgeInsets.only(right: 8),
                         child: _NavChip(
                           tab: tab,
-                          selected: location == tab.path,
+                          selected: location.startsWith(tab.path),
                         ),
                       ),
                     )

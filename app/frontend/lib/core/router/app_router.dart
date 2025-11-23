@@ -10,6 +10,7 @@ import '../../presentation/help/help_screen.dart';
 import '../../presentation/planner/timetable_screen.dart';
 import '../../presentation/planner/timetable_edit_screen.dart';
 import '../../presentation/registration/course_registration_screen.dart';
+import '../../presentation/scenario/scenario_detail_screen.dart';
 import '../../presentation/scenario/scenario_screen.dart';
 import '../../presentation/wishlist/wishlist_screen.dart';
 import '../auth/session_provider.dart';
@@ -63,6 +64,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/app/scenario',
             builder: (context, state) => const ScenarioScreen(),
+          ),
+          GoRoute(
+            path: '/app/scenario/:id',
+            builder: (context, state) {
+              final id = int.tryParse(state.pathParameters['id'] ?? '');
+              return id == null ? const ScenarioScreen() : ScenarioDetailScreen(scenarioId: id);
+            },
           ),
           GoRoute(
             path: '/app/course-registration',

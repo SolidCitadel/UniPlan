@@ -6,17 +6,37 @@ part 'course.g.dart';
 @freezed
 abstract class Course with _$Course {
   const factory Course({
-    required String id,
-    required String code,
-    required String name,
-    required String professor,
+    required int id,
+    required int openingYear,
+    required String semester,
+    int? targetGrade,
+    required String courseCode,
+    String? section,
+    required String courseName,
+    String? professor,
     required int credits,
-    required String time,
-    required String room,
+    String? classroom,
     required String campus,
-    required String department,
-    required String courseType,
+    String? notes,
+    String? departmentCode,
+    String? departmentName,
+    String? collegeCode,
+    String? collegeName,
+    String? courseTypeCode,
+    String? courseTypeName,
+    @Default([]) List<ClassTime> classTimes,
   }) = _Course;
 
   factory Course.fromJson(Map<String, dynamic> json) => _$CourseFromJson(json);
+}
+
+@freezed
+abstract class ClassTime with _$ClassTime {
+  const factory ClassTime({
+    required String day,
+    required String startTime,
+    required String endTime,
+  }) = _ClassTime;
+
+  factory ClassTime.fromJson(Map<String, dynamic> json) => _$ClassTimeFromJson(json);
 }

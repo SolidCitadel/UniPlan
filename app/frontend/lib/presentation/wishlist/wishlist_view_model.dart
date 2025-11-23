@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/wishlist_item.dart';
-import '../../domain/entities/course.dart';
 import '../../data/repositories/wishlist_repository_impl.dart';
 
 final wishlistProvider = AsyncNotifierProvider<WishlistViewModel, List<WishlistItem>>(() {
@@ -22,15 +21,15 @@ class WishlistViewModel extends AsyncNotifier<List<WishlistItem>> {
     state = await AsyncValue.guard(() => _fetchWishlist());
   }
 
-  Future<void> addToWishlist(Course course, int priority) async {
+  Future<void> addToWishlist(int courseId, int priority) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      await ref.read(wishlistRepositoryProvider).addToWishlist(course, priority);
+      await ref.read(wishlistRepositoryProvider).addToWishlist(courseId, priority);
       return _fetchWishlist();
     });
   }
 
-  Future<void> removeFromWishlist(String itemId) async {
+  Future<void> removeFromWishlist(int itemId) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await ref.read(wishlistRepositoryProvider).removeFromWishlist(itemId);
@@ -38,7 +37,7 @@ class WishlistViewModel extends AsyncNotifier<List<WishlistItem>> {
     });
   }
 
-  Future<void> updatePriority(String itemId, int priority) async {
+  Future<void> updatePriority(int itemId, int priority) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await ref.read(wishlistRepositoryProvider).updatePriority(itemId, priority);

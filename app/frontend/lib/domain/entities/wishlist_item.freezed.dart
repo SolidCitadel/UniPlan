@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$WishlistItem {
 
- String get id; Course get course; int get priority; bool get isSelected;
+ int get id; int get userId; int get courseId; String? get courseName; String? get professor; int get priority; DateTime? get addedAt;
 /// Create a copy of WishlistItem
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $WishlistItemCopyWith<WishlistItem> get copyWith => _$WishlistItemCopyWithImpl<W
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WishlistItem&&(identical(other.id, id) || other.id == id)&&(identical(other.course, course) || other.course == course)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.isSelected, isSelected) || other.isSelected == isSelected));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WishlistItem&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.courseId, courseId) || other.courseId == courseId)&&(identical(other.courseName, courseName) || other.courseName == courseName)&&(identical(other.professor, professor) || other.professor == professor)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.addedAt, addedAt) || other.addedAt == addedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,course,priority,isSelected);
+int get hashCode => Object.hash(runtimeType,id,userId,courseId,courseName,professor,priority,addedAt);
 
 @override
 String toString() {
-  return 'WishlistItem(id: $id, course: $course, priority: $priority, isSelected: $isSelected)';
+  return 'WishlistItem(id: $id, userId: $userId, courseId: $courseId, courseName: $courseName, professor: $professor, priority: $priority, addedAt: $addedAt)';
 }
 
 
@@ -48,11 +48,11 @@ abstract mixin class $WishlistItemCopyWith<$Res>  {
   factory $WishlistItemCopyWith(WishlistItem value, $Res Function(WishlistItem) _then) = _$WishlistItemCopyWithImpl;
 @useResult
 $Res call({
- String id, Course course, int priority, bool isSelected
+ int id, int userId, int courseId, String? courseName, String? professor, int priority, DateTime? addedAt
 });
 
 
-$CourseCopyWith<$Res> get course;
+
 
 }
 /// @nodoc
@@ -65,25 +65,19 @@ class _$WishlistItemCopyWithImpl<$Res>
 
 /// Create a copy of WishlistItem
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? course = null,Object? priority = null,Object? isSelected = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? userId = null,Object? courseId = null,Object? courseName = freezed,Object? professor = freezed,Object? priority = null,Object? addedAt = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,course: null == course ? _self.course : course // ignore: cast_nullable_to_non_nullable
-as Course,priority: null == priority ? _self.priority : priority // ignore: cast_nullable_to_non_nullable
-as int,isSelected: null == isSelected ? _self.isSelected : isSelected // ignore: cast_nullable_to_non_nullable
-as bool,
+as int,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
+as int,courseId: null == courseId ? _self.courseId : courseId // ignore: cast_nullable_to_non_nullable
+as int,courseName: freezed == courseName ? _self.courseName : courseName // ignore: cast_nullable_to_non_nullable
+as String?,professor: freezed == professor ? _self.professor : professor // ignore: cast_nullable_to_non_nullable
+as String?,priority: null == priority ? _self.priority : priority // ignore: cast_nullable_to_non_nullable
+as int,addedAt: freezed == addedAt ? _self.addedAt : addedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
-/// Create a copy of WishlistItem
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$CourseCopyWith<$Res> get course {
-  
-  return $CourseCopyWith<$Res>(_self.course, (value) {
-    return _then(_self.copyWith(course: value));
-  });
-}
+
 }
 
 
@@ -165,10 +159,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  Course course,  int priority,  bool isSelected)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  int userId,  int courseId,  String? courseName,  String? professor,  int priority,  DateTime? addedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _WishlistItem() when $default != null:
-return $default(_that.id,_that.course,_that.priority,_that.isSelected);case _:
+return $default(_that.id,_that.userId,_that.courseId,_that.courseName,_that.professor,_that.priority,_that.addedAt);case _:
   return orElse();
 
 }
@@ -186,10 +180,10 @@ return $default(_that.id,_that.course,_that.priority,_that.isSelected);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  Course course,  int priority,  bool isSelected)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  int userId,  int courseId,  String? courseName,  String? professor,  int priority,  DateTime? addedAt)  $default,) {final _that = this;
 switch (_that) {
 case _WishlistItem():
-return $default(_that.id,_that.course,_that.priority,_that.isSelected);case _:
+return $default(_that.id,_that.userId,_that.courseId,_that.courseName,_that.professor,_that.priority,_that.addedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -206,10 +200,10 @@ return $default(_that.id,_that.course,_that.priority,_that.isSelected);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  Course course,  int priority,  bool isSelected)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  int userId,  int courseId,  String? courseName,  String? professor,  int priority,  DateTime? addedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _WishlistItem() when $default != null:
-return $default(_that.id,_that.course,_that.priority,_that.isSelected);case _:
+return $default(_that.id,_that.userId,_that.courseId,_that.courseName,_that.professor,_that.priority,_that.addedAt);case _:
   return null;
 
 }
@@ -221,13 +215,16 @@ return $default(_that.id,_that.course,_that.priority,_that.isSelected);case _:
 @JsonSerializable()
 
 class _WishlistItem implements WishlistItem {
-  const _WishlistItem({required this.id, required this.course, required this.priority, this.isSelected = false});
+  const _WishlistItem({required this.id, required this.userId, required this.courseId, this.courseName, this.professor, required this.priority, this.addedAt});
   factory _WishlistItem.fromJson(Map<String, dynamic> json) => _$WishlistItemFromJson(json);
 
-@override final  String id;
-@override final  Course course;
+@override final  int id;
+@override final  int userId;
+@override final  int courseId;
+@override final  String? courseName;
+@override final  String? professor;
 @override final  int priority;
-@override@JsonKey() final  bool isSelected;
+@override final  DateTime? addedAt;
 
 /// Create a copy of WishlistItem
 /// with the given fields replaced by the non-null parameter values.
@@ -242,16 +239,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _WishlistItem&&(identical(other.id, id) || other.id == id)&&(identical(other.course, course) || other.course == course)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.isSelected, isSelected) || other.isSelected == isSelected));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _WishlistItem&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.courseId, courseId) || other.courseId == courseId)&&(identical(other.courseName, courseName) || other.courseName == courseName)&&(identical(other.professor, professor) || other.professor == professor)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.addedAt, addedAt) || other.addedAt == addedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,course,priority,isSelected);
+int get hashCode => Object.hash(runtimeType,id,userId,courseId,courseName,professor,priority,addedAt);
 
 @override
 String toString() {
-  return 'WishlistItem(id: $id, course: $course, priority: $priority, isSelected: $isSelected)';
+  return 'WishlistItem(id: $id, userId: $userId, courseId: $courseId, courseName: $courseName, professor: $professor, priority: $priority, addedAt: $addedAt)';
 }
 
 
@@ -262,11 +259,11 @@ abstract mixin class _$WishlistItemCopyWith<$Res> implements $WishlistItemCopyWi
   factory _$WishlistItemCopyWith(_WishlistItem value, $Res Function(_WishlistItem) _then) = __$WishlistItemCopyWithImpl;
 @override @useResult
 $Res call({
- String id, Course course, int priority, bool isSelected
+ int id, int userId, int courseId, String? courseName, String? professor, int priority, DateTime? addedAt
 });
 
 
-@override $CourseCopyWith<$Res> get course;
+
 
 }
 /// @nodoc
@@ -279,26 +276,20 @@ class __$WishlistItemCopyWithImpl<$Res>
 
 /// Create a copy of WishlistItem
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? course = null,Object? priority = null,Object? isSelected = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? userId = null,Object? courseId = null,Object? courseName = freezed,Object? professor = freezed,Object? priority = null,Object? addedAt = freezed,}) {
   return _then(_WishlistItem(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,course: null == course ? _self.course : course // ignore: cast_nullable_to_non_nullable
-as Course,priority: null == priority ? _self.priority : priority // ignore: cast_nullable_to_non_nullable
-as int,isSelected: null == isSelected ? _self.isSelected : isSelected // ignore: cast_nullable_to_non_nullable
-as bool,
+as int,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
+as int,courseId: null == courseId ? _self.courseId : courseId // ignore: cast_nullable_to_non_nullable
+as int,courseName: freezed == courseName ? _self.courseName : courseName // ignore: cast_nullable_to_non_nullable
+as String?,professor: freezed == professor ? _self.professor : professor // ignore: cast_nullable_to_non_nullable
+as String?,priority: null == priority ? _self.priority : priority // ignore: cast_nullable_to_non_nullable
+as int,addedAt: freezed == addedAt ? _self.addedAt : addedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 
-/// Create a copy of WishlistItem
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$CourseCopyWith<$Res> get course {
-  
-  return $CourseCopyWith<$Res>(_self.course, (value) {
-    return _then(_self.copyWith(course: value));
-  });
-}
+
 }
 
 // dart format on

@@ -32,10 +32,8 @@ class HomeScreen extends ConsumerWidget {
             return Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('Welcome, ${user.username}!', style: Theme.of(context).textTheme.headlineMedium),
+                Text('Welcome, ${user.name}!', style: Theme.of(context).textTheme.headlineMedium),
                 const SizedBox(height: 8),
-                Text('Student ID: ${user.studentId}'),
-                Text('Department: ${user.department}'),
                 Text('Email: ${user.email}'),
               ],
             );

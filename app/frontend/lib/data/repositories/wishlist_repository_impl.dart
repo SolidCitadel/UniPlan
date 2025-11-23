@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/wishlist_item.dart';
-import '../../domain/entities/course.dart';
 import '../../domain/repositories/wishlist_repository.dart';
 import '../datasources/wishlist_remote_data_source.dart';
 
@@ -20,17 +19,17 @@ class WishlistRepositoryImpl implements WishlistRepository {
   }
 
   @override
-  Future<void> addToWishlist(Course course, int priority) async {
-    return await _remoteDataSource.addToWishlist(course, priority);
+  Future<WishlistItem> addToWishlist(int courseId, int priority) async {
+    return await _remoteDataSource.addToWishlist(courseId, priority);
   }
 
   @override
-  Future<void> removeFromWishlist(String itemId) async {
+  Future<void> removeFromWishlist(int itemId) async {
     return await _remoteDataSource.removeFromWishlist(itemId);
   }
 
   @override
-  Future<void> updatePriority(String itemId, int priority) async {
+  Future<void> updatePriority(int itemId, int priority) async {
     return await _remoteDataSource.updatePriority(itemId, priority);
   }
 }

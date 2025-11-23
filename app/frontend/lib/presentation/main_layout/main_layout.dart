@@ -8,65 +8,130 @@ class MainLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final location = GoRouterState.of(context).uri.path;
+
     return Scaffold(
-      body: Row(
+      backgroundColor: const Color(0xFFF5F5F5),
+      body: Column(
         children: [
-          NavigationRail(
-            selectedIndex: _calculateSelectedIndex(context),
-            onDestinationSelected: (int index) => _onItemTapped(index, context),
-            labelType: NavigationRailLabelType.all,
-            destinations: const <NavigationRailDestination>[
-              NavigationRailDestination(
-                icon: Icon(Icons.home_outlined),
-                selectedIcon: Icon(Icons.home),
-                label: Text('Home'),
+          // Header
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 3,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 13),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Logo and Tabs
+                  Row(
+                    children: [
+                      // Logo
+                      Row(
+                        children: [
+                          Icon(Icons.school, size: 32, color: Colors.blue[700]),
+                          const SizedBox(width: 12),
+                          const Text(
+                            'UniPlan',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 32),
+
+                      // Navigation Tabs
+                      _buildTab(context, '강의 목록 조회', '/courses', location),
+                      _buildTab(context, '희망과목', '/wishlist', location),
+                      _buildTab(context, '시간표 계획', '/planner', location),
+                      _buildTab(context, '시나리오 계획', '/scenario-planner', location),
+                      _buildTab(context, '수강신청', '/course-registration', location),
+                      _buildTab(context, '도움말', '/help', location),
+                    ],
+                  ),
+
+                  // User Menu
+                  PopupMenuButton<String>(
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.blue[100],
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.person, color: Colors.blue[800]),
+                    ),
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'profile',
+                        child: Row(
+                          children: [
+                            Icon(Icons.person_outline, size: 18),
+                            SizedBox(width: 8),
+                            Text('마이페이지'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'logout',
+                        child: Row(
+                          children: [
+                            Icon(Icons.logout, size: 18, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('로그아웃', style: TextStyle(color: Colors.red)),
+                          ],
+                        ),
+                      ),
+                    ],
+                    onSelected: (value) {
+                      if (value == 'logout') {
+                        context.go('/login');
+                      }
+                    },
+                  ),
+                ],
               ),
-              NavigationRailDestination(
-                icon: Icon(Icons.list_alt_outlined),
-                selectedIcon: Icon(Icons.list_alt),
-                label: Text('Courses'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.favorite_border),
-                selectedIcon: Icon(Icons.favorite),
-                label: Text('Wishlist'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.calendar_today_outlined),
-                selectedIcon: Icon(Icons.calendar_today),
-                label: Text('Planner'),
-              ),
-            ],
+            ),
           ),
-          const VerticalDivider(thickness: 1, width: 1),
+
+          // Content
           Expanded(child: child),
         ],
       ),
     );
   }
 
-  int _calculateSelectedIndex(BuildContext context) {
-    final String location = GoRouterState.of(context).uri.path;
-    if (location.startsWith('/courses')) return 1;
-    if (location.startsWith('/wishlist')) return 2;
-    if (location.startsWith('/planner')) return 3;
-    return 0;
-  }
+  Widget _buildTab(BuildContext context, String label, String path, String currentPath) {
+    final isSelected = currentPath == path;
 
-  void _onItemTapped(int index, BuildContext context) {
-    switch (index) {
-      case 0:
-        context.go('/');
-        break;
-      case 1:
-        context.go('/courses');
-        break;
-      case 2:
-        context.go('/wishlist');
-        break;
-      case 3:
-        context.go('/planner');
-        break;
-    }
+    return GestureDetector(
+      onTap: () => context.go(path),
+      child: Container(
+        margin: const EdgeInsets.only(right: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFE3F2FD) : Colors.transparent,
+          borderRadius: BorderRadius.circular(100),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: isSelected ? const Color(0xFF1565C0) : Colors.grey[700],
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -2,11 +2,13 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import '../../presentation/auth/login_screen.dart';
 import '../../presentation/auth/signup_screen.dart';
-import '../../presentation/main_layout/home_screen.dart';
 import '../../presentation/main_layout/main_layout.dart';
 import '../../presentation/course_list/course_list_screen.dart';
 import '../../presentation/wishlist/wishlist_screen.dart';
 import '../../presentation/timetable/timetable_planner_screen.dart';
+import '../../presentation/help/help_screen.dart';
+import '../../presentation/scenario/scenario_planner_screen.dart';
+import '../../presentation/course_registration/course_registration_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -30,10 +32,6 @@ final router = GoRouter(
       },
       routes: [
         GoRoute(
-          path: '/',
-          builder: (context, state) => const HomeScreen(),
-        ),
-        GoRoute(
           path: '/courses',
           builder: (context, state) => const CourseListScreen(),
         ),
@@ -45,7 +43,27 @@ final router = GoRouter(
           path: '/planner',
           builder: (context, state) => const TimetablePlannerScreen(),
         ),
+        GoRoute(
+          path: '/scenario-planner',
+          builder: (context, state) => const ScenarioPlannerScreen(),
+        ),
+        GoRoute(
+          path: '/course-registration',
+          builder: (context, state) => const CourseRegistrationScreen(),
+        ),
+        GoRoute(
+          path: '/help',
+          builder: (context, state) => const HelpScreen(),
+        ),
       ],
     ),
   ],
+  redirect: (context, state) {
+    // After login, redirect to courses instead of home
+    if (state.uri.path == '/') {
+      return '/courses';
+    }
+    return null;
+  },
 );
+

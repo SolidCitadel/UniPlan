@@ -15,21 +15,25 @@ class CourseRepositoryImpl implements CourseRepository {
 
   @override
   Future<List<Course>> getCourses({
-    String? department,
-    String? search,
+    String? courseName,
+    String? professor,
+    String? departmentCode,
+    String? campus,
     int? page,
     int? size,
   }) async {
     return await _remoteDataSource.getCourses(
-      department: department,
-      search: search,
+      courseName: courseName,
+      professor: professor,
+      departmentCode: departmentCode,
+      campus: campus,
       page: page,
       size: size,
     );
   }
 
   @override
-  Future<Course> getCourseDetail(String courseId) async {
+  Future<Course> getCourseDetail(int courseId) async {
     return await _remoteDataSource.getCourseDetail(courseId);
   }
 }

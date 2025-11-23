@@ -12,7 +12,7 @@ spring:
       globalcors:
         cors-configurations:
           '[/**]':
-            allowed-origins: "http://localhost:3000"  # Flutter 웹
+            allowed-origin-patterns: "*" # Flutter 웹 (Dev)
             allowed-methods:
               - GET
               - POST

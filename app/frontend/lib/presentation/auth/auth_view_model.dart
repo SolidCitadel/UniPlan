@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/storage/user_preferences.dart';
 import '../../domain/entities/user.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 
@@ -12,22 +13,23 @@ class AuthViewModel extends AsyncNotifier<User?> {
     return null;
   }
 
-  Future<void> login(String username, String password) async {
+  Future<void> login(String email, String password) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      return await ref.read(authRepositoryProvider).login(username, password);
+      return await ref.read(authRepositoryProvider).login(email, password);
     });
   }
 
-  Future<void> signup(String username, String password, String email, String studentId, String department) async {
+  Future<void> signup(String email, String password, String name) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      return await ref.read(authRepositoryProvider).signup(username, password, email, studentId, department);
+      return await ref.read(authRepositoryProvider).signup(email, password, name);
     });
   }
 
   Future<void> logout() async {
     await ref.read(authRepositoryProvider).logout();
+    await ref.read(userPreferencesProvider).clear();
     state = const AsyncValue.data(null);
   }
 }

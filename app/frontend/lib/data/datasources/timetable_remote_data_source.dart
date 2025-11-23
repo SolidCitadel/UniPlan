@@ -1,70 +1,78 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
+import '../../core/constants/api_constants.dart';
+import '../../core/network/dio_provider.dart';
 import '../../domain/entities/timetable.dart';
-import '../../domain/entities/course.dart';
 
 final timetableRemoteDataSourceProvider = Provider<TimetableRemoteDataSource>((ref) {
-  return TimetableRemoteDataSource();
+  return TimetableRemoteDataSource(ref.watch(dioProvider));
 });
 
 class TimetableRemoteDataSource {
-  final List<Timetable> _mockTimetables = [];
+  final Dio _dio;
+
+  TimetableRemoteDataSource(this._dio);
 
   Future<List<Timetable>> getTimetables() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    return _mockTimetables;
-  }
-
-  Future<Timetable> createTimetable(String name, {String? parentId}) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    final newTimetable = Timetable(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: name,
-      courses: [],
-      parentId: parentId,
-    );
-    _mockTimetables.add(newTimetable);
-    
-    if (parentId != null) {
-      final parentIndex = _mockTimetables.indexWhere((t) => t.id == parentId);
-      if (parentIndex != -1) {
-        final parent = _mockTimetables[parentIndex];
-        _mockTimetables[parentIndex] = parent.copyWith(
-          childIds: [...parent.childIds, newTimetable.id],
-        );
-      }
+    try {
+      final response = await _dio.get(ApiConstants.timetables);
+      
+      final data = response.data as List;
+      return data.map((json) => Timetable.fromJson(json)).toList();
+    } catch (e) {
+      throw Exception('Failed to load timetables: $e');
     }
-    
-    return newTimetable;
   }
 
-  Future<void> addCourseToTimetable(String timetableId, Course course) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    final index = _mockTimetables.indexWhere((t) => t.id == timetableId);
-    if (index != -1) {
-      final timetable = _mockTimetables[index];
-      // Simple conflict check (mock)
-      if (timetable.courses.any((c) => c.time == course.time && c.time != '-')) {
-        throw Exception('Time conflict detected!');
-      }
-      _mockTimetables[index] = timetable.copyWith(
-        courses: [...timetable.courses, course],
+  Future<Timetable> createTimetable({
+    required String name,
+    required int openingYear,
+    required String semester,
+  }) async {
+    try {
+      final response = await _dio.post(
+        ApiConstants.timetables,
+        data: {
+          'name': name,
+          'openingYear': openingYear,
+          'semester': semester,
+        },
       );
+      
+      return Timetable.fromJson(response.data);
+    } catch (e) {
+      throw Exception('Failed to create timetable: $e');
     }
   }
 
-  Future<void> removeCourseFromTimetable(String timetableId, String courseId) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    final index = _mockTimetables.indexWhere((t) => t.id == timetableId);
-    if (index != -1) {
-      final timetable = _mockTimetables[index];
-      _mockTimetables[index] = timetable.copyWith(
-        courses: timetable.courses.where((c) => c.id != courseId).toList(),
+  Future<void> addCourseToTimetable(int timetableId, int courseId) async {
+    try {
+      await _dio.post(
+        '${ApiConstants.timetables}/$timetableId/courses',
+        data: {'courseId': courseId},
       );
+    } catch (e) {
+      throw Exception('Failed to add course: $e');
     }
   }
 
-  Future<void> deleteTimetable(String timetableId) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    _mockTimetables.removeWhere((t) => t.id == timetableId);
+  Future<void> removeCourseFromTimetable(int timetableId, int courseId) async {
+    try {
+      await _dio.delete(
+        '${ApiConstants.timetables}/$timetableId/courses/$courseId',
+      );
+    } catch (e) {
+      throw Exception('Failed to remove course: $e');
+    }
+  }
+
+  Future<void> deleteTimetable(int timetableId) async {
+    try {
+      await _dio.delete(
+        '${ApiConstants.timetables}/$timetableId',
+      );
+    } catch (e) {
+      throw Exception('Failed to delete timetable: $e');
+    }
   }
 }

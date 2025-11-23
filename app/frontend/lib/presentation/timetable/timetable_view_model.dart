@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/timetable.dart';
-import '../../domain/entities/course.dart';
 import '../../data/repositories/timetable_repository_impl.dart';
 
 final timetableProvider = AsyncNotifierProvider<TimetableViewModel, List<Timetable>>(() {
@@ -22,23 +21,31 @@ class TimetableViewModel extends AsyncNotifier<List<Timetable>> {
     state = await AsyncValue.guard(() => _fetchTimetables());
   }
 
-  Future<void> createTimetable(String name, {String? parentId}) async {
+  Future<void> createTimetable({
+    required String name,
+    required int openingYear,
+    required String semester,
+  }) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      await ref.read(timetableRepositoryProvider).createTimetable(name, parentId: parentId);
+      await ref.read(timetableRepositoryProvider).createTimetable(
+        name: name,
+        openingYear: openingYear,
+        semester: semester,
+      );
       return _fetchTimetables();
     });
   }
 
-  Future<void> addCourseToTimetable(String timetableId, Course course) async {
+  Future<void> addCourseToTimetable(int timetableId, int courseId) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      await ref.read(timetableRepositoryProvider).addCourseToTimetable(timetableId, course);
+      await ref.read(timetableRepositoryProvider).addCourseToTimetable(timetableId, courseId);
       return _fetchTimetables();
     });
   }
 
-  Future<void> removeCourseFromTimetable(String timetableId, String courseId) async {
+  Future<void> removeCourseFromTimetable(int timetableId, int courseId) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await ref.read(timetableRepositoryProvider).removeCourseFromTimetable(timetableId, courseId);
@@ -46,7 +53,7 @@ class TimetableViewModel extends AsyncNotifier<List<Timetable>> {
     });
   }
 
-  Future<void> deleteTimetable(String timetableId) async {
+  Future<void> deleteTimetable(int timetableId) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await ref.read(timetableRepositoryProvider).deleteTimetable(timetableId);

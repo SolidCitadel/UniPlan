@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/timetable.dart';
-import '../../domain/entities/course.dart';
 import '../../domain/repositories/timetable_repository.dart';
 import '../datasources/timetable_remote_data_source.dart';
 
@@ -20,22 +19,30 @@ class TimetableRepositoryImpl implements TimetableRepository {
   }
 
   @override
-  Future<Timetable> createTimetable(String name, {String? parentId}) async {
-    return await _remoteDataSource.createTimetable(name, parentId: parentId);
+  Future<Timetable> createTimetable({
+    required String name,
+    required int openingYear,
+    required String semester,
+  }) async {
+    return await _remoteDataSource.createTimetable(
+      name: name,
+      openingYear: openingYear,
+      semester: semester,
+    );
   }
 
   @override
-  Future<void> addCourseToTimetable(String timetableId, Course course) async {
-    return await _remoteDataSource.addCourseToTimetable(timetableId, course);
+  Future<void> addCourseToTimetable(int timetableId, int courseId) async {
+    return await _remoteDataSource.addCourseToTimetable(timetableId, courseId);
   }
 
   @override
-  Future<void> removeCourseFromTimetable(String timetableId, String courseId) async {
+  Future<void> removeCourseFromTimetable(int timetableId, int courseId) async {
     return await _remoteDataSource.removeCourseFromTimetable(timetableId, courseId);
   }
 
   @override
-  Future<void> deleteTimetable(String timetableId) async {
+  Future<void> deleteTimetable(int timetableId) async {
     return await _remoteDataSource.deleteTimetable(timetableId);
   }
 }

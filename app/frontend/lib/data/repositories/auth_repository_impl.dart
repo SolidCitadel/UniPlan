@@ -15,23 +15,23 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl(this._remoteDataSource);
 
   @override
-  Future<User> login(String username, String password) async {
-    final user = await _remoteDataSource.login(username, password);
+  Future<User> login(String email, String password) async {
+    final user = await _remoteDataSource.login(email, password);
     _currentUser = user;
     return user;
   }
 
   @override
-  Future<User> signup(String username, String password, String email, String studentId, String department) async {
-    final user = await _remoteDataSource.signup(username, password, email, studentId, department);
+  Future<User> signup(String email, String password, String name) async {
+    final user = await _remoteDataSource.signup(email, password, name);
     _currentUser = user;
     return user;
   }
 
   @override
   Future<void> logout() async {
+    await _remoteDataSource.logout();
     _currentUser = null;
-    // Clear token if implemented
   }
 
   @override

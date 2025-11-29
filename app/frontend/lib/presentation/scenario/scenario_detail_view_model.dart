@@ -36,4 +36,18 @@ class ScenarioDetailViewModel extends AsyncNotifier<Scenario?> {
     state = await AsyncValue.guard(_fetch);
     return created;
   }
+
+  Future<Scenario?> updateScenario({
+    required String name,
+    String? description,
+  }) async {
+    final updated =
+        await ref.read(scenarioRepositoryProvider).updateScenario(scenarioId: scenarioId, name: name, description: description);
+    state = await AsyncValue.guard(_fetch);
+    return updated;
+  }
+
+  Future<void> deleteScenario() async {
+    await ref.read(scenarioRepositoryProvider).deleteScenario(scenarioId);
+  }
 }

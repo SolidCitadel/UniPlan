@@ -53,4 +53,19 @@ class ScenarioRepositoryImpl implements ScenarioRepository {
     final dto = await _remote.getScenario(id);
     return dto.toDomain();
   }
+
+  @override
+  Future<Scenario> updateScenario({
+    required int scenarioId,
+    required String name,
+    String? description,
+  }) async {
+    final dto = await _remote.updateScenario(scenarioId: scenarioId, name: name, description: description);
+    return dto.toDomain();
+  }
+
+  @override
+  Future<void> deleteScenario(int scenarioId) {
+    return _remote.deleteScenario(scenarioId);
+  }
 }

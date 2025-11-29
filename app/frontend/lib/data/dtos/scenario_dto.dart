@@ -11,6 +11,7 @@ abstract class ScenarioDto with _$ScenarioDto {
     String? description,
     int? parentId,
     required int timetableId,
+    @Default([]) List<int> failedCourseIds,
     @Default([]) List<ScenarioDto> children,
   }) = _ScenarioDto;
 

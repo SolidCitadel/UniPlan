@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Scenario {
 
- int get id; String get name; String? get description; int? get parentId; int get timetableId; List<Scenario> get children;
+ int get id; String get name; String? get description; int? get parentId; int get timetableId; List<int> get failedCourseIds; List<Scenario> get children;
 /// Create a copy of Scenario
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $ScenarioCopyWith<Scenario> get copyWith => _$ScenarioCopyWithImpl<Scenario>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Scenario&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.timetableId, timetableId) || other.timetableId == timetableId)&&const DeepCollectionEquality().equals(other.children, children));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Scenario&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.timetableId, timetableId) || other.timetableId == timetableId)&&const DeepCollectionEquality().equals(other.failedCourseIds, failedCourseIds)&&const DeepCollectionEquality().equals(other.children, children));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,description,parentId,timetableId,const DeepCollectionEquality().hash(children));
+int get hashCode => Object.hash(runtimeType,id,name,description,parentId,timetableId,const DeepCollectionEquality().hash(failedCourseIds),const DeepCollectionEquality().hash(children));
 
 @override
 String toString() {
-  return 'Scenario(id: $id, name: $name, description: $description, parentId: $parentId, timetableId: $timetableId, children: $children)';
+  return 'Scenario(id: $id, name: $name, description: $description, parentId: $parentId, timetableId: $timetableId, failedCourseIds: $failedCourseIds, children: $children)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $ScenarioCopyWith<$Res>  {
   factory $ScenarioCopyWith(Scenario value, $Res Function(Scenario) _then) = _$ScenarioCopyWithImpl;
 @useResult
 $Res call({
- int id, String name, String? description, int? parentId, int timetableId, List<Scenario> children
+ int id, String name, String? description, int? parentId, int timetableId, List<int> failedCourseIds, List<Scenario> children
 });
 
 
@@ -65,14 +65,15 @@ class _$ScenarioCopyWithImpl<$Res>
 
 /// Create a copy of Scenario
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? description = freezed,Object? parentId = freezed,Object? timetableId = null,Object? children = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? description = freezed,Object? parentId = freezed,Object? timetableId = null,Object? failedCourseIds = null,Object? children = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,parentId: freezed == parentId ? _self.parentId : parentId // ignore: cast_nullable_to_non_nullable
 as int?,timetableId: null == timetableId ? _self.timetableId : timetableId // ignore: cast_nullable_to_non_nullable
-as int,children: null == children ? _self.children : children // ignore: cast_nullable_to_non_nullable
+as int,failedCourseIds: null == failedCourseIds ? _self.failedCourseIds : failedCourseIds // ignore: cast_nullable_to_non_nullable
+as List<int>,children: null == children ? _self.children : children // ignore: cast_nullable_to_non_nullable
 as List<Scenario>,
   ));
 }
@@ -158,10 +159,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String name,  String? description,  int? parentId,  int timetableId,  List<Scenario> children)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String name,  String? description,  int? parentId,  int timetableId,  List<int> failedCourseIds,  List<Scenario> children)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Scenario() when $default != null:
-return $default(_that.id,_that.name,_that.description,_that.parentId,_that.timetableId,_that.children);case _:
+return $default(_that.id,_that.name,_that.description,_that.parentId,_that.timetableId,_that.failedCourseIds,_that.children);case _:
   return orElse();
 
 }
@@ -179,10 +180,10 @@ return $default(_that.id,_that.name,_that.description,_that.parentId,_that.timet
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String name,  String? description,  int? parentId,  int timetableId,  List<Scenario> children)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String name,  String? description,  int? parentId,  int timetableId,  List<int> failedCourseIds,  List<Scenario> children)  $default,) {final _that = this;
 switch (_that) {
 case _Scenario():
-return $default(_that.id,_that.name,_that.description,_that.parentId,_that.timetableId,_that.children);case _:
+return $default(_that.id,_that.name,_that.description,_that.parentId,_that.timetableId,_that.failedCourseIds,_that.children);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -199,10 +200,10 @@ return $default(_that.id,_that.name,_that.description,_that.parentId,_that.timet
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String name,  String? description,  int? parentId,  int timetableId,  List<Scenario> children)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String name,  String? description,  int? parentId,  int timetableId,  List<int> failedCourseIds,  List<Scenario> children)?  $default,) {final _that = this;
 switch (_that) {
 case _Scenario() when $default != null:
-return $default(_that.id,_that.name,_that.description,_that.parentId,_that.timetableId,_that.children);case _:
+return $default(_that.id,_that.name,_that.description,_that.parentId,_that.timetableId,_that.failedCourseIds,_that.children);case _:
   return null;
 
 }
@@ -214,7 +215,7 @@ return $default(_that.id,_that.name,_that.description,_that.parentId,_that.timet
 @JsonSerializable()
 
 class _Scenario implements Scenario {
-  const _Scenario({required this.id, required this.name, this.description, this.parentId, required this.timetableId, final  List<Scenario> children = const []}): _children = children;
+  const _Scenario({required this.id, required this.name, this.description, this.parentId, required this.timetableId, final  List<int> failedCourseIds = const [], final  List<Scenario> children = const []}): _failedCourseIds = failedCourseIds,_children = children;
   factory _Scenario.fromJson(Map<String, dynamic> json) => _$ScenarioFromJson(json);
 
 @override final  int id;
@@ -222,6 +223,13 @@ class _Scenario implements Scenario {
 @override final  String? description;
 @override final  int? parentId;
 @override final  int timetableId;
+ final  List<int> _failedCourseIds;
+@override@JsonKey() List<int> get failedCourseIds {
+  if (_failedCourseIds is EqualUnmodifiableListView) return _failedCourseIds;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_failedCourseIds);
+}
+
  final  List<Scenario> _children;
 @override@JsonKey() List<Scenario> get children {
   if (_children is EqualUnmodifiableListView) return _children;
@@ -243,16 +251,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Scenario&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.timetableId, timetableId) || other.timetableId == timetableId)&&const DeepCollectionEquality().equals(other._children, _children));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Scenario&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.timetableId, timetableId) || other.timetableId == timetableId)&&const DeepCollectionEquality().equals(other._failedCourseIds, _failedCourseIds)&&const DeepCollectionEquality().equals(other._children, _children));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,description,parentId,timetableId,const DeepCollectionEquality().hash(_children));
+int get hashCode => Object.hash(runtimeType,id,name,description,parentId,timetableId,const DeepCollectionEquality().hash(_failedCourseIds),const DeepCollectionEquality().hash(_children));
 
 @override
 String toString() {
-  return 'Scenario(id: $id, name: $name, description: $description, parentId: $parentId, timetableId: $timetableId, children: $children)';
+  return 'Scenario(id: $id, name: $name, description: $description, parentId: $parentId, timetableId: $timetableId, failedCourseIds: $failedCourseIds, children: $children)';
 }
 
 
@@ -263,7 +271,7 @@ abstract mixin class _$ScenarioCopyWith<$Res> implements $ScenarioCopyWith<$Res>
   factory _$ScenarioCopyWith(_Scenario value, $Res Function(_Scenario) _then) = __$ScenarioCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String name, String? description, int? parentId, int timetableId, List<Scenario> children
+ int id, String name, String? description, int? parentId, int timetableId, List<int> failedCourseIds, List<Scenario> children
 });
 
 
@@ -280,14 +288,15 @@ class __$ScenarioCopyWithImpl<$Res>
 
 /// Create a copy of Scenario
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? description = freezed,Object? parentId = freezed,Object? timetableId = null,Object? children = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? description = freezed,Object? parentId = freezed,Object? timetableId = null,Object? failedCourseIds = null,Object? children = null,}) {
   return _then(_Scenario(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,parentId: freezed == parentId ? _self.parentId : parentId // ignore: cast_nullable_to_non_nullable
 as int?,timetableId: null == timetableId ? _self.timetableId : timetableId // ignore: cast_nullable_to_non_nullable
-as int,children: null == children ? _self._children : children // ignore: cast_nullable_to_non_nullable
+as int,failedCourseIds: null == failedCourseIds ? _self._failedCourseIds : failedCourseIds // ignore: cast_nullable_to_non_nullable
+as List<int>,children: null == children ? _self._children : children // ignore: cast_nullable_to_non_nullable
 as List<Scenario>,
   ));
 }

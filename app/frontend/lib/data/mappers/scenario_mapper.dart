@@ -8,6 +8,7 @@ extension ScenarioDtoMapper on ScenarioDto {
         description: description,
         parentId: parentId,
         timetableId: timetableId,
+        failedCourseIds: failedCourseIds,
         children: children.map((c) => c.toDomain()).toList(),
       );
 }

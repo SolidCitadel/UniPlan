@@ -10,6 +10,26 @@
 - 보안: 비밀값(.env, DB 비번, JWT 시크릿) 커밋 금지. 로컬 설정은 예시 파일만 제공합니다.
 - 문서 우선: 변경 시 관련 README/AGENT를 함께 갱신합니다.
 
+## API Gateway 규칙
+### 경로 규칙
+- **외부 요청**: 모든 클라이언트 요청은 `/api/v1/*` 형식으로 시작
+- **URL Rewrite**: Gateway가 `/api/v1/segment` → `/segment`로 변환하여 내부 서비스로 전달
+- **예시**: 클라이언트가 `/api/v1/timetables/123` 요청 → planner-service는 `/timetables/123`로 수신
+
+### JWT 인증 패턴
+- **요청 헤더**: `Authorization: Bearer {token}`
+- **인증 흐름**:
+  1. Gateway가 JWT 토큰 검증
+  2. 성공 시 `X-User-Id`, `X-User-Email`, `X-User-Role` 헤더 추가
+  3. 다운스트림 서비스로 전달 (각 서비스는 헤더에서 사용자 정보 추출)
+- **인증 불필요 경로**: `/api/v1/auth/**` (로그인/회원가입)
+- **인증 필수 경로**: `/api/v1/users/**`, `/api/v1/planner/**`, `/api/v1/timetables/**`, `/api/v1/scenarios/**`, `/api/v1/wishlist/**`, `/api/v1/registrations/**`, `/api/v1/courses/**`, `/api/v1/catalog/**`
+
+### 서비스별 라우팅
+- **user-service**: `/api/v1/auth/**`, `/api/v1/users/**`
+- **planner-service**: `/api/v1/planner/**`, `/api/v1/timetables/**`, `/api/v1/scenarios/**`, `/api/v1/wishlist/**`, `/api/v1/registrations/**`
+- **catalog-service**: `/api/v1/courses/**`, `/api/v1/catalog/**`
+
 ## 주요 경로
 - 루트 개요: `README.md`
 - 백엔드: `app/backend`

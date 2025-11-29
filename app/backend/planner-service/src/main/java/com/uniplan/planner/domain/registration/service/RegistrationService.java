@@ -49,7 +49,7 @@ public class RegistrationService {
         Registration savedRegistration = registrationRepository.save(registration);
 
         Set<Long> courseIds = new HashSet<>();
-        collectCourseIdsFromScenario(savedRegistration.getStartScenario(), courseIds);
+        collectCourseIdsFromScenarioTree(savedRegistration.getStartScenario(), courseIds);
         Map<Long, CourseFullResponse> courseMap = catalogClient.getFullCoursesByIds(new ArrayList<>(courseIds));
 
         return RegistrationResponse.from(savedRegistration, courseMap);
@@ -70,20 +70,33 @@ public class RegistrationService {
 
         // 자동 네비게이션: 실패한 과목이 있으면 대안 시나리오 찾기
         if (!request.getFailedCourses().isEmpty()) {
-            // 실패한 과목들의 Set을 만들어서 네비게이션
-            java.util.Set<Long> failedCourseSet = new java.util.HashSet<>(request.getFailedCourses());
+            // 이전까지 누적된 실패 과목 (현재 단계 이전까지)
+            Set<Long> previouslyFailed = new HashSet<>(registration.getAllFailedCourses());
 
-            Optional<Scenario> alternativeScenario = scenarioRepository
-                    .findAlternativeScenario(currentScenario.getId(), failedCourseSet);
+            // 이번 단계에서 새로 실패한 과목만 추출
+            Set<Long> newlyFailed = request.getFailedCourses().stream()
+                    .filter(id -> !previouslyFailed.contains(id))
+                    .collect(Collectors.toSet());
 
-            if (alternativeScenario.isPresent()) {
-                nextScenario = alternativeScenario.get();
-                registration.navigateToScenario(nextScenario);
-                log.info("Navigated from scenario {} to {} due to failed courses {}",
-                        currentScenario.getId(), nextScenario.getId(), failedCourseSet);
+            log.debug("Previously failed: {}, Request failed: {}, Newly failed: {}",
+                    previouslyFailed, request.getFailedCourses(), newlyFailed);
+
+            if (!newlyFailed.isEmpty()) {
+                Optional<Scenario> alternativeScenario = scenarioRepository
+                        .findAlternativeScenario(currentScenario.getId(), newlyFailed);
+
+                if (alternativeScenario.isPresent()) {
+                    nextScenario = alternativeScenario.get();
+                    registration.navigateToScenario(nextScenario);
+                    log.info("Navigated from scenario {} to {} due to newly failed courses {}",
+                            currentScenario.getId(), nextScenario.getId(), newlyFailed);
+                } else {
+                    log.warn("No alternative scenario found for newly failed courses {} in scenario {}",
+                            newlyFailed, currentScenario.getId());
+                }
             } else {
-                log.warn("No alternative scenario found for failed courses {} in scenario {}",
-                        failedCourseSet, currentScenario.getId());
+                log.debug("No newly failed courses (all were already failed in previous steps), staying at scenario {}",
+                        currentScenario.getId());
             }
         }
 
@@ -102,8 +115,8 @@ public class RegistrationService {
         registrationStepRepository.save(step);
 
         Set<Long> courseIds = new HashSet<>();
-        collectCourseIdsFromScenario(registration.getStartScenario(), courseIds);
-        collectCourseIdsFromScenario(registration.getCurrentScenario(), courseIds);
+        collectCourseIdsFromScenarioTree(registration.getStartScenario(), courseIds);
+        collectCourseIdsFromScenarioTree(registration.getCurrentScenario(), courseIds);
         Map<Long, CourseFullResponse> courseMap = catalogClient.getFullCoursesByIds(new ArrayList<>(courseIds));
 
         return RegistrationResponse.from(registration, courseMap);
@@ -113,10 +126,10 @@ public class RegistrationService {
         Registration registration = registrationRepository.findByIdAndUserId(registrationId, userId)
                 .orElseThrow(() -> new RegistrationNotFoundException(registrationId));
 
-        // Collect all course IDs from start and current scenarios
+        // Collect all course IDs from start and current scenarios (including children)
         Set<Long> allCourseIds = new HashSet<>();
-        collectCourseIdsFromScenario(registration.getStartScenario(), allCourseIds);
-        collectCourseIdsFromScenario(registration.getCurrentScenario(), allCourseIds);
+        collectCourseIdsFromScenarioTree(registration.getStartScenario(), allCourseIds);
+        collectCourseIdsFromScenarioTree(registration.getCurrentScenario(), allCourseIds);
 
         // Fetch course details
         Map<Long, CourseFullResponse> courseMap = catalogClient.getFullCoursesByIds(new ArrayList<>(allCourseIds));
@@ -127,11 +140,11 @@ public class RegistrationService {
     public List<RegistrationResponse> getUserRegistrations(Long userId) {
         List<Registration> registrations = registrationRepository.findByUserId(userId);
 
-        // Collect all course IDs
+        // Collect all course IDs (including children)
         Set<Long> allCourseIds = new HashSet<>();
         for (Registration reg : registrations) {
-            collectCourseIdsFromScenario(reg.getStartScenario(), allCourseIds);
-            collectCourseIdsFromScenario(reg.getCurrentScenario(), allCourseIds);
+            collectCourseIdsFromScenarioTree(reg.getStartScenario(), allCourseIds);
+            collectCourseIdsFromScenarioTree(reg.getCurrentScenario(), allCourseIds);
         }
         Map<Long, CourseFullResponse> courseMap = catalogClient.getFullCoursesByIds(new ArrayList<>(allCourseIds));
 
@@ -143,11 +156,11 @@ public class RegistrationService {
     public List<RegistrationResponse> getUserRegistrationsByStatus(Long userId, RegistrationStatus status) {
         List<Registration> registrations = registrationRepository.findByUserIdAndStatus(userId, status);
 
-        // Collect all course IDs
+        // Collect all course IDs (including children)
         Set<Long> allCourseIds = new HashSet<>();
         for (Registration reg : registrations) {
-            collectCourseIdsFromScenario(reg.getStartScenario(), allCourseIds);
-            collectCourseIdsFromScenario(reg.getCurrentScenario(), allCourseIds);
+            collectCourseIdsFromScenarioTree(reg.getStartScenario(), allCourseIds);
+            collectCourseIdsFromScenarioTree(reg.getCurrentScenario(), allCourseIds);
         }
         Map<Long, CourseFullResponse> courseMap = catalogClient.getFullCoursesByIds(new ArrayList<>(allCourseIds));
 
@@ -168,8 +181,8 @@ public class RegistrationService {
         registration.complete();
 
         Set<Long> courseIds = new HashSet<>();
-        collectCourseIdsFromScenario(registration.getStartScenario(), courseIds);
-        collectCourseIdsFromScenario(registration.getCurrentScenario(), courseIds);
+        collectCourseIdsFromScenarioTree(registration.getStartScenario(), courseIds);
+        collectCourseIdsFromScenarioTree(registration.getCurrentScenario(), courseIds);
         Map<Long, CourseFullResponse> courseMap = catalogClient.getFullCoursesByIds(new ArrayList<>(courseIds));
 
         return RegistrationResponse.from(registration, courseMap);
@@ -201,6 +214,16 @@ public class RegistrationService {
     }
 
     /**
+     * 단일 수강신청 삭제
+     */
+    @Transactional
+    public void deleteRegistration(Long userId, Long registrationId) {
+        Registration registration = registrationRepository.findByIdAndUserId(registrationId, userId)
+                .orElseThrow(() -> new RegistrationNotFoundException(registrationId));
+        registrationRepository.delete(registration);
+    }
+
+    /**
      * 사용자의 모든 수강신청 삭제
      */
     @Transactional
@@ -218,6 +241,25 @@ public class RegistrationService {
                     .map(TimetableItem::getCourseId)
                     .forEach(courseIds::add);
             courseIds.addAll(scenario.getTimetable().getExcludedCourseIds());
+        }
+    }
+
+    /**
+     * Helper method to recursively collect course IDs from a scenario tree (including children)
+     */
+    private void collectCourseIdsFromScenarioTree(Scenario scenario, Set<Long> courseIds) {
+        if (scenario == null) {
+            return;
+        }
+
+        // Collect from current scenario
+        collectCourseIdsFromScenario(scenario, courseIds);
+
+        // Recursively collect from child scenarios
+        if (scenario.getChildScenarios() != null) {
+            for (Scenario child : scenario.getChildScenarios()) {
+                collectCourseIdsFromScenarioTree(child, courseIds);
+            }
         }
     }
 }

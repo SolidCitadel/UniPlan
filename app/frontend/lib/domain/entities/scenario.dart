@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'timetable.dart';
+
 part 'scenario.freezed.dart';
 part 'scenario.g.dart';
 
@@ -11,6 +13,7 @@ abstract class Scenario with _$Scenario {
     String? description,
     int? parentId,
     required int timetableId,
+    required Timetable timetable,
     @Default([]) List<int> failedCourseIds,
     @Default([]) List<Scenario> children,
   }) = _Scenario;

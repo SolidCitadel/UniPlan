@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ScenarioDto {
 
- int get id; String get name; String? get description; int? get parentId; int get timetableId; List<int> get failedCourseIds; List<ScenarioDto> get children;
+ int get id; String get name; String? get description; int? get parentId; int get timetableId; TimetableDto get timetable; List<int> get failedCourseIds; List<ScenarioDto> get children;
 /// Create a copy of ScenarioDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $ScenarioDtoCopyWith<ScenarioDto> get copyWith => _$ScenarioDtoCopyWithImpl<Scen
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ScenarioDto&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.timetableId, timetableId) || other.timetableId == timetableId)&&const DeepCollectionEquality().equals(other.failedCourseIds, failedCourseIds)&&const DeepCollectionEquality().equals(other.children, children));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ScenarioDto&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.timetableId, timetableId) || other.timetableId == timetableId)&&(identical(other.timetable, timetable) || other.timetable == timetable)&&const DeepCollectionEquality().equals(other.failedCourseIds, failedCourseIds)&&const DeepCollectionEquality().equals(other.children, children));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,description,parentId,timetableId,const DeepCollectionEquality().hash(failedCourseIds),const DeepCollectionEquality().hash(children));
+int get hashCode => Object.hash(runtimeType,id,name,description,parentId,timetableId,timetable,const DeepCollectionEquality().hash(failedCourseIds),const DeepCollectionEquality().hash(children));
 
 @override
 String toString() {
-  return 'ScenarioDto(id: $id, name: $name, description: $description, parentId: $parentId, timetableId: $timetableId, failedCourseIds: $failedCourseIds, children: $children)';
+  return 'ScenarioDto(id: $id, name: $name, description: $description, parentId: $parentId, timetableId: $timetableId, timetable: $timetable, failedCourseIds: $failedCourseIds, children: $children)';
 }
 
 
@@ -48,11 +48,11 @@ abstract mixin class $ScenarioDtoCopyWith<$Res>  {
   factory $ScenarioDtoCopyWith(ScenarioDto value, $Res Function(ScenarioDto) _then) = _$ScenarioDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, String name, String? description, int? parentId, int timetableId, List<int> failedCourseIds, List<ScenarioDto> children
+ int id, String name, String? description, int? parentId, int timetableId, TimetableDto timetable, List<int> failedCourseIds, List<ScenarioDto> children
 });
 
 
-
+$TimetableDtoCopyWith<$Res> get timetable;
 
 }
 /// @nodoc
@@ -65,19 +65,29 @@ class _$ScenarioDtoCopyWithImpl<$Res>
 
 /// Create a copy of ScenarioDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? description = freezed,Object? parentId = freezed,Object? timetableId = null,Object? failedCourseIds = null,Object? children = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? description = freezed,Object? parentId = freezed,Object? timetableId = null,Object? timetable = null,Object? failedCourseIds = null,Object? children = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,parentId: freezed == parentId ? _self.parentId : parentId // ignore: cast_nullable_to_non_nullable
 as int?,timetableId: null == timetableId ? _self.timetableId : timetableId // ignore: cast_nullable_to_non_nullable
-as int,failedCourseIds: null == failedCourseIds ? _self.failedCourseIds : failedCourseIds // ignore: cast_nullable_to_non_nullable
+as int,timetable: null == timetable ? _self.timetable : timetable // ignore: cast_nullable_to_non_nullable
+as TimetableDto,failedCourseIds: null == failedCourseIds ? _self.failedCourseIds : failedCourseIds // ignore: cast_nullable_to_non_nullable
 as List<int>,children: null == children ? _self.children : children // ignore: cast_nullable_to_non_nullable
 as List<ScenarioDto>,
   ));
 }
-
+/// Create a copy of ScenarioDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TimetableDtoCopyWith<$Res> get timetable {
+  
+  return $TimetableDtoCopyWith<$Res>(_self.timetable, (value) {
+    return _then(_self.copyWith(timetable: value));
+  });
+}
 }
 
 
@@ -159,10 +169,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String name,  String? description,  int? parentId,  int timetableId,  List<int> failedCourseIds,  List<ScenarioDto> children)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String name,  String? description,  int? parentId,  int timetableId,  TimetableDto timetable,  List<int> failedCourseIds,  List<ScenarioDto> children)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ScenarioDto() when $default != null:
-return $default(_that.id,_that.name,_that.description,_that.parentId,_that.timetableId,_that.failedCourseIds,_that.children);case _:
+return $default(_that.id,_that.name,_that.description,_that.parentId,_that.timetableId,_that.timetable,_that.failedCourseIds,_that.children);case _:
   return orElse();
 
 }
@@ -180,10 +190,10 @@ return $default(_that.id,_that.name,_that.description,_that.parentId,_that.timet
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String name,  String? description,  int? parentId,  int timetableId,  List<int> failedCourseIds,  List<ScenarioDto> children)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String name,  String? description,  int? parentId,  int timetableId,  TimetableDto timetable,  List<int> failedCourseIds,  List<ScenarioDto> children)  $default,) {final _that = this;
 switch (_that) {
 case _ScenarioDto():
-return $default(_that.id,_that.name,_that.description,_that.parentId,_that.timetableId,_that.failedCourseIds,_that.children);case _:
+return $default(_that.id,_that.name,_that.description,_that.parentId,_that.timetableId,_that.timetable,_that.failedCourseIds,_that.children);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -200,10 +210,10 @@ return $default(_that.id,_that.name,_that.description,_that.parentId,_that.timet
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String name,  String? description,  int? parentId,  int timetableId,  List<int> failedCourseIds,  List<ScenarioDto> children)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String name,  String? description,  int? parentId,  int timetableId,  TimetableDto timetable,  List<int> failedCourseIds,  List<ScenarioDto> children)?  $default,) {final _that = this;
 switch (_that) {
 case _ScenarioDto() when $default != null:
-return $default(_that.id,_that.name,_that.description,_that.parentId,_that.timetableId,_that.failedCourseIds,_that.children);case _:
+return $default(_that.id,_that.name,_that.description,_that.parentId,_that.timetableId,_that.timetable,_that.failedCourseIds,_that.children);case _:
   return null;
 
 }
@@ -215,7 +225,7 @@ return $default(_that.id,_that.name,_that.description,_that.parentId,_that.timet
 @JsonSerializable()
 
 class _ScenarioDto implements ScenarioDto {
-  const _ScenarioDto({required this.id, required this.name, this.description, this.parentId, required this.timetableId, final  List<int> failedCourseIds = const [], final  List<ScenarioDto> children = const []}): _failedCourseIds = failedCourseIds,_children = children;
+  const _ScenarioDto({required this.id, required this.name, this.description, this.parentId, required this.timetableId, required this.timetable, final  List<int> failedCourseIds = const [], final  List<ScenarioDto> children = const []}): _failedCourseIds = failedCourseIds,_children = children;
   factory _ScenarioDto.fromJson(Map<String, dynamic> json) => _$ScenarioDtoFromJson(json);
 
 @override final  int id;
@@ -223,6 +233,7 @@ class _ScenarioDto implements ScenarioDto {
 @override final  String? description;
 @override final  int? parentId;
 @override final  int timetableId;
+@override final  TimetableDto timetable;
  final  List<int> _failedCourseIds;
 @override@JsonKey() List<int> get failedCourseIds {
   if (_failedCourseIds is EqualUnmodifiableListView) return _failedCourseIds;
@@ -251,16 +262,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ScenarioDto&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.timetableId, timetableId) || other.timetableId == timetableId)&&const DeepCollectionEquality().equals(other._failedCourseIds, _failedCourseIds)&&const DeepCollectionEquality().equals(other._children, _children));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ScenarioDto&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.timetableId, timetableId) || other.timetableId == timetableId)&&(identical(other.timetable, timetable) || other.timetable == timetable)&&const DeepCollectionEquality().equals(other._failedCourseIds, _failedCourseIds)&&const DeepCollectionEquality().equals(other._children, _children));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,description,parentId,timetableId,const DeepCollectionEquality().hash(_failedCourseIds),const DeepCollectionEquality().hash(_children));
+int get hashCode => Object.hash(runtimeType,id,name,description,parentId,timetableId,timetable,const DeepCollectionEquality().hash(_failedCourseIds),const DeepCollectionEquality().hash(_children));
 
 @override
 String toString() {
-  return 'ScenarioDto(id: $id, name: $name, description: $description, parentId: $parentId, timetableId: $timetableId, failedCourseIds: $failedCourseIds, children: $children)';
+  return 'ScenarioDto(id: $id, name: $name, description: $description, parentId: $parentId, timetableId: $timetableId, timetable: $timetable, failedCourseIds: $failedCourseIds, children: $children)';
 }
 
 
@@ -271,11 +282,11 @@ abstract mixin class _$ScenarioDtoCopyWith<$Res> implements $ScenarioDtoCopyWith
   factory _$ScenarioDtoCopyWith(_ScenarioDto value, $Res Function(_ScenarioDto) _then) = __$ScenarioDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String name, String? description, int? parentId, int timetableId, List<int> failedCourseIds, List<ScenarioDto> children
+ int id, String name, String? description, int? parentId, int timetableId, TimetableDto timetable, List<int> failedCourseIds, List<ScenarioDto> children
 });
 
 
-
+@override $TimetableDtoCopyWith<$Res> get timetable;
 
 }
 /// @nodoc
@@ -288,20 +299,30 @@ class __$ScenarioDtoCopyWithImpl<$Res>
 
 /// Create a copy of ScenarioDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? description = freezed,Object? parentId = freezed,Object? timetableId = null,Object? failedCourseIds = null,Object? children = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? description = freezed,Object? parentId = freezed,Object? timetableId = null,Object? timetable = null,Object? failedCourseIds = null,Object? children = null,}) {
   return _then(_ScenarioDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,parentId: freezed == parentId ? _self.parentId : parentId // ignore: cast_nullable_to_non_nullable
 as int?,timetableId: null == timetableId ? _self.timetableId : timetableId // ignore: cast_nullable_to_non_nullable
-as int,failedCourseIds: null == failedCourseIds ? _self._failedCourseIds : failedCourseIds // ignore: cast_nullable_to_non_nullable
+as int,timetable: null == timetable ? _self.timetable : timetable // ignore: cast_nullable_to_non_nullable
+as TimetableDto,failedCourseIds: null == failedCourseIds ? _self._failedCourseIds : failedCourseIds // ignore: cast_nullable_to_non_nullable
 as List<int>,children: null == children ? _self._children : children // ignore: cast_nullable_to_non_nullable
 as List<ScenarioDto>,
   ));
 }
 
-
+/// Create a copy of ScenarioDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TimetableDtoCopyWith<$Res> get timetable {
+  
+  return $TimetableDtoCopyWith<$Res>(_self.timetable, (value) {
+    return _then(_self.copyWith(timetable: value));
+  });
+}
 }
 
 // dart format on

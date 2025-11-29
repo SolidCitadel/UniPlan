@@ -9,4 +9,5 @@ class ApiEndpoints {
   static const timetables = '/api/v1/timetables';
   static const wishlist = '/api/v1/wishlist';
   static const scenarios = '/api/v1/scenarios';
+  static const registrations = '/api/v1/registrations';
 }

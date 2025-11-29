@@ -9,7 +9,8 @@ import '../../presentation/courses/course_list_screen.dart';
 import '../../presentation/help/help_screen.dart';
 import '../../presentation/planner/timetable_screen.dart';
 import '../../presentation/planner/timetable_edit_screen.dart';
-import '../../presentation/registration/course_registration_screen.dart';
+import '../../presentation/registration/registration_list_screen.dart';
+import '../../presentation/registration/registration_detail_screen.dart';
 import '../../presentation/scenario/scenario_detail_screen.dart';
 import '../../presentation/scenario/scenario_screen.dart';
 import '../../presentation/wishlist/wishlist_screen.dart';
@@ -73,8 +74,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             },
           ),
           GoRoute(
-            path: '/app/course-registration',
-            builder: (context, state) => const CourseRegistrationScreen(),
+            path: '/app/registrations',
+            builder: (context, state) => const RegistrationListScreen(),
+          ),
+          GoRoute(
+            path: '/app/registrations/:id',
+            builder: (context, state) {
+              final id = int.tryParse(state.pathParameters['id'] ?? '');
+              return id == null ? const RegistrationListScreen() : RegistrationDetailScreen(registrationId: id);
+            },
           ),
           GoRoute(
             path: '/app/help',

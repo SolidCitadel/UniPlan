@@ -12,6 +12,7 @@ _Scenario _$ScenarioFromJson(Map<String, dynamic> json) => _Scenario(
   description: json['description'] as String?,
   parentId: (json['parentId'] as num?)?.toInt(),
   timetableId: (json['timetableId'] as num).toInt(),
+  timetable: Timetable.fromJson(json['timetable'] as Map<String, dynamic>),
   failedCourseIds:
       (json['failedCourseIds'] as List<dynamic>?)
           ?.map((e) => (e as num).toInt())
@@ -30,6 +31,7 @@ Map<String, dynamic> _$ScenarioToJson(_Scenario instance) => <String, dynamic>{
   'description': instance.description,
   'parentId': instance.parentId,
   'timetableId': instance.timetableId,
+  'timetable': instance.timetable,
   'failedCourseIds': instance.failedCourseIds,
   'children': instance.children,
 };

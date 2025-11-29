@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'timetable_dto.dart';
 
 part 'scenario_dto.freezed.dart';
 part 'scenario_dto.g.dart';
@@ -11,6 +12,7 @@ abstract class ScenarioDto with _$ScenarioDto {
     String? description,
     int? parentId,
     required int timetableId,
+    required TimetableDto timetable,
     @Default([]) List<int> failedCourseIds,
     @Default([]) List<ScenarioDto> children,
   }) = _ScenarioDto;

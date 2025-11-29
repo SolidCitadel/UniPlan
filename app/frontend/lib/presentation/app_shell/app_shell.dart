@@ -14,7 +14,7 @@ class AppShell extends ConsumerWidget {
     _NavTab(label: '위시리스트', path: '/app/wishlist', icon: Icons.bookmark_outline),
     _NavTab(label: '시간표', path: '/app/timetables', icon: Icons.calendar_month),
     _NavTab(label: '시나리오', path: '/app/scenario', icon: Icons.account_tree),
-    _NavTab(label: '수강 신청', path: '/app/course-registration', icon: Icons.flag_outlined),
+    _NavTab(label: '수강 신청', path: '/app/registrations', icon: Icons.flag_outlined),
     _NavTab(label: '도움말', path: '/app/help', icon: Icons.help_outline),
   ];
 

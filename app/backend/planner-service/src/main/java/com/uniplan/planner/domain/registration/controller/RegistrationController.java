@@ -73,12 +73,21 @@ public class RegistrationController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "수강신청 취소", description = "수강신청 세션을 취소합니다")
-    @DeleteMapping("/{registrationId}")
+    @Operation(summary = "수강신청 취소", description = "수강신청 세션을 취소 상태로 변경합니다")
+    @PostMapping("/{registrationId}/cancel")
     public ResponseEntity<Void> cancelRegistration(
             @Parameter(hidden = true) @RequestHeader("X-User-Id") Long userId,
             @PathVariable Long registrationId) {
         registrationService.cancelRegistration(userId, registrationId);
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "수강신청 삭제", description = "수강신청 세션을 DB에서 완전히 삭제합니다")
+    @DeleteMapping("/{registrationId}")
+    public ResponseEntity<Void> deleteRegistration(
+            @Parameter(hidden = true) @RequestHeader("X-User-Id") Long userId,
+            @PathVariable Long registrationId) {
+        registrationService.deleteRegistration(userId, registrationId);
         return ResponseEntity.noContent().build();
     }
 

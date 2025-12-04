@@ -305,7 +305,6 @@ http://localhost:8080/swagger-ui.html
 - ✅ Swagger/OpenAPI 문서화
 
 ## 참고 문서
-- [API Path Mapping](../API_PATH_MAPPING.md)
-- [JWT 인증 가이드](../JWT_AUTH_GUIDE.md)
-- [Swagger 아키텍처](../SWAGGER_ARCHITECTURE.md)
+- [API Path Mapping](../../docs/backend/api-path-mapping.md)
+- [Swagger 아키텍처](../../docs/backend/swagger-architecture.md)
 

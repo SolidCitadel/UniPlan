@@ -17,11 +17,10 @@ Flutter Web 기반 UniPlan 프론트엔드입니다. Riverpod 3 + GoRouter + Dio
 ## 디렉터리
 ```
 lib/
-├─ core/           # 공용 상수/테마/네트워크 클라이언트
-├─ data/           # DTO, mapper, remote datasource(Dio), repository 구현
-├─ domain/         # Entity(Freezed), Repository 인터페이스
-└─ presentation/   # UI(Screen/Widget) + ViewModel(AsyncNotifier 기반)
-docs/              # 설계/플로우 문서
+- core/         # 공용 상수/테마/네트워크 클라이언트
+- data/         # DTO, mapper, remote datasource(Dio), repository 구현
+- domain/       # Entity(Freezed), Repository 인터페이스
+- presentation/ # UI(Screen/Widget) + ViewModel(AsyncNotifier 기반)
 ```
 
 ## 주요 화면/플로우 요약
@@ -38,7 +37,7 @@ docs/              # 설계/플로우 문서
   - 목록 `/app/registrations`: 세션 리스트 + “새로 시작”(시나리오 선택, 이름 입력). 취소/삭제 분리.
   - 상세 `/app/registrations/:id`: 좌측 상태 리스트(성공/대기/실패, 누적 집합). 대기는 현재 시간표 과목만, 성공/실패는 시작+현재 시나리오 전체에서 매핑. “다음 단계 저장” 시 `addStep` 호출. 우측 그리드: 성공=초록, 대기=연한 회색, 실패=빨강, 취소/제외=연한 빨강.
 
-세부 화면/요구사항/엔드포인트: `docs/frontend-status.md` 참고.
+세부 화면/요구사항/엔드포인트: `../../docs/frontend/frontend-status.md` 참고.
 
 ## 실행
 ```bash

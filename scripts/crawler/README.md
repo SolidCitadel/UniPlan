@@ -424,7 +424,7 @@ public class ClassTime {
 
 ## 10. 참고 문서
 
-- **FIELD_MAPPING.md**: API 응답 구조 상세
+- **FIELD_MAPPING.md**: API 응답 구조 상세(`../../docs/crawler/field-mapping.md`)
 - **sample_data_tiny.txt**: data_YYYY.js 샘플
 - **sample_list.txt**: 강의 목록 API 응답 샘플
 - **tests/README.md**: 테스트 스크립트 설명

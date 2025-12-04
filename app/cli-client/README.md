@@ -305,7 +305,7 @@ chcp 65001
 ## Complete User Scenario
 
 For a complete walkthrough of the entire user journey (from login to registration), see:
-**[SCENARIO_GUIDE.md](SCENARIO_GUIDE.md)**
+**[SCENARIO_GUIDE.md](../docs/cli-client/scenario-guide.md)**
 
 This guide covers:
 1. Authentication

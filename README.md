@@ -4,8 +4,8 @@
 
 ## 현재 상태
 - 백엔드(Spring Boot MSA)와 CLI 클라이언트는 동작 가능.
-- TS/Vite 프로토타입(`Uniplanprototype`)을 참고해 `app/frontend`에 Flutter Web 앱 골격을 만들었으나, 오류가 많아 전면 리팩토링 필요.
-- 목표: 프로토타입과 동일한 디자인/UX로 Flutter Web을 완성 → 백엔드 API 연동 → 통합 검증.
+- Flutter Web 앱은 프로토타입 흐름을 그대로 구현하여 백엔드와 연동됨(화면/UX 세부는 `docs/frontend/frontend-status.md` 참고).
+- 통합 검증 및 품질 개선(분석/테스트) 지속 진행.
 
 ## 디렉터리 구조
 ```
@@ -13,10 +13,11 @@ UniPlan/
 ├─ app/
 │  ├─ backend/          # Spring Boot MSA (api-gateway, user, catalog, planner, common-lib)
 │  ├─ cli-client/       # Dart CLI 클라이언트
-│  └─ frontend/         # Flutter Web 앱(리팩토링 대상)
+│  └─ frontend/         # Flutter Web 앱
 ├─ scripts/
 │  └─ crawler/          # 강의 메타데이터 크롤러
 └─ Uniplanprototype/    # TS/Vite 프로토타입 (디자인/플로우 참고)
+docs/                   # 요구사항/가이드/설계 문서 모음
 ```
 
 ## 주요 스택
@@ -64,4 +65,15 @@ UniPlan/
   ```
 
 ## 참고 문서
+- 전역 가이드: `docs/AGENTS.md`
+- 프론트엔드 현황/화면 스펙: `docs/frontend/frontend-status.md`, `docs/frontend/prototype-report.md`
 - TS 프로토타입: `Uniplanprototype/README.md` (Figma 링크 포함)
+
+## Docker Compose (backend + frontend)
+```
+docker compose up --build
+```
+- Gateway: http://localhost:8180  
+- Frontend (Flutter web via Nginx): http://localhost:3000  
+- MySQL: localhost:3316 (user/password) with pre-created `uniplan_user`, `uniplan_planner`, `uniplan_catalog`
+- Customize `JWT_SECRET`, Google OAuth client/secret, and the `BASE_URL` build-arg for the frontend if you deploy elsewhere.

@@ -252,7 +252,6 @@ ERROR AuthenticationHeaderFilter - JWT 검증 실패: JWT signature does not mat
 - [ ] API 버전 관리 (v2, v3 등)
 
 ## 참고 문서
-- [API Path Mapping](../API_PATH_MAPPING.md)
-- [JWT 인증 가이드](../JWT_AUTH_GUIDE.md)
-- [Swagger 아키텍처](../SWAGGER_ARCHITECTURE.md)
+- [API Path Mapping](../../docs/backend/api-path-mapping.md)
+- [Swagger 아키텍처](../../docs/backend/swagger-architecture.md)
 

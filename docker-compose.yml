@@ -1,0 +1,111 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: uniplan-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    command:
+      - "--character-set-server=utf8mb4"
+      - "--collation-server=utf8mb4_unicode_ci"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "3316:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-prootpass"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  user-service:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+      args:
+        SERVICE: user-service
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_DATASOURCE_URL: jdbc:mysql://uniplan-mysql:3306/uniplan_user?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID: dummy
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET: dummy
+      OAUTH2_SUCCESS_REDIRECT_URL: http://localhost:3000/auth/callback
+      JWT_SECRET: local-dev-jwt-secret-32bytes-long-123456
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  catalog-service:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+      args:
+        SERVICE: catalog-service
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_DATASOURCE_URL: jdbc:mysql://uniplan-mysql:3306/uniplan_catalog?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  planner-service:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+      args:
+        SERVICE: planner-service
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_DATASOURCE_URL: jdbc:mysql://uniplan-mysql:3306/uniplan_planner?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      SERVICES_CATALOG_URL: http://catalog-service:8083
+    depends_on:
+      mysql:
+        condition: service_healthy
+      catalog-service:
+        condition: service_started
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+      args:
+        SERVICE: api-gateway
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SERVICES_USER_SERVICE_URI: http://user-service:8081
+      SERVICES_PLANNER_SERVICE_URI: http://planner-service:8082
+      SERVICES_CATALOG_SERVICE_URI: http://catalog-service:8083
+      JWT_SECRET: local-dev-jwt-secret-32bytes-long-123456
+    ports:
+      - "8180:8080"
+    depends_on:
+      user-service:
+        condition: service_started
+      planner-service:
+        condition: service_started
+      catalog-service:
+        condition: service_started
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+      args:
+        FLUTTER_VERSION: beta
+        BASE_URL: http://localhost:8180
+    ports:
+      - "3000:80"
+    depends_on:
+      api-gateway:
+        condition: service_started
+
+volumes:
+  mysql-data:

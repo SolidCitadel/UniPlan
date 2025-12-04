@@ -1,0 +1,10 @@
+**/build
+**/.dart_tool
+**/.gradle
+**/.idea
+**/.git
+**/.vscode
+packages
+scripts
+node_modules
+*.iml

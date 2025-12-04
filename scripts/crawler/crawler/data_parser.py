@@ -12,14 +12,12 @@ class KHUDataParser:
     @staticmethod
     def normalize_semester(semester: int) -> str:
         """
-        학기 숫자 → 표준 형식
-        예: 1 → "1학기", 2 → "2학기"
+        Normalize semester to a plain numeric string (e.g., 1 -> "1").
         """
-        semester_map = {
-            1: "1학기",
-            2: "2학기",
-        }
-        return semester_map.get(semester, f"{semester}학기")
+        try:
+            return str(int(semester))
+        except (TypeError, ValueError):
+            return str(semester)
 
     @staticmethod
     def normalize_course_type(field_gb: str, course_types: dict) -> str:

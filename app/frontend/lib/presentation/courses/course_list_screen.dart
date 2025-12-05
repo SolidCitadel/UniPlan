@@ -134,28 +134,32 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
     final notifier = ref.read(wishlistViewModelProvider.notifier);
     final priority = await showModalBottomSheet<int>(
       context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTokens.radius5)),
       builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.all(AppTokens.space4),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('위시리스트 우선순위 선택', style: AppTokens.heading),
-              const SizedBox(height: AppTokens.space3),
-              Wrap(
-                spacing: AppTokens.space2,
-                children: List.generate(5, (i) {
-                  final value = i + 1;
-                  return ChoiceChip(
-                    label: Text('우선순위 $value'),
-                    selected: false,
-                    onSelected: (_) => Navigator.of(ctx).pop(value),
-                  );
-                }),
-              ),
-            ],
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(AppTokens.space4),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('위시리스트 우선순위 선택', style: AppTokens.heading),
+                const SizedBox(height: AppTokens.space3),
+                Wrap(
+                  spacing: AppTokens.space2,
+                  children: List.generate(5, (i) {
+                    final value = i + 1;
+                    return ChoiceChip(
+                      label: Text('$value'),
+                      selected: false,
+                      onSelected: (_) => Navigator.of(ctx).pop(value),
+                    );
+                  }),
+                ),
+              ],
+            ),
           ),
         );
       },

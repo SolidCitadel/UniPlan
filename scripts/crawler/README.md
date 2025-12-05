@@ -87,19 +87,10 @@ Step 4: 서버 업로드
 ### 설치
 
 ```bash
-cd scripts/crawler
+cd scripts
 
-# 가상환경 생성 (최초 1회만)
-python -m venv venv
-
-# 가상환경 활성화
-# Windows
-venv\Scripts\activate
-# Mac/Linux
-source venv/bin/activate
-
-# 의존성 설치
-pip install -r requirements.txt
+# Poetry 의존성 설치 (최초 1회만)
+poetry install
 ```
 
 ### 실행 (전체 워크플로우)
@@ -107,20 +98,20 @@ pip install -r requirements.txt
 ```bash
 # Step 1: Metadata 크롤링 (~1초)
 # → data_js_raw_2025_1.js + metadata_2025_1.json 생성
-python crawl_metadata.py --year 2025 --semester 1
+poetry run python crawler/crawl_metadata.py --year 2025 --semester 1
 
 # Step 2: Courses 크롤링 (테스트: 처음 5개 학과)
 # → metadata_2025_1.json에서 학과 목록 로드 후 크롤링
-python run_crawler.py --year 2025 --semester 1 --limit 5
+poetry run python crawler/run_crawler.py --year 2025 --semester 1 --limit 5
 
 # Step 3: 변환
 # → 학과별 그룹화된 데이터를 하나의 리스트로 변환
-python transformer.py \
-  --metadata output/metadata_2025_1.json \
-  --courses output/courses_raw_2025_1.json
+poetry run python crawler/transformer.py \
+  --metadata crawler/output/metadata_2025_1.json \
+  --courses crawler/output/courses_raw_2025_1.json
 
 # 결과 확인
-cat output/transformed_2025_1.json | head -100
+cat crawler/output/transformed_2025_1.json | head -100
 
 # 만족스럽지 않으면?
 # → data_parser.py 수정
@@ -131,28 +122,28 @@ cat output/transformed_2025_1.json | head -100
 
 ```bash
 # Step 1: Metadata 크롤링 (1차)
-python crawl_metadata.py --year 2025 --semester 1
+poetry run python crawler/crawl_metadata.py --year 2025 --semester 1
 
 # Step 2: 전체 437개 학과 크롤링 (~4분, 2차)
 # → metadata_2025_1.json에서 학과 목록 자동 로드
-python run_crawler.py --year 2025 --semester 1
+poetry run python crawler/run_crawler.py --year 2025 --semester 1
 
 # Step 3: 변환
 # → 학과별 그룹 데이터를 통합하여 변환
-python transformer.py \
-  --metadata output/metadata_2025_1.json \
-  --courses output/courses_raw_2025_1.json
+poetry run python crawler/transformer.py \
+  --metadata crawler/output/metadata_2025_1.json \
+  --courses crawler/output/courses_raw_2025_1.json
 
 # Step 4: catalog-service로 업로드 (간편 모드 - 권장!)
-python upload_to_service.py --year 2025 --semester 1
+poetry run python crawler/upload_to_service.py --year 2025 --semester 1
 
 # 또는 파일 경로 직접 지정
-python upload_to_service.py --file output/transformed_2025_1.json
+poetry run python crawler/upload_to_service.py --file crawler/output/transformed_2025_1.json
 
 # 또는 curl 사용 (직접 연결)
 curl -X POST http://localhost:8083/courses/import \
   -H "Content-Type: application/json" \
-  -d @output/transformed_2025_1.json
+  -d @crawler/output/transformed_2025_1.json
 ```
 
 ## 4. 출력 형식
@@ -297,17 +288,16 @@ scripts/crawler/
 ├── run_crawler.py                 # Step 2: Courses 크롤러 ⭐
 ├── transformer.py                 # Step 3: 변환 ⭐
 ├── upload_to_service.py           # catalog-service로 업로드 ⭐
-├── requirements.txt
 ├── .gitignore
 └── README.md
 ```
 
 ## 6. 기술 스택
 
-- **Language**: Python 3.x
+- **Language**: Python 3.11+
 - **HTTP Client**: requests (Selenium 불필요!)
 - **Data Parsing**: re (정규표현식), json
-- **의존성 관리**: requirements.txt
+- **의존성 관리**: Poetry (scripts/pyproject.toml)
 
 ## 7. 중요 사항
 
@@ -335,7 +325,7 @@ config/khu_config.py에서 자동 처리합니다.
 ```
 ERROR: Metadata file not found: output/metadata_2025_1.json
 ```
-→ Step 1을 먼저 실행: `python crawl_metadata.py --year 2025 --semester 1`
+→ Step 1을 먼저 실행: `poetry run python crawler/crawl_metadata.py --year 2025 --semester 1`
 
 ### 404 에러
 - Referer 헤더 확인 (자동 설정됨)

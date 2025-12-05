@@ -83,3 +83,13 @@ app.*.map.json
 **/android/app/debug
 **/android/app/profile
 **/android/app/release
+
+# Python
+*.pyc
+__pycache__/
+**/__pycache__/
+.pytest_cache/
+**/.pytest_cache/
+*.egg-info/
+scripts/.venv/
+scripts/crawler/.venv/

@@ -211,21 +211,22 @@ dart run bin/uniplan.dart timetable create "Plan A" 2025 "1학기"
 경희대학교 강의 데이터 크롤링:
 
 ```bash
-cd scripts/crawler
-python -m venv venv && source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
+cd scripts
+poetry install  # 의존성 설치
 
 # 메타데이터 크롤링
-python crawl_metadata.py --year 2025 --semester 1
+poetry run python crawler/crawl_metadata.py --year 2025 --semester 1
 
 # 강의 크롤링
-python run_crawler.py --year 2025 --semester 1
+poetry run python crawler/run_crawler.py --year 2025 --semester 1
 
 # 변환 (catalog-service 형식)
-python transformer.py \
+poetry run python crawler/transformer.py \
   --metadata output/metadata_2025_1.json \
   --courses output/courses_raw_2025_1.json
 ```
+
+자세한 사용법은 `scripts/README.md` 참고
 
 ## 문서
 

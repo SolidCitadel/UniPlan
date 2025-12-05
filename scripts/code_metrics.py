@@ -10,8 +10,8 @@ Reports per-category counts for:
 - top-level functions (not inside a class)
 
 Categories are pre-wired for server (app/backend) and client
-(app/frontend, app/cli-client, Uniplanprototype) but can be
-overridden with flags.
+(app/frontend, app/cli-client) but can be overridden with flags.
+
 """
 
 from __future__ import annotations
@@ -47,10 +47,18 @@ IGNORE_DIRS: Set[str] = {
     ".fleet",
 }
 
+# Skip generated source files
+IGNORE_FILE_PATTERNS: Set[str] = {
+    ".freezed.dart",  # Freezed generated files
+    ".g.dart",        # JSON serialization generated files
+}
+
 
 @dataclass
 class LangRule:
     class_patterns: Sequence[re.Pattern[str]]
+    interface_patterns: Sequence[re.Pattern[str]]
+    enum_patterns: Sequence[re.Pattern[str]]
     function_patterns: Sequence[re.Pattern[str]]
     skip_first_words: Set[str]
     allow_top_level_functions: bool
@@ -61,7 +69,19 @@ LANG_RULES: Dict[str, LangRule] = {
         class_patterns=[
             re.compile(
                 r"^\s*(?:public|protected|private|abstract|final|static|\s)*"
-                r"(?:class|interface|enum|record)\s+[A-Za-z_][\w$]*"
+                r"(?:class|record)\s+[A-Za-z_][\w$]*"
+            )
+        ],
+        interface_patterns=[
+            re.compile(
+                r"^\s*(?:public|protected|private|\s)*"
+                r"interface\s+[A-Za-z_][\w$]*"
+            )
+        ],
+        enum_patterns=[
+            re.compile(
+                r"^\s*(?:public|protected|private|\s)*"
+                r"enum\s+[A-Za-z_][\w$]*"
             )
         ],
         function_patterns=[
@@ -80,8 +100,11 @@ LANG_RULES: Dict[str, LangRule] = {
     "dart": LangRule(
         class_patterns=[
             re.compile(r"^\s*(?:abstract\s+|sealed\s+|base\s+|final\s+)?class\s+[A-Za-z_][\w<>$]*"),
-            re.compile(r"^\s*enum\s+[A-Za-z_][\w$]*"),
             re.compile(r"^\s*mixin\s+[A-Za-z_][\w$]*"),
+        ],
+        interface_patterns=[],  # Dart doesn't have explicit interfaces
+        enum_patterns=[
+            re.compile(r"^\s*enum\s+[A-Za-z_][\w$]*"),
         ],
         function_patterns=[
             re.compile(
@@ -95,7 +118,11 @@ LANG_RULES: Dict[str, LangRule] = {
     "ts": LangRule(
         class_patterns=[
             re.compile(r"^\s*(?:export\s+)?(?:abstract\s+)?class\s+[A-Za-z_][\w]*"),
+        ],
+        interface_patterns=[
             re.compile(r"^\s*(?:export\s+)?interface\s+[A-Za-z_][\w]*"),
+        ],
+        enum_patterns=[
             re.compile(r"^\s*(?:export\s+)?enum\s+[A-Za-z_][\w]*"),
         ],
         function_patterns=[
@@ -134,7 +161,7 @@ CategoryConfig = Dict[str, List[str]]
 
 DEFAULT_CATEGORIES: Dict[str, CategoryConfig] = {
     "server": {"roots": ["app/backend"]},
-    "client": {"roots": ["app/frontend", "app/cli-client", "Uniplanprototype"]},
+    "client": {"roots": ["app/frontend", "app/cli-client"]},
 }
 
 
@@ -164,6 +191,11 @@ def should_skip_dir(path: Path) -> bool:
     return any(part in IGNORE_DIRS for part in path.parts)
 
 
+def should_skip_file(path: Path) -> bool:
+    """Check if file should be skipped based on generated file patterns."""
+    return any(str(path).endswith(pattern) for pattern in IGNORE_FILE_PATTERNS)
+
+
 def iter_source_files(root: Path, allowed_exts: Set[str]) -> Iterable[Path]:
     stack: List[Path] = [root]
     while stack:
@@ -178,7 +210,8 @@ def iter_source_files(root: Path, allowed_exts: Set[str]) -> Iterable[Path]:
                     continue
                 stack.append(child)
             elif child.suffix in allowed_exts:
-                yield child
+                if not should_skip_file(child):
+                    yield child
 
 
 def matches_any(patterns: Sequence[re.Pattern[str]], text: str) -> bool:
@@ -190,7 +223,7 @@ def analyze_file(path: Path, lang: str) -> Dict[str, int]:
     try:
         lines = path.read_text(encoding="utf-8", errors="ignore").splitlines()
     except OSError:
-        return {"lines": 0, "classes": 0, "methods": 0, "top_level_functions": 0}
+        return {"lines": 0, "classes": 0, "interfaces": 0, "enums": 0, "methods": 0, "top_level_functions": 0}
 
     brace_depth = 0
     class_stack: List[int] = []
@@ -198,6 +231,8 @@ def analyze_file(path: Path, lang: str) -> Dict[str, int]:
     in_block_comment = False
 
     class_count = 0
+    interface_count = 0
+    enum_count = 0
     method_count = 0
     top_level_functions = 0
 
@@ -207,6 +242,14 @@ def analyze_file(path: Path, lang: str) -> Dict[str, int]:
 
         if stripped and matches_any(rules.class_patterns, stripped):
             class_count += 1
+            pending_classes += 1
+
+        if stripped and matches_any(rules.interface_patterns, stripped):
+            interface_count += 1
+            pending_classes += 1
+
+        if stripped and matches_any(rules.enum_patterns, stripped):
+            enum_count += 1
             pending_classes += 1
 
         function_hit = False
@@ -240,13 +283,15 @@ def analyze_file(path: Path, lang: str) -> Dict[str, int]:
     return {
         "lines": len(lines),
         "classes": class_count,
+        "interfaces": interface_count,
+        "enums": enum_count,
         "methods": method_count,
         "top_level_functions": top_level_functions,
     }
 
 
 def analyze_category(name: str, roots: Sequence[str]) -> Dict[str, int]:
-    stats = {"files": 0, "lines": 0, "classes": 0, "methods": 0, "top_level_functions": 0}
+    stats = {"files": 0, "lines": 0, "classes": 0, "interfaces": 0, "enums": 0, "methods": 0, "top_level_functions": 0}
     allowed_exts = set(EXT_TO_LANG.keys())
     for root in roots:
         root_path = (PROJECT_ROOT / root).resolve()
@@ -260,6 +305,8 @@ def analyze_category(name: str, roots: Sequence[str]) -> Dict[str, int]:
             stats["files"] += 1
             stats["lines"] += file_stats["lines"]
             stats["classes"] += file_stats["classes"]
+            stats["interfaces"] += file_stats["interfaces"]
+            stats["enums"] += file_stats["enums"]
             stats["methods"] += file_stats["methods"]
             stats["top_level_functions"] += file_stats["top_level_functions"]
     return stats
@@ -283,7 +330,7 @@ def parse_args() -> argparse.Namespace:
         "--client-roots",
         nargs="*",
         default=None,
-        help="Override client roots (default: app/frontend app/cli-client Uniplanprototype).",
+        help="Override client roots (default: app/frontend app/cli-client).",
     )
     parser.add_argument("--json", action="store_true", help="Output JSON instead of text.")
     return parser.parse_args()
@@ -312,7 +359,9 @@ def main() -> None:
         print(f"[{name}]")
         print(f"  source files          : {stats['files']}")
         print(f"  total lines           : {stats['lines']}")
-        print(f"  classes/interfaces    : {stats['classes']}")
+        print(f"  classes               : {stats['classes']}")
+        print(f"  interfaces            : {stats['interfaces']}")
+        print(f"  enums                 : {stats['enums']}")
         print(f"  class methods (total) : {stats['methods']}")
         print(f"  top-level functions   : {stats['top_level_functions']}")
         print()

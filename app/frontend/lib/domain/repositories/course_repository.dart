@@ -5,8 +5,10 @@ abstract class CourseRepository {
   Future<PageEnvelope<Course>> getCourses({
     String? courseName,
     String? professor,
-    String? departmentCode,
+    String? departmentName,
     String? campus,
+    int? targetGrade,
+    int? credits,
     int page,
     int size,
   });

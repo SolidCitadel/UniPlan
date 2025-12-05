@@ -9,6 +9,7 @@ abstract class Course with _$Course {
     required int id,
     required int openingYear,
     required String semester,
+    int? targetGrade,
     required String courseCode,
     String? section,
     required String courseName,

@@ -1,7 +1,14 @@
 package com.uniplan.catalog.domain.course.controller;
 
-import com.uniplan.catalog.domain.course.entity.*;
-import com.uniplan.catalog.domain.course.repository.*;
+import com.uniplan.catalog.domain.course.entity.ClassTime;
+import com.uniplan.catalog.domain.course.entity.College;
+import com.uniplan.catalog.domain.course.entity.Course;
+import com.uniplan.catalog.domain.course.entity.CourseType;
+import com.uniplan.catalog.domain.course.entity.Department;
+import com.uniplan.catalog.domain.course.repository.CollegeRepository;
+import com.uniplan.catalog.domain.course.repository.CourseRepository;
+import com.uniplan.catalog.domain.course.repository.CourseTypeRepository;
+import com.uniplan.catalog.domain.course.repository.DepartmentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,7 +21,8 @@ import java.time.LocalTime;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Integration tests for CourseController
@@ -40,6 +48,7 @@ class CourseControllerTest {
 
     private College testCollege;
     private Department testDepartment;
+    private Department anotherDepartment;
     private CourseType testCourseType;
 
     @BeforeEach
@@ -58,7 +67,7 @@ class CourseControllerTest {
             .build();
         testCollege = collegeRepository.save(testCollege);
 
-        // Create test department
+        // Create test departments
         testDepartment = Department.builder()
             .code("TEST_DEPT")
             .name("테스트학과")
@@ -68,6 +77,15 @@ class CourseControllerTest {
             .build();
         testDepartment = departmentRepository.save(testDepartment);
 
+        anotherDepartment = Department.builder()
+            .code("ANOTHER_DEPT")
+            .name("다른학과")
+            .nameEn("Another Department")
+            .college(testCollege)
+            .level("30")
+            .build();
+        anotherDepartment = departmentRepository.save(anotherDepartment);
+
         // Create test course type
         testCourseType = CourseType.builder()
             .code("04")
@@ -76,28 +94,29 @@ class CourseControllerTest {
             .build();
         testCourseType = courseTypeRepository.save(testCourseType);
 
-        // Create test courses
-        createTestCourse("CSE101", "01", "컴퓨터개론", "김철수", 3, "국제", "월", "09:00", "10:15");
-        createTestCourse("CSE102", "01", "자료구조", "이영희", 3, "국제", "화", "10:30", "11:45");
-        createTestCourse("CSE201", "01", "알고리즘", "박민수", 3, "국제", "수", "13:00", "14:15");
-        createTestCourse("ECON101", "01", "경영학개론", "최지훈", 3, "서울", "목", "14:30", "15:45");
-        createTestCourse("ECON102", "01", "미시경제학", "정수진", 3, "서울", "금", "16:00", "17:15");
-        createTestCourse("MATH101", "01", "미적분학", "강동훈", 4, "국제", "월", "15:00", "17:00");
-        createTestCourse("MATH102", "01", "선형대수", "송미래", 4, "국제", "화", "13:00", "15:00");
-        createTestCourse("PHYS101", "01", "물리학개론", "윤서연", 3, "서울", "수", "09:00", "10:15");
-        createTestCourse("CHEM101", "01", "화학개론", "한지우", 3, "서울", "목", "10:30", "11:45");
-        createTestCourse("BIO101", "01", "생물학개론", "임태양", 3, "국제", "금", "13:00", "14:15");
-        createTestCourse("ENG101", "01", "영어회화", "조하늘", 2, "국제", "월", "11:00", "11:50");
-        createTestCourse("KOR101", "01", "한국어작문", "배별", 2, "서울", "화", "11:00", "11:50");
+        // Create test courses (12)
+        createTestCourse("CSE101", "01", "컴퓨터개론", "김철수", 3, "국제", "월", "09:00", "10:15", 1, testDepartment);
+        createTestCourse("CSE102", "01", "자료구조", "이영희", 3, "국제", "화", "10:30", "11:45", 1, testDepartment);
+        createTestCourse("CSE201", "01", "알고리즘", "박민수", 3, "국제", "수", "13:00", "14:15", 1, testDepartment);
+        createTestCourse("ECON101", "01", "경영학개론", "최지훈", 3, "서울", "목", "14:30", "15:45", 1, testDepartment);
+        createTestCourse("ECON102", "01", "미시경제학", "정수진", 3, "서울", "금", "16:00", "17:15", 2, anotherDepartment);
+        createTestCourse("MATH101", "01", "미적분학", "강동훈", 4, "국제", "월", "15:00", "17:00", 1, testDepartment);
+        createTestCourse("MATH102", "01", "선형대수", "송미래", 4, "국제", "화", "13:00", "15:00", 2, testDepartment);
+        createTestCourse("PHYS101", "01", "물리학개론", "윤서연", 3, "서울", "수", "09:00", "10:15", 1, testDepartment);
+        createTestCourse("CHEM101", "01", "화학개론", "한지우", 3, "서울", "목", "10:30", "11:45", 1, testDepartment);
+        createTestCourse("BIO101", "01", "생물학개론", "임태양", 3, "국제", "금", "13:00", "14:15", 1, testDepartment);
+        createTestCourse("ENG101", "01", "영어회화", "조하늘", 2, "국제", "월", "11:00", "11:50", 1, testDepartment);
+        createTestCourse("KOR101", "01", "한국어작문", "배별", 2, "서울", "화", "11:00", "11:50", 2, anotherDepartment);
     }
 
     private void createTestCourse(String courseCode, String section, String courseName,
                                   String professor, int credits, String campus,
-                                  String day, String startTime, String endTime) {
+                                  String day, String startTime, String endTime,
+                                  int targetGrade, Department department) {
         Course course = Course.builder()
             .openingYear(2025)
             .semester("2학기")
-            .targetGrade(1)
+            .targetGrade(targetGrade)
             .courseCode(courseCode)
             .section(section)
             .courseName(courseName)
@@ -105,8 +124,8 @@ class CourseControllerTest {
             .credits(credits)
             .classroom("테스트강의실")
             .campus(campus)
-            .notes("테스트 과목")
-            .departments(java.util.List.of(testDepartment))
+            .notes("테스트용 과목")
+            .departments(java.util.List.of(department))
             .courseType(testCourseType)
             .build();
 
@@ -122,7 +141,7 @@ class CourseControllerTest {
     }
 
     @Test
-    @DisplayName("전체 과목 조회 - 기본 페이징")
+    @DisplayName("전체 과목 조회 - 기본 페이지네이션")
     void searchCourses_withDefaultPagination() throws Exception {
         mockMvc.perform(get("/courses")
                 .param("page", "0")
@@ -152,7 +171,7 @@ class CourseControllerTest {
     @DisplayName("교수명으로 검색")
     void searchCourses_byProfessor() throws Exception {
         mockMvc.perform(get("/courses")
-                .param("professor", "이")
+                .param("professor", "김")
                 .param("page", "0")
                 .param("size", "5"))
             .andDo(print())
@@ -161,7 +180,7 @@ class CourseControllerTest {
     }
 
     @Test
-    @DisplayName("학기와 년도로 검색")
+    @DisplayName("학기와 연도로 검색")
     void searchCourses_byYearAndSemester() throws Exception {
         mockMvc.perform(get("/courses")
                 .param("openingYear", "2025")
@@ -214,10 +233,37 @@ class CourseControllerTest {
     }
 
     @Test
+    @DisplayName("학년으로 검색")
+    void searchCourses_byTargetGrade() throws Exception {
+        mockMvc.perform(get("/courses")
+                .param("targetGrade", "2")
+                .param("page", "0")
+                .param("size", "10"))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content").isArray())
+            .andExpect(jsonPath("$.content.length()").value(3))
+            .andExpect(jsonPath("$.content[0].targetGrade").value(2));
+    }
+
+    @Test
+    @DisplayName("학과명으로 검색")
+    void searchCourses_byDepartmentName() throws Exception {
+        mockMvc.perform(get("/courses")
+                .param("departmentName", "다른")
+                .param("page", "0")
+                .param("size", "10"))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content").isArray())
+            .andExpect(jsonPath("$.content.length()").value(2));
+    }
+
+    @Test
     @DisplayName("복합 조건 검색 - 과목명, 학점, 캠퍼스")
     void searchCourses_withMultipleFilters() throws Exception {
         // Search for "컴퓨터", 3 credits, "국제" campus
-        // Should match: CSE101 (컴퓨터개론), CSE102 (자료구조)
+        // Should match: CSE101 only
         mockMvc.perform(get("/courses")
                 .param("courseName", "컴퓨터")
                 .param("minCredits", "3")
@@ -228,7 +274,7 @@ class CourseControllerTest {
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.content").isArray())
-            .andExpect(jsonPath("$.content.length()").value(1))  // Only CSE101 matches all conditions
+            .andExpect(jsonPath("$.content.length()").value(1))
             .andExpect(jsonPath("$.content[0].courseName").value("컴퓨터개론"));
     }
 
@@ -252,7 +298,7 @@ class CourseControllerTest {
     }
 
     @Test
-    @DisplayName("페이징 - 두 번째 페이지 조회")
+    @DisplayName("페이지네이션 - 두 번째 페이지 조회")
     void searchCourses_secondPage() throws Exception {
         mockMvc.perform(get("/courses")
                 .param("page", "1")

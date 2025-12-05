@@ -14,7 +14,9 @@ public class CourseSearchRequest {
     private String courseName;         // partial match
     private String courseCode;         // partial match
     private String professor;          // partial match
+    private Integer targetGrade;
     private String departmentCode;
+    private String departmentName;     // partial match
     private String courseTypeCode;
     private String campus;
 

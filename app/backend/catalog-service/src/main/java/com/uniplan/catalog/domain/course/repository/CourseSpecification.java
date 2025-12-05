@@ -52,14 +52,29 @@ public class CourseSpecification {
                 ));
             }
 
+            if (request.getTargetGrade() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("targetGrade"), request.getTargetGrade()));
+            }
+
             if (request.getCampus() != null && !request.getCampus().isBlank()) {
                 predicates.add(criteriaBuilder.equal(root.get("campus"), request.getCampus()));
             }
 
             // Department filter (join)
-            if (request.getDepartmentCode() != null && !request.getDepartmentCode().isBlank()) {
+            if ((request.getDepartmentCode() != null && !request.getDepartmentCode().isBlank())
+                || (request.getDepartmentName() != null && !request.getDepartmentName().isBlank())) {
                 Join<Object, Object> department = root.join("departments");
-                predicates.add(criteriaBuilder.equal(department.get("code"), request.getDepartmentCode()));
+
+                if (request.getDepartmentCode() != null && !request.getDepartmentCode().isBlank()) {
+                    predicates.add(criteriaBuilder.equal(department.get("code"), request.getDepartmentCode()));
+                }
+
+                if (request.getDepartmentName() != null && !request.getDepartmentName().isBlank()) {
+                    predicates.add(criteriaBuilder.like(
+                        department.get("name"),
+                        "%" + request.getDepartmentName() + "%"
+                    ));
+                }
             }
 
             // Course type filter (join)

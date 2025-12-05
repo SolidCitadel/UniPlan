@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$CourseDto {
 
- int get id; int get openingYear; String get semester; String get courseCode; String? get section; String get courseName; String? get professor; int get credits; String? get classroom; String get campus; String? get departmentCode; String? get departmentName; String? get collegeCode; String? get collegeName; List<ClassTimeDto> get classTimes;
+ int get id; int get openingYear; String get semester; int? get targetGrade; String get courseCode; String? get section; String get courseName; String? get professor; int get credits; String? get classroom; String get campus; String? get departmentCode; String? get departmentName; String? get collegeCode; String? get collegeName; List<ClassTimeDto> get classTimes;
 /// Create a copy of CourseDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $CourseDtoCopyWith<CourseDto> get copyWith => _$CourseDtoCopyWithImpl<CourseDto>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CourseDto&&(identical(other.id, id) || other.id == id)&&(identical(other.openingYear, openingYear) || other.openingYear == openingYear)&&(identical(other.semester, semester) || other.semester == semester)&&(identical(other.courseCode, courseCode) || other.courseCode == courseCode)&&(identical(other.section, section) || other.section == section)&&(identical(other.courseName, courseName) || other.courseName == courseName)&&(identical(other.professor, professor) || other.professor == professor)&&(identical(other.credits, credits) || other.credits == credits)&&(identical(other.classroom, classroom) || other.classroom == classroom)&&(identical(other.campus, campus) || other.campus == campus)&&(identical(other.departmentCode, departmentCode) || other.departmentCode == departmentCode)&&(identical(other.departmentName, departmentName) || other.departmentName == departmentName)&&(identical(other.collegeCode, collegeCode) || other.collegeCode == collegeCode)&&(identical(other.collegeName, collegeName) || other.collegeName == collegeName)&&const DeepCollectionEquality().equals(other.classTimes, classTimes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CourseDto&&(identical(other.id, id) || other.id == id)&&(identical(other.openingYear, openingYear) || other.openingYear == openingYear)&&(identical(other.semester, semester) || other.semester == semester)&&(identical(other.targetGrade, targetGrade) || other.targetGrade == targetGrade)&&(identical(other.courseCode, courseCode) || other.courseCode == courseCode)&&(identical(other.section, section) || other.section == section)&&(identical(other.courseName, courseName) || other.courseName == courseName)&&(identical(other.professor, professor) || other.professor == professor)&&(identical(other.credits, credits) || other.credits == credits)&&(identical(other.classroom, classroom) || other.classroom == classroom)&&(identical(other.campus, campus) || other.campus == campus)&&(identical(other.departmentCode, departmentCode) || other.departmentCode == departmentCode)&&(identical(other.departmentName, departmentName) || other.departmentName == departmentName)&&(identical(other.collegeCode, collegeCode) || other.collegeCode == collegeCode)&&(identical(other.collegeName, collegeName) || other.collegeName == collegeName)&&const DeepCollectionEquality().equals(other.classTimes, classTimes));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,openingYear,semester,courseCode,section,courseName,professor,credits,classroom,campus,departmentCode,departmentName,collegeCode,collegeName,const DeepCollectionEquality().hash(classTimes));
+int get hashCode => Object.hash(runtimeType,id,openingYear,semester,targetGrade,courseCode,section,courseName,professor,credits,classroom,campus,departmentCode,departmentName,collegeCode,collegeName,const DeepCollectionEquality().hash(classTimes));
 
 @override
 String toString() {
-  return 'CourseDto(id: $id, openingYear: $openingYear, semester: $semester, courseCode: $courseCode, section: $section, courseName: $courseName, professor: $professor, credits: $credits, classroom: $classroom, campus: $campus, departmentCode: $departmentCode, departmentName: $departmentName, collegeCode: $collegeCode, collegeName: $collegeName, classTimes: $classTimes)';
+  return 'CourseDto(id: $id, openingYear: $openingYear, semester: $semester, targetGrade: $targetGrade, courseCode: $courseCode, section: $section, courseName: $courseName, professor: $professor, credits: $credits, classroom: $classroom, campus: $campus, departmentCode: $departmentCode, departmentName: $departmentName, collegeCode: $collegeCode, collegeName: $collegeName, classTimes: $classTimes)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $CourseDtoCopyWith<$Res>  {
   factory $CourseDtoCopyWith(CourseDto value, $Res Function(CourseDto) _then) = _$CourseDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, int openingYear, String semester, String courseCode, String? section, String courseName, String? professor, int credits, String? classroom, String campus, String? departmentCode, String? departmentName, String? collegeCode, String? collegeName, List<ClassTimeDto> classTimes
+ int id, int openingYear, String semester, int? targetGrade, String courseCode, String? section, String courseName, String? professor, int credits, String? classroom, String campus, String? departmentCode, String? departmentName, String? collegeCode, String? collegeName, List<ClassTimeDto> classTimes
 });
 
 
@@ -65,12 +65,13 @@ class _$CourseDtoCopyWithImpl<$Res>
 
 /// Create a copy of CourseDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? openingYear = null,Object? semester = null,Object? courseCode = null,Object? section = freezed,Object? courseName = null,Object? professor = freezed,Object? credits = null,Object? classroom = freezed,Object? campus = null,Object? departmentCode = freezed,Object? departmentName = freezed,Object? collegeCode = freezed,Object? collegeName = freezed,Object? classTimes = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? openingYear = null,Object? semester = null,Object? targetGrade = freezed,Object? courseCode = null,Object? section = freezed,Object? courseName = null,Object? professor = freezed,Object? credits = null,Object? classroom = freezed,Object? campus = null,Object? departmentCode = freezed,Object? departmentName = freezed,Object? collegeCode = freezed,Object? collegeName = freezed,Object? classTimes = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,openingYear: null == openingYear ? _self.openingYear : openingYear // ignore: cast_nullable_to_non_nullable
 as int,semester: null == semester ? _self.semester : semester // ignore: cast_nullable_to_non_nullable
-as String,courseCode: null == courseCode ? _self.courseCode : courseCode // ignore: cast_nullable_to_non_nullable
+as String,targetGrade: freezed == targetGrade ? _self.targetGrade : targetGrade // ignore: cast_nullable_to_non_nullable
+as int?,courseCode: null == courseCode ? _self.courseCode : courseCode // ignore: cast_nullable_to_non_nullable
 as String,section: freezed == section ? _self.section : section // ignore: cast_nullable_to_non_nullable
 as String?,courseName: null == courseName ? _self.courseName : courseName // ignore: cast_nullable_to_non_nullable
 as String,professor: freezed == professor ? _self.professor : professor // ignore: cast_nullable_to_non_nullable
@@ -167,10 +168,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  int openingYear,  String semester,  String courseCode,  String? section,  String courseName,  String? professor,  int credits,  String? classroom,  String campus,  String? departmentCode,  String? departmentName,  String? collegeCode,  String? collegeName,  List<ClassTimeDto> classTimes)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  int openingYear,  String semester,  int? targetGrade,  String courseCode,  String? section,  String courseName,  String? professor,  int credits,  String? classroom,  String campus,  String? departmentCode,  String? departmentName,  String? collegeCode,  String? collegeName,  List<ClassTimeDto> classTimes)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CourseDto() when $default != null:
-return $default(_that.id,_that.openingYear,_that.semester,_that.courseCode,_that.section,_that.courseName,_that.professor,_that.credits,_that.classroom,_that.campus,_that.departmentCode,_that.departmentName,_that.collegeCode,_that.collegeName,_that.classTimes);case _:
+return $default(_that.id,_that.openingYear,_that.semester,_that.targetGrade,_that.courseCode,_that.section,_that.courseName,_that.professor,_that.credits,_that.classroom,_that.campus,_that.departmentCode,_that.departmentName,_that.collegeCode,_that.collegeName,_that.classTimes);case _:
   return orElse();
 
 }
@@ -188,10 +189,10 @@ return $default(_that.id,_that.openingYear,_that.semester,_that.courseCode,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  int openingYear,  String semester,  String courseCode,  String? section,  String courseName,  String? professor,  int credits,  String? classroom,  String campus,  String? departmentCode,  String? departmentName,  String? collegeCode,  String? collegeName,  List<ClassTimeDto> classTimes)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  int openingYear,  String semester,  int? targetGrade,  String courseCode,  String? section,  String courseName,  String? professor,  int credits,  String? classroom,  String campus,  String? departmentCode,  String? departmentName,  String? collegeCode,  String? collegeName,  List<ClassTimeDto> classTimes)  $default,) {final _that = this;
 switch (_that) {
 case _CourseDto():
-return $default(_that.id,_that.openingYear,_that.semester,_that.courseCode,_that.section,_that.courseName,_that.professor,_that.credits,_that.classroom,_that.campus,_that.departmentCode,_that.departmentName,_that.collegeCode,_that.collegeName,_that.classTimes);case _:
+return $default(_that.id,_that.openingYear,_that.semester,_that.targetGrade,_that.courseCode,_that.section,_that.courseName,_that.professor,_that.credits,_that.classroom,_that.campus,_that.departmentCode,_that.departmentName,_that.collegeCode,_that.collegeName,_that.classTimes);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -208,10 +209,10 @@ return $default(_that.id,_that.openingYear,_that.semester,_that.courseCode,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  int openingYear,  String semester,  String courseCode,  String? section,  String courseName,  String? professor,  int credits,  String? classroom,  String campus,  String? departmentCode,  String? departmentName,  String? collegeCode,  String? collegeName,  List<ClassTimeDto> classTimes)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  int openingYear,  String semester,  int? targetGrade,  String courseCode,  String? section,  String courseName,  String? professor,  int credits,  String? classroom,  String campus,  String? departmentCode,  String? departmentName,  String? collegeCode,  String? collegeName,  List<ClassTimeDto> classTimes)?  $default,) {final _that = this;
 switch (_that) {
 case _CourseDto() when $default != null:
-return $default(_that.id,_that.openingYear,_that.semester,_that.courseCode,_that.section,_that.courseName,_that.professor,_that.credits,_that.classroom,_that.campus,_that.departmentCode,_that.departmentName,_that.collegeCode,_that.collegeName,_that.classTimes);case _:
+return $default(_that.id,_that.openingYear,_that.semester,_that.targetGrade,_that.courseCode,_that.section,_that.courseName,_that.professor,_that.credits,_that.classroom,_that.campus,_that.departmentCode,_that.departmentName,_that.collegeCode,_that.collegeName,_that.classTimes);case _:
   return null;
 
 }
@@ -223,12 +224,13 @@ return $default(_that.id,_that.openingYear,_that.semester,_that.courseCode,_that
 @JsonSerializable()
 
 class _CourseDto implements CourseDto {
-  const _CourseDto({required this.id, required this.openingYear, required this.semester, required this.courseCode, this.section, required this.courseName, this.professor, required this.credits, this.classroom, required this.campus, this.departmentCode, this.departmentName, this.collegeCode, this.collegeName, final  List<ClassTimeDto> classTimes = const []}): _classTimes = classTimes;
+  const _CourseDto({required this.id, required this.openingYear, required this.semester, this.targetGrade, required this.courseCode, this.section, required this.courseName, this.professor, required this.credits, this.classroom, required this.campus, this.departmentCode, this.departmentName, this.collegeCode, this.collegeName, final  List<ClassTimeDto> classTimes = const []}): _classTimes = classTimes;
   factory _CourseDto.fromJson(Map<String, dynamic> json) => _$CourseDtoFromJson(json);
 
 @override final  int id;
 @override final  int openingYear;
 @override final  String semester;
+@override final  int? targetGrade;
 @override final  String courseCode;
 @override final  String? section;
 @override final  String courseName;
@@ -261,16 +263,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CourseDto&&(identical(other.id, id) || other.id == id)&&(identical(other.openingYear, openingYear) || other.openingYear == openingYear)&&(identical(other.semester, semester) || other.semester == semester)&&(identical(other.courseCode, courseCode) || other.courseCode == courseCode)&&(identical(other.section, section) || other.section == section)&&(identical(other.courseName, courseName) || other.courseName == courseName)&&(identical(other.professor, professor) || other.professor == professor)&&(identical(other.credits, credits) || other.credits == credits)&&(identical(other.classroom, classroom) || other.classroom == classroom)&&(identical(other.campus, campus) || other.campus == campus)&&(identical(other.departmentCode, departmentCode) || other.departmentCode == departmentCode)&&(identical(other.departmentName, departmentName) || other.departmentName == departmentName)&&(identical(other.collegeCode, collegeCode) || other.collegeCode == collegeCode)&&(identical(other.collegeName, collegeName) || other.collegeName == collegeName)&&const DeepCollectionEquality().equals(other._classTimes, _classTimes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CourseDto&&(identical(other.id, id) || other.id == id)&&(identical(other.openingYear, openingYear) || other.openingYear == openingYear)&&(identical(other.semester, semester) || other.semester == semester)&&(identical(other.targetGrade, targetGrade) || other.targetGrade == targetGrade)&&(identical(other.courseCode, courseCode) || other.courseCode == courseCode)&&(identical(other.section, section) || other.section == section)&&(identical(other.courseName, courseName) || other.courseName == courseName)&&(identical(other.professor, professor) || other.professor == professor)&&(identical(other.credits, credits) || other.credits == credits)&&(identical(other.classroom, classroom) || other.classroom == classroom)&&(identical(other.campus, campus) || other.campus == campus)&&(identical(other.departmentCode, departmentCode) || other.departmentCode == departmentCode)&&(identical(other.departmentName, departmentName) || other.departmentName == departmentName)&&(identical(other.collegeCode, collegeCode) || other.collegeCode == collegeCode)&&(identical(other.collegeName, collegeName) || other.collegeName == collegeName)&&const DeepCollectionEquality().equals(other._classTimes, _classTimes));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,openingYear,semester,courseCode,section,courseName,professor,credits,classroom,campus,departmentCode,departmentName,collegeCode,collegeName,const DeepCollectionEquality().hash(_classTimes));
+int get hashCode => Object.hash(runtimeType,id,openingYear,semester,targetGrade,courseCode,section,courseName,professor,credits,classroom,campus,departmentCode,departmentName,collegeCode,collegeName,const DeepCollectionEquality().hash(_classTimes));
 
 @override
 String toString() {
-  return 'CourseDto(id: $id, openingYear: $openingYear, semester: $semester, courseCode: $courseCode, section: $section, courseName: $courseName, professor: $professor, credits: $credits, classroom: $classroom, campus: $campus, departmentCode: $departmentCode, departmentName: $departmentName, collegeCode: $collegeCode, collegeName: $collegeName, classTimes: $classTimes)';
+  return 'CourseDto(id: $id, openingYear: $openingYear, semester: $semester, targetGrade: $targetGrade, courseCode: $courseCode, section: $section, courseName: $courseName, professor: $professor, credits: $credits, classroom: $classroom, campus: $campus, departmentCode: $departmentCode, departmentName: $departmentName, collegeCode: $collegeCode, collegeName: $collegeName, classTimes: $classTimes)';
 }
 
 
@@ -281,7 +283,7 @@ abstract mixin class _$CourseDtoCopyWith<$Res> implements $CourseDtoCopyWith<$Re
   factory _$CourseDtoCopyWith(_CourseDto value, $Res Function(_CourseDto) _then) = __$CourseDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, int openingYear, String semester, String courseCode, String? section, String courseName, String? professor, int credits, String? classroom, String campus, String? departmentCode, String? departmentName, String? collegeCode, String? collegeName, List<ClassTimeDto> classTimes
+ int id, int openingYear, String semester, int? targetGrade, String courseCode, String? section, String courseName, String? professor, int credits, String? classroom, String campus, String? departmentCode, String? departmentName, String? collegeCode, String? collegeName, List<ClassTimeDto> classTimes
 });
 
 
@@ -298,12 +300,13 @@ class __$CourseDtoCopyWithImpl<$Res>
 
 /// Create a copy of CourseDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? openingYear = null,Object? semester = null,Object? courseCode = null,Object? section = freezed,Object? courseName = null,Object? professor = freezed,Object? credits = null,Object? classroom = freezed,Object? campus = null,Object? departmentCode = freezed,Object? departmentName = freezed,Object? collegeCode = freezed,Object? collegeName = freezed,Object? classTimes = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? openingYear = null,Object? semester = null,Object? targetGrade = freezed,Object? courseCode = null,Object? section = freezed,Object? courseName = null,Object? professor = freezed,Object? credits = null,Object? classroom = freezed,Object? campus = null,Object? departmentCode = freezed,Object? departmentName = freezed,Object? collegeCode = freezed,Object? collegeName = freezed,Object? classTimes = null,}) {
   return _then(_CourseDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,openingYear: null == openingYear ? _self.openingYear : openingYear // ignore: cast_nullable_to_non_nullable
 as int,semester: null == semester ? _self.semester : semester // ignore: cast_nullable_to_non_nullable
-as String,courseCode: null == courseCode ? _self.courseCode : courseCode // ignore: cast_nullable_to_non_nullable
+as String,targetGrade: freezed == targetGrade ? _self.targetGrade : targetGrade // ignore: cast_nullable_to_non_nullable
+as int?,courseCode: null == courseCode ? _self.courseCode : courseCode // ignore: cast_nullable_to_non_nullable
 as String,section: freezed == section ? _self.section : section // ignore: cast_nullable_to_non_nullable
 as String?,courseName: null == courseName ? _self.courseName : courseName // ignore: cast_nullable_to_non_nullable
 as String,professor: freezed == professor ? _self.professor : professor // ignore: cast_nullable_to_non_nullable

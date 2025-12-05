@@ -18,6 +18,8 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
   final _profCtrl = TextEditingController();
   final _deptCtrl = TextEditingController();
   final _campusCtrl = TextEditingController();
+  final _gradeCtrl = TextEditingController();
+  final _creditsCtrl = TextEditingController();
 
   @override
   void dispose() {
@@ -25,15 +27,22 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
     _profCtrl.dispose();
     _deptCtrl.dispose();
     _campusCtrl.dispose();
+    _gradeCtrl.dispose();
+    _creditsCtrl.dispose();
     super.dispose();
   }
 
   void _search() {
+    final targetGrade = int.tryParse(_gradeCtrl.text.trim());
+    final credits = int.tryParse(_creditsCtrl.text.trim());
+
     ref.read(courseListViewModelProvider.notifier).search(
           query: _queryCtrl.text.trim().isEmpty ? null : _queryCtrl.text.trim(),
           professor: _profCtrl.text.trim().isEmpty ? null : _profCtrl.text.trim(),
-          department: _deptCtrl.text.trim().isEmpty ? null : _deptCtrl.text.trim(),
+          departmentName: _deptCtrl.text.trim().isEmpty ? null : _deptCtrl.text.trim(),
           campus: _campusCtrl.text.trim().isEmpty ? null : _campusCtrl.text.trim(),
+          targetGrade: targetGrade,
+          credits: credits,
         );
   }
 
@@ -42,6 +51,8 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
     _profCtrl.clear();
     _deptCtrl.clear();
     _campusCtrl.clear();
+    _gradeCtrl.clear();
+    _creditsCtrl.clear();
     ref.read(courseListViewModelProvider.notifier).search();
   }
 
@@ -59,6 +70,8 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
             profCtrl: _profCtrl,
             deptCtrl: _deptCtrl,
             campusCtrl: _campusCtrl,
+            gradeCtrl: _gradeCtrl,
+            creditsCtrl: _creditsCtrl,
             onSearch: _search,
             onReset: _reset,
           ),
@@ -173,6 +186,8 @@ class _Filters extends StatelessWidget {
     required this.profCtrl,
     required this.deptCtrl,
     required this.campusCtrl,
+    required this.gradeCtrl,
+    required this.creditsCtrl,
     required this.onSearch,
     required this.onReset,
   });
@@ -181,6 +196,8 @@ class _Filters extends StatelessWidget {
   final TextEditingController profCtrl;
   final TextEditingController deptCtrl;
   final TextEditingController campusCtrl;
+  final TextEditingController gradeCtrl;
+  final TextEditingController creditsCtrl;
   final VoidCallback onSearch;
   final VoidCallback onReset;
 
@@ -190,51 +207,16 @@ class _Filters extends StatelessWidget {
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTokens.radius5)),
       child: Padding(
-        padding: const EdgeInsets.all(AppTokens.space4),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTokens.space4,
+          vertical: AppTokens.space2,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('강의 검색', style: AppTokens.heading),
-            const SizedBox(height: AppTokens.space3),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: TextField(
-                    controller: queryCtrl,
-                    decoration: const InputDecoration(
-                      labelText: '과목명',
-                      prefixIcon: Icon(Icons.search),
-                    ),
-                    onSubmitted: (_) => onSearch(),
-                  ),
-                ),
-                const SizedBox(width: AppTokens.space3),
-                Expanded(
-                  child: TextField(
-                    controller: profCtrl,
-                    decoration: const InputDecoration(
-                      labelText: '교수명',
-                      prefixIcon: Icon(Icons.person_outline),
-                    ),
-                    onSubmitted: (_) => onSearch(),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppTokens.space3),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: deptCtrl,
-                    decoration: const InputDecoration(
-                      labelText: '학과 코드',
-                      prefixIcon: Icon(Icons.apartment),
-                    ),
-                    onSubmitted: (_) => onSearch(),
-                  ),
-                ),
-                const SizedBox(width: AppTokens.space3),
                 Expanded(
                   child: TextField(
                     controller: campusCtrl,
@@ -245,11 +227,68 @@ class _Filters extends StatelessWidget {
                     onSubmitted: (_) => onSearch(),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: AppTokens.space3),
-            Row(
-              children: [
+                const SizedBox(width: AppTokens.space2),
+                Expanded(
+                  flex: 2,
+                  child: TextField(
+                    controller: deptCtrl,
+                    decoration: const InputDecoration(
+                      labelText: '학과명',
+                      prefixIcon: Icon(Icons.apartment),
+                    ),
+                    onSubmitted: (_) => onSearch(),
+                  ),
+                ),
+                const SizedBox(width: AppTokens.space2),
+                Expanded(
+                  child: TextField(
+                    controller: profCtrl,
+                    decoration: const InputDecoration(
+                      labelText: '교수명',
+                      prefixIcon: Icon(Icons.person_outline),
+                    ),
+                    onSubmitted: (_) => onSearch(),
+                  ),
+                ),
+                const SizedBox(width: AppTokens.space2),
+                Expanded(
+                  flex: 2,
+                  child: TextField(
+                    controller: queryCtrl,
+                    decoration: const InputDecoration(
+                      labelText: '과목명',
+                      prefixIcon: Icon(Icons.search),
+                    ),
+                    onSubmitted: (_) => onSearch(),
+                  ),
+                ),
+                const SizedBox(width: AppTokens.space2),
+                SizedBox(
+                  width: 90,
+                  child: TextField(
+                    controller: gradeCtrl,
+                    decoration: const InputDecoration(
+                      labelText: '학년',
+                      prefixIcon: Icon(Icons.school_outlined),
+                    ),
+                    keyboardType: TextInputType.number,
+                    onSubmitted: (_) => onSearch(),
+                  ),
+                ),
+                const SizedBox(width: AppTokens.space2),
+                SizedBox(
+                  width: 90,
+                  child: TextField(
+                    controller: creditsCtrl,
+                    decoration: const InputDecoration(
+                      labelText: '학점',
+                      prefixIcon: Icon(Icons.format_list_numbered),
+                    ),
+                    keyboardType: TextInputType.number,
+                    onSubmitted: (_) => onSearch(),
+                  ),
+                ),
+                const Spacer(),
                 SizedBox(
                   height: 44,
                   child: ElevatedButton.icon(
@@ -258,10 +297,13 @@ class _Filters extends StatelessWidget {
                     label: const Text('검색'),
                   ),
                 ),
-                const SizedBox(width: AppTokens.space3),
-                OutlinedButton(
-                  onPressed: onReset,
-                  child: const Text('초기화'),
+                const SizedBox(width: AppTokens.space2),
+                SizedBox(
+                  height: 44,
+                  child: OutlinedButton(
+                    onPressed: onReset,
+                    child: const Text('초기화'),
+                  ),
                 ),
               ],
             ),

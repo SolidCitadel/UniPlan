@@ -19,16 +19,20 @@ class CourseRepositoryImpl implements CourseRepository {
   Future<PageEnvelope<Course>> getCourses({
     String? courseName,
     String? professor,
-    String? departmentCode,
+    String? departmentName,
     String? campus,
+    int? targetGrade,
+    int? credits,
     int page = 0,
     int size = 20,
   }) async {
     final dto = await _remote.getCourses(
       courseName: courseName,
       professor: professor,
-      departmentCode: departmentCode,
+      departmentName: departmentName,
       campus: campus,
+      targetGrade: targetGrade,
+      credits: credits,
       page: page,
       size: size,
     );

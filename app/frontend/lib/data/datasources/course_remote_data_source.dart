@@ -18,8 +18,10 @@ class CourseRemoteDataSource {
   Future<PageDto<CourseDto>> getCourses({
     String? courseName,
     String? professor,
-    String? departmentCode,
+    String? departmentName,
     String? campus,
+    int? targetGrade,
+    int? credits,
     int page = 0,
     int size = 20,
   }) async {
@@ -30,8 +32,13 @@ class CourseRemoteDataSource {
         'size': size,
         if (courseName != null && courseName.isNotEmpty) 'courseName': courseName,
         if (professor != null && professor.isNotEmpty) 'professor': professor,
-        if (departmentCode != null && departmentCode.isNotEmpty) 'departmentCode': departmentCode,
+        if (departmentName != null && departmentName.isNotEmpty) 'departmentName': departmentName,
         if (campus != null && campus.isNotEmpty) 'campus': campus,
+        if (targetGrade != null) 'targetGrade': targetGrade,
+        if (credits != null) ...{
+          'minCredits': credits,
+          'maxCredits': credits,
+        },
       },
     );
     return PageDto<CourseDto>.fromJson(

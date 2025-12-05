@@ -8,6 +8,7 @@ extension CourseDtoMapper on CourseDto {
         id: id,
         openingYear: openingYear,
         semester: semester,
+        targetGrade: targetGrade,
         courseCode: courseCode,
         section: section,
         courseName: courseName,

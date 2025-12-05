@@ -12,8 +12,10 @@ final courseListViewModelProvider =
 class CourseListViewModel extends AsyncNotifier<PageEnvelope<Course>> {
   String? _query;
   String? _professor;
-  String? _department;
+  String? _departmentName;
   String? _campus;
+  int? _targetGrade;
+  int? _credits;
   int _page = 0;
   final int _size = 20;
 
@@ -26,8 +28,10 @@ class CourseListViewModel extends AsyncNotifier<PageEnvelope<Course>> {
     return ref.read(courseRepositoryProvider).getCourses(
           courseName: _query,
           professor: _professor,
-          departmentCode: _department,
+          departmentName: _departmentName,
           campus: _campus,
+          targetGrade: _targetGrade,
+          credits: _credits,
           page: _page,
           size: _size,
         );
@@ -36,13 +40,17 @@ class CourseListViewModel extends AsyncNotifier<PageEnvelope<Course>> {
   Future<void> search({
     String? query,
     String? professor,
-    String? department,
+    String? departmentName,
     String? campus,
+    int? targetGrade,
+    int? credits,
   }) async {
     _query = query;
     _professor = professor;
-    _department = department;
+    _departmentName = departmentName;
     _campus = campus;
+    _targetGrade = targetGrade;
+    _credits = credits;
     _page = 0;
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(_fetch);

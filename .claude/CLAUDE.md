@@ -62,8 +62,21 @@ UniPlan은 대학 수강신청 계획을 돕는 웹 애플리케이션입니다.
 ## 상세 가이드 참조
 **작업 전 반드시 다음 문서들을 확인하세요:**
 
-- **루트 AGENTS.md**: 프로젝트 전반의 공통 원칙, 주요 경로, 자주 쓰는 명령어, PR 체크리스트
-- **app/frontend/AGENTS.md**: Flutter 프론트엔드 필수 규칙, 현재 상태, 다음 단계, 명령어 요약
+### 프로젝트 공통
+- **AGENTS.md**: 프로젝트 전반의 공통 원칙, 주요 경로, 자주 쓰는 명령어, PR 체크리스트
+
+### 문서화 (docs/)
+- **docs/architecture.md**: API Gateway, Swagger, 엔티티 설계
+- **docs/features.md**: 기능별 사용자 시나리오 (강의검색, 위시리스트, 시간표, 시나리오, 수강신청)
+- **docs/guides.md**: 개발 가이드 (DDD, 테스트 전략, 코딩 컨벤션)
+- **docs/requirements.md**: 전체 프로젝트 요구사항
+- **docs/adr/**: 주요 아키텍처 의사결정 기록
+
+### 모듈별 문서
+- **app/frontend/AGENTS.md**: Flutter 프론트엔드 필수 규칙
+- **app/frontend/docs/status.md**: 프론트엔드 현황
+- **app/cli-client/docs/**: CLI 사용 가이드 및 시나리오
+- **scripts/crawler/docs/**: 크롤러 필드 매핑 및 변환 가이드
 
 ## 주요 명령어
 

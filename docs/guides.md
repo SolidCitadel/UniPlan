@@ -106,12 +106,16 @@ planner-service/
 - 대상: 프론트엔드가 사용하는 API Gateway 전체 워크플로우
 - 위치: `tests/e2e/`
 - 프레임워크: Dart Test
-- 핵심: **공통 DTO 패키지**를 통해 프론트엔드와 DTO 공유
+- 목적: HTTP API 검증 (프론트엔드는 검증된 명세의 공통 DTO 사용)
+- 접근:
+  - **Signup-first**: 테스트마다 신규 계정 생성
+  - **동적 픽스처**: `/api/v1/courses/import` API로 과목 데이터 생성
+  - **tmpfs**: 인메모리 DB로 빠른 실행 및 격리
 
 **구조:**
 ```
 packages/
-  └── uniplan_models/          # 공통 DTO 패키지
+  └── uniplan_models/          # 공통 DTO 패키지 (E2E로 검증됨)
       ├── pubspec.yaml
       └── lib/
           └── src/
@@ -121,46 +125,98 @@ packages/
 
 tests/
   └── e2e/
-      ├── pubspec.yaml         # uniplan_models 의존
+      ├── .env                 # 환경 설정 (API_BASE_URL)
+      ├── pubspec.yaml         # Dart 의존성
+      ├── README.md            # 상세 사용법
       └── test/
-          ├── full_workflow_test.dart
-          ├── auth_test.dart
-          └── registration_test.dart
+          ├── helpers/
+          │   ├── http_client.dart    # GatewayClient (signup/login/API)
+          │   └── test_context.dart   # E2eContext (리소스 추적/정리/seedCourse)
+          └── full_workflow_test.dart
 
 app/frontend/
-  └── pubspec.yaml             # uniplan_models 의존
+  └── pubspec.yaml             # uniplan_models 의존 (E2E 검증된 명세)
 ```
 
 **장점:**
-- ✅ 프론트엔드와 동일한 DTO 사용 → 완전한 API 계약 검증
-- ✅ E2E 테스트 통과 = 프론트엔드 파싱 보장
-- ✅ 타입 안정성 (컴파일 타임 오류 감지)
-- ✅ DTO 변경 시 한 곳만 수정
+- ✅ 진정한 E2E: 회원가입부터 전체 워크플로우 테스트
+- ✅ 격리된 테스트 환경: docker-compose.test.yml로 독립 DB 사용
+- ✅ 동적 픽스처: API를 통한 데이터 생성으로 외부 의존성 제거
+- ✅ 빠른 실행: tmpfs 인메모리 DB 사용
+- ✅ API 명세 검증: 프론트엔드는 E2E로 검증된 공통 DTO를 안전하게 사용
 
 **예시:**
 ```dart
 // tests/e2e/test/full_workflow_test.dart
 import 'package:test/test.dart';
-import 'package:uniplan_models/uniplan_models.dart';  // 프론트와 같은 DTO
+import 'package:uniplan_models/uniplan_models.dart';  // 검증될 공통 DTO
+import 'helpers/http_client.dart';
+import 'helpers/test_context.dart';
 
-test('Timetable alternative returns correct format', () async {
-  final response = await http.post(...);
+void main() {
+  final env = EnvConfig.load();
+  late E2eContext ctx;
 
-  // 프론트엔드와 동일한 파싱 로직
-  final timetable = Timetable.fromJson(jsonDecode(response.body));
+  setUpAll(() async {
+    ctx = E2eContext(env);
+    await ctx.signup();      // 신규 계정 생성 (타임스탬프 기반 유니크 이메일)
+    await ctx.seedCourse();  // 테스트용 과목 생성 (API를 통해 동적 생성)
+  });
 
-  // ✅ 이게 통과하면 프론트엔드도 파싱 가능!
-  expect(timetable.excludedCourses.length, 2);
-  expect(timetable.excludedCourses[0].courseId, 101);
-});
+  tearDownAll(() async {
+    await ctx.cleanup();  // 생성된 리소스 자동 삭제
+  });
+
+  test('alternative timetable respects excludedCourseIds contract', () async {
+    expect(ctx.fixtureCourseId > 0, isTrue);
+    final courseId = ctx.fixtureCourseId;
+
+    final base = await ctx.createTimetable(
+      name: 'E2E Base Timetable',
+      openingYear: DateTime.now().year,
+      semester: '1',
+    );
+
+    await ctx.addCourse(base.id, courseId);
+
+    final alt = await ctx.createAlternativeTimetable(
+      baseTimetableId: base.id,
+      name: 'E2E Alternative',
+      excludedCourseIds: {courseId},
+    );
+
+    // API 계약 검증: excludedCourseIds -> excludedCourses 변환 확인
+    expect(alt.excludedCourses.map((c) => c.courseId), contains(courseId));
+  });
+}
 ```
 
 **실행:**
 ```bash
+# 1. 테스트 환경 실행 (MySQL + 백엔드 서비스)
+docker compose -f docker-compose.test.yml up -d
+
+# 2. E2E 테스트 실행
 cd tests/e2e
 dart pub get
 dart test
+
+# 3. 테스트 환경 종료
+docker compose -f docker-compose.test.yml down
 ```
+
+**환경 설정 (.env):**
+```bash
+API_BASE_URL=http://localhost:8280
+```
+
+**테스트 환경 (docker-compose.test.yml):**
+- **MySQL**: 포트 3307 (개발 환경과 분리), tmpfs로 인메모리 실행
+- **API Gateway**: 포트 8280 (개발 환경과 분리)
+- **JPA DDL Auto**: `update` 설정으로 테이블 자동 생성/업데이트
+- **프로파일**: 모든 서비스에서 `SPRING_PROFILES_ACTIVE=test`
+- **선택적 실행**: `docker compose -f docker-compose.test.yml up mysql-test -d` (백엔드를 로컬에서 직접 실행할 때)
+- **과목 데이터**: `/api/v1/courses/import` API를 통해 테스트 중 동적 생성
 
 ### 테스트 커버리지 목표
 
@@ -331,7 +387,7 @@ test: Timetable 단위 테스트 추가
 
 ### Test
 - 단위/통합/E2E 테스트
-- E2E: 공통 DTO 패키지로 프론트엔드와 완전한 계약 검증
+- E2E: API Gateway 전체 워크플로우 검증 → 프론트엔드는 검증된 공통 DTO 사용
 - 품질 게이트 필수 통과
 - 핵심 로직 80% 커버리지 목표
 

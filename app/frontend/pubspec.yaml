@@ -45,6 +45,8 @@ dependencies:
   hooks_riverpod: ^3.0.3
   flutter_secure_storage: ^9.2.4
   shared_preferences: ^2.5.3
+  uniplan_models:
+    path: ../../packages/uniplan_models
 
 dev_dependencies:
   flutter_test:

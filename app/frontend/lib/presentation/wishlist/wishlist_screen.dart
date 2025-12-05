@@ -89,8 +89,6 @@ class _PrioritySection extends StatelessWidget {
                   ),
                   child: Text('우선순위 $priority', style: AppTokens.body),
                 ),
-                const SizedBox(width: AppTokens.space2),
-                Text('프로토타입: 우선순위별 그룹', style: AppTokens.caption),
               ],
             ),
             const SizedBox(height: AppTokens.space3),
@@ -187,7 +185,7 @@ class _PriorityMenu extends StatelessWidget {
               children: [
                 if (value == current) const Icon(Icons.check, size: 16),
                 if (value == current) const SizedBox(width: 6),
-                Text('우선순위 $value'),
+                Text('$value'),
               ],
             ),
           );

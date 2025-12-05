@@ -1,79 +1,256 @@
 # UniPlan
 
-시나리오 기반 대학 수강 계획/실시간 등록 내비게이션 서비스입니다. Plan A/B/C로 시간표를 준비하고, 등록 시점에는 남은 선택지를 실시간으로 안내합니다.
+시나리오 기반 대학 수강신청 계획 및 실시간 네비게이션 서비스입니다.
 
-## 현재 상태
-- 백엔드(Spring Boot MSA)와 CLI 클라이언트는 동작 가능.
-- Flutter Web 앱은 프로토타입 흐름을 그대로 구현하여 백엔드와 연동됨(화면/UX 세부는 `docs/frontend/frontend-status.md` 참고).
-- 통합 검증 및 품질 개선(분석/테스트) 지속 진행.
+## 프로젝트 소개
+
+UniPlan은 대학 수강신청의 불확실성을 해결하기 위한 웹 애플리케이션입니다. 사용자는 Plan A/B/C 형태로 여러 시나리오를 미리 준비하고, 실제 수강신청 시점에는 과목 실패 상황에 따라 자동으로 다음 대안을 제시받습니다.
+
+### 주요 기능
+
+1. **강의 검색 및 위시리스트**
+   - 과목명, 교수명, 학과, 캠퍼스별 검색
+   - 우선순위(1~5) 기반 위시리스트 관리
+
+2. **시간표 계획**
+   - 여러 시간표 생성 및 관리
+   - 시간 충돌 자동 감지
+   - 대안 시간표 생성 (특정 과목 제외)
+
+3. **시나리오 트리**
+   - 의사결정 트리 구조로 대안 시나리오 관리
+   - "과목 A 실패 시 Plan B로 이동" 형태의 계획
+   - 여러 과목 동시 실패 조합 지원
+
+4. **수강신청 시뮬레이션**
+   - 실시간 성공/실패 기록
+   - 자동 시나리오 네비게이션
+   - 상태별 시각화 (성공/대기/실패/취소)
+
+## 기술 스택
+
+### 백엔드 (MSA)
+- **프레임워크**: Spring Boot 3.x (Java 21)
+- **빌드**: Gradle (Kotlin DSL)
+- **데이터베이스**: MySQL (Production), H2 (Development)
+- **인증**: JWT
+- **문서화**: Swagger/OpenAPI
+
+**서비스 구성**:
+- `api-gateway` (8080): API Gateway, JWT 인증
+- `user-service` (8081): 사용자 인증 및 계정 관리
+- `catalog-service` (8083): 강의 목록 및 검색
+- `planner-service` (8082): 시간표, 시나리오, 수강신청 로직
+
+### 프론트엔드
+- **프레임워크**: Flutter Web
+- **상태관리**: Riverpod 3 (AsyncNotifier)
+- **라우팅**: GoRouter
+- **HTTP**: Dio
+- **직렬화**: Freezed, JSON Serializable
+
+### 기타
+- **CLI 클라이언트**: Dart (개발/테스트용)
+- **크롤러**: Python 3.x
+- **E2E 테스트**: Dart Test (공통 DTO 패키지 기반)
+
+## 아키텍처
+
+```
+┌─────────────┐
+│   Flutter   │  ← 사용자 인터페이스
+│   Web App   │
+└──────┬──────┘
+       │ HTTP + JWT
+       ▼
+┌─────────────────────────────────────┐
+│        API Gateway (8080)           │
+│  - JWT 검증                          │
+│  - 경로 라우팅 (/api/v1/* → /*)     │
+│  - 통합 Swagger UI                   │
+└──────┬──────────────────────────────┘
+       │
+       ├─→ User Service (8081)
+       ├─→ Catalog Service (8083)
+       └─→ Planner Service (8082)
+              │
+              └─→ MySQL DB
+```
+
+### 주요 설계 원칙
+
+- **DDD (Domain-Driven Design)**: 서비스별 독립 도메인
+- **API Gateway 패턴**: 단일 진입점, JWT 검증, 경로 변환
+- **공통 DTO**: 프론트엔드와 E2E 테스트가 동일한 DTO 공유 (`packages/uniplan_models`)
 
 ## 디렉터리 구조
+
 ```
 UniPlan/
-├─ app/
-│  ├─ backend/          # Spring Boot MSA (api-gateway, user, catalog, planner, common-lib)
-│  ├─ cli-client/       # Dart CLI 클라이언트
-│  └─ frontend/         # Flutter Web 앱
-├─ scripts/
-│  └─ crawler/          # 강의 메타데이터 크롤러
-└─ Uniplanprototype/    # TS/Vite 프로토타입 (디자인/플로우 참고)
-docs/                   # 요구사항/가이드/설계 문서 모음
+├── app/
+│   ├── backend/           # Spring Boot MSA
+│   │   ├── api-gateway/
+│   │   ├── user-service/
+│   │   ├── catalog-service/
+│   │   ├── planner-service/
+│   │   └── common-lib/
+│   ├── frontend/          # Flutter Web
+│   └── cli-client/        # Dart CLI
+├── packages/
+│   └── uniplan_models/    # 공통 DTO 패키지
+├── tests/
+│   └── e2e/               # E2E 테스트
+├── scripts/
+│   └── crawler/           # 강의 크롤러 (Python)
+├── docs/                  # 문서
+│   ├── architecture.md    # 아키텍처 설계
+│   ├── features.md        # 기능 명세
+│   ├── guides.md          # 개발 가이드
+│   └── adr/               # Architecture Decision Records
+└── docker/                # Docker 설정
 ```
 
-## 주요 스택
-- Backend: Spring Boot 3.x (Java 21), Gradle(Kotlin DSL), MySQL(prod)/H2(dev), JWT, Swagger/OpenAPI
-- Frontend: Flutter Web, Riverpod, GoRouter, Dio, Freezed/JSON Serializable, FlexColorScheme, Hooks
-- CLI: Dart
-- Scripts: Python 3.x
+## 빠른 시작
 
-## 우선 로드맵 (프런트 중심)
-1) **베이스 정리**: Flutter stable 고정, `flutter pub get`, `build_runner` 재생성, `flutter analyze` 경고 제거.  
-2) **UI 패리티**: 프로토타입의 색/타이포/레이아웃/컴포넌트를 추출해 Flutter 테마/공용 위젯에 반영. 화면별(로그인/회원가입, 과목 검색, 위시리스트, 시나리오·시간표, 등록 지원, 도움말) UI 정비.  
-3) **백엔드 연동**: 컨트롤러·DTO·응답 형태 확인 후 파라미터/모델 매핑. Dio 인터셉터로 토큰 주입·401 처리. 로딩/에러/빈 상태를 UI에 명시.  
-4) **품질/검증**: 핵심 뷰모델/유틸 테스트, 필요한 골든 테스트, 회귀 체크리스트(로그인→검색→위시리스트→시간표 배치→시나리오 전환).
+### 필수 요구사항
 
-## 실행/개발 요약
-- Backend 빌드/실행  
-  ```bash
-  cd app/backend
-  ./gradlew clean build
-  ./gradlew :api-gateway:bootRun      # 8080
-  ./gradlew :user-service:bootRun     # 8081
-  ./gradlew :planner-service:bootRun  # 8082
-  ./gradlew :catalog-service:bootRun  # 8083
-  ```
-  Swagger: http://localhost:8080/swagger-ui.html
+- Java 21+
+- Dart SDK 3.0+
+- Flutter SDK 3.0+
+- MySQL 8.0+ (또는 Docker)
+- Python 3.11+ (크롤러 사용 시)
 
-- Crawler 예시  
-  ```bash
-  cd scripts/crawler
-  python -m venv venv && venv\Scripts\activate
-  pip install -r requirements.txt
-  python crawl_metadata.py --year 2025 --semester 1
-  python run_crawler.py --year 2025 --semester 1
-  python transformer.py --metadata ... --courses ...
-  ```
+### 1. 백엔드 실행
 
-- Frontend 준비/실행(웹)  
-  ```bash
-  cd app/frontend
-  flutter pub get
-  flutter pub run build_runner build --delete-conflicting-outputs
-  flutter run -d chrome
-  flutter analyze
-  flutter test
-  ```
+```bash
+cd app/backend
 
-## 참고 문서
-- 전역 가이드: `docs/AGENTS.md`
-- 프론트엔드 현황/화면 스펙: `docs/frontend/frontend-status.md`, `docs/frontend/prototype-report.md`
-- TS 프로토타입: `Uniplanprototype/README.md` (Figma 링크 포함)
+# 빌드
+./gradlew clean build
 
-## Docker Compose (backend + frontend)
+# 서비스 실행 (각각 별도 터미널)
+./gradlew :api-gateway:bootRun      # http://localhost:8080
+./gradlew :user-service:bootRun     # http://localhost:8081
+./gradlew :catalog-service:bootRun  # http://localhost:8083
+./gradlew :planner-service:bootRun  # http://localhost:8082
 ```
+
+**Swagger UI**: http://localhost:8080/swagger-ui.html
+
+### 2. 프론트엔드 실행
+
+```bash
+cd app/frontend
+
+# 의존성 설치
+flutter pub get
+
+# 코드 생성
+flutter pub run build_runner build --delete-conflicting-outputs
+
+# 웹 실행
+flutter run -d chrome
+```
+
+**접속**: http://localhost:8080 (Flutter 개발 서버 포트)
+
+### 3. Docker Compose (올인원)
+
+```bash
+# 루트 디렉터리에서
 docker compose up --build
 ```
-- Gateway: http://localhost:8180  
-- Frontend (Flutter web via Nginx): http://localhost:3000  
-- MySQL: localhost:3316 (user/password) with pre-created `uniplan_user`, `uniplan_planner`, `uniplan_catalog`
-- Customize `JWT_SECRET`, Google OAuth client/secret, and the `BASE_URL` build-arg for the frontend if you deploy elsewhere.
+
+- **API Gateway**: http://localhost:8180
+- **Frontend (Nginx)**: http://localhost:3000
+- **MySQL**: localhost:3316
+
+## 개발 가이드
+
+### 테스트
+
+**백엔드:**
+```bash
+cd app/backend
+./gradlew test
+```
+
+**프론트엔드:**
+```bash
+cd app/frontend
+flutter analyze
+flutter test
+```
+
+**E2E:**
+```bash
+cd tests/e2e
+dart pub get
+dart test
+```
+
+### CLI 클라이언트
+
+개발 및 테스트를 위한 CLI 도구:
+
+```bash
+cd app/cli-client
+dart run bin/uniplan.dart --help
+
+# 예시: 전체 워크플로우
+dart run bin/uniplan.dart auth login test@example.com password123
+dart run bin/uniplan.dart courses list
+dart run bin/uniplan.dart wishlist add 101 1
+dart run bin/uniplan.dart timetable create "Plan A" 2025 "1학기"
+```
+
+자세한 사용법은 `app/cli-client/docs/` 참고
+
+### 강의 크롤러
+
+경희대학교 강의 데이터 크롤링:
+
+```bash
+cd scripts/crawler
+python -m venv venv && source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+
+# 메타데이터 크롤링
+python crawl_metadata.py --year 2025 --semester 1
+
+# 강의 크롤링
+python run_crawler.py --year 2025 --semester 1
+
+# 변환 (catalog-service 형식)
+python transformer.py \
+  --metadata output/metadata_2025_1.json \
+  --courses output/courses_raw_2025_1.json
+```
+
+## 문서
+
+프로젝트 상세 문서는 `docs/` 폴더를 참고하세요:
+
+- **[architecture.md](docs/architecture.md)**: API Gateway, Swagger, 엔티티 설계
+- **[features.md](docs/features.md)**: 기능별 사용자 시나리오
+- **[guides.md](docs/guides.md)**: 개발 가이드 (DDD, 테스트, 컨벤션)
+- **[requirements.md](docs/requirements.md)**: 프로젝트 요구사항
+- **[AGENTS.md](AGENTS.md)**: 공통 개발 원칙 및 명령어
+
+모듈별 문서:
+- `app/frontend/AGENTS.md`: Flutter 프론트엔드 규칙
+- `app/cli-client/docs/`: CLI 사용 가이드
+- `scripts/crawler/docs/`: 크롤러 필드 매핑
+
+## 라이선스
+
+이 프로젝트는 개인 학습 및 포트폴리오 목적으로 제작되었습니다.
+
+## 기여
+
+이슈 및 풀 리퀘스트는 환영합니다. 주요 변경 사항은 먼저 이슈로 논의해주세요.
+
+## 개발자
+
+- GitHub: [Repository Link]
+- 문의: [Contact Information]

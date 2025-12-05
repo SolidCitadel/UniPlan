@@ -103,9 +103,64 @@ planner-service/
   ```
 
 **3. E2E 테스트 (End-to-End Test)**
-- 대상: 전체 워크플로우 (강의 검색 → 위시리스트 → 시간표 → 시나리오 → 수강신청)
-- 도구: Flutter Integration Test (프론트엔드), CLI 스크립트 (자동화)
-- 예시: CLI 시나리오 가이드 참고
+- 대상: 프론트엔드가 사용하는 API Gateway 전체 워크플로우
+- 위치: `tests/e2e/`
+- 프레임워크: Dart Test
+- 핵심: **공통 DTO 패키지**를 통해 프론트엔드와 DTO 공유
+
+**구조:**
+```
+packages/
+  └── uniplan_models/          # 공통 DTO 패키지
+      ├── pubspec.yaml
+      └── lib/
+          └── src/
+              ├── timetable.dart      # Freezed DTO
+              ├── scenario.dart
+              └── registration.dart
+
+tests/
+  └── e2e/
+      ├── pubspec.yaml         # uniplan_models 의존
+      └── test/
+          ├── full_workflow_test.dart
+          ├── auth_test.dart
+          └── registration_test.dart
+
+app/frontend/
+  └── pubspec.yaml             # uniplan_models 의존
+```
+
+**장점:**
+- ✅ 프론트엔드와 동일한 DTO 사용 → 완전한 API 계약 검증
+- ✅ E2E 테스트 통과 = 프론트엔드 파싱 보장
+- ✅ 타입 안정성 (컴파일 타임 오류 감지)
+- ✅ DTO 변경 시 한 곳만 수정
+
+**예시:**
+```dart
+// tests/e2e/test/full_workflow_test.dart
+import 'package:test/test.dart';
+import 'package:uniplan_models/uniplan_models.dart';  // 프론트와 같은 DTO
+
+test('Timetable alternative returns correct format', () async {
+  final response = await http.post(...);
+
+  // 프론트엔드와 동일한 파싱 로직
+  final timetable = Timetable.fromJson(jsonDecode(response.body));
+
+  // ✅ 이게 통과하면 프론트엔드도 파싱 가능!
+  expect(timetable.excludedCourses.length, 2);
+  expect(timetable.excludedCourses[0].courseId, 101);
+});
+```
+
+**실행:**
+```bash
+cd tests/e2e
+dart pub get
+dart test
+```
 
 ### 테스트 커버리지 목표
 
@@ -127,6 +182,13 @@ cd app/backend
 cd app/frontend
 flutter analyze
 flutter test
+```
+
+**E2E (선택적, 주요 변경 시):**
+```bash
+cd tests/e2e
+dart pub get
+dart test
 ```
 
 ---
@@ -269,6 +331,7 @@ test: Timetable 단위 테스트 추가
 
 ### Test
 - 단위/통합/E2E 테스트
+- E2E: 공통 DTO 패키지로 프론트엔드와 완전한 계약 검증
 - 품질 게이트 필수 통과
 - 핵심 로직 80% 커버리지 목표
 

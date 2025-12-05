@@ -207,113 +207,114 @@ class _Filters extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTokens.radius5)),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppTokens.space4,
-          vertical: AppTokens.space2,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const compactBreakpoint = 1100.0;
+        final compact = constraints.maxWidth < compactBreakpoint;
+
+        InputDecoration decoration(String label, IconData icon) {
+          return InputDecoration(
+            labelText: label,
+            prefixIcon: compact ? null : Icon(icon),
+          );
+        }
+
+        return Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTokens.radius5)),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppTokens.space4,
+              vertical: AppTokens.space2,
+            ),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: TextField(
-                    controller: campusCtrl,
-                    decoration: const InputDecoration(
-                      labelText: '캠퍼스',
-                      prefixIcon: Icon(Icons.location_on_outlined),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: campusCtrl,
+                        decoration: decoration('캠퍼스', Icons.location_on_outlined),
+                        onSubmitted: (_) => onSearch(),
+                      ),
                     ),
-                    onSubmitted: (_) => onSearch(),
-                  ),
-                ),
-                const SizedBox(width: AppTokens.space2),
-                Expanded(
-                  flex: 2,
-                  child: TextField(
-                    controller: deptCtrl,
-                    decoration: const InputDecoration(
-                      labelText: '학과명',
-                      prefixIcon: Icon(Icons.apartment),
+                    const SizedBox(width: AppTokens.space2),
+                    Expanded(
+                      flex: 2,
+                      child: TextField(
+                        controller: deptCtrl,
+                        decoration: decoration('학과명', Icons.apartment),
+                        onSubmitted: (_) => onSearch(),
+                      ),
                     ),
-                    onSubmitted: (_) => onSearch(),
-                  ),
-                ),
-                const SizedBox(width: AppTokens.space2),
-                Expanded(
-                  child: TextField(
-                    controller: profCtrl,
-                    decoration: const InputDecoration(
-                      labelText: '교수명',
-                      prefixIcon: Icon(Icons.person_outline),
+                    const SizedBox(width: AppTokens.space2),
+                    Expanded(
+                      child: TextField(
+                        controller: profCtrl,
+                        decoration: decoration('교수명', Icons.person_outline),
+                        onSubmitted: (_) => onSearch(),
+                      ),
                     ),
-                    onSubmitted: (_) => onSearch(),
-                  ),
-                ),
-                const SizedBox(width: AppTokens.space2),
-                Expanded(
-                  flex: 2,
-                  child: TextField(
-                    controller: queryCtrl,
-                    decoration: const InputDecoration(
-                      labelText: '과목명',
-                      prefixIcon: Icon(Icons.search),
+                    const SizedBox(width: AppTokens.space2),
+                    Expanded(
+                      flex: 2,
+                      child: TextField(
+                        controller: queryCtrl,
+                        decoration: decoration('과목명', Icons.search),
+                        onSubmitted: (_) => onSearch(),
+                      ),
                     ),
-                    onSubmitted: (_) => onSearch(),
-                  ),
-                ),
-                const SizedBox(width: AppTokens.space2),
-                SizedBox(
-                  width: 90,
-                  child: TextField(
-                    controller: gradeCtrl,
-                    decoration: const InputDecoration(
-                      labelText: '학년',
-                      prefixIcon: Icon(Icons.school_outlined),
+                    const SizedBox(width: AppTokens.space2),
+                    SizedBox(
+                      width: 90,
+                      child: TextField(
+                        controller: gradeCtrl,
+                        decoration: decoration('학년', Icons.school_outlined),
+                        keyboardType: TextInputType.number,
+                        onSubmitted: (_) => onSearch(),
+                      ),
                     ),
-                    keyboardType: TextInputType.number,
-                    onSubmitted: (_) => onSearch(),
-                  ),
-                ),
-                const SizedBox(width: AppTokens.space2),
-                SizedBox(
-                  width: 90,
-                  child: TextField(
-                    controller: creditsCtrl,
-                    decoration: const InputDecoration(
-                      labelText: '학점',
-                      prefixIcon: Icon(Icons.format_list_numbered),
+                    const SizedBox(width: AppTokens.space2),
+                    SizedBox(
+                      width: 90,
+                      child: TextField(
+                        controller: creditsCtrl,
+                        decoration: decoration('학점', Icons.format_list_numbered),
+                        keyboardType: TextInputType.number,
+                        onSubmitted: (_) => onSearch(),
+                      ),
                     ),
-                    keyboardType: TextInputType.number,
-                    onSubmitted: (_) => onSearch(),
-                  ),
-                ),
-                const Spacer(),
-                SizedBox(
-                  height: 44,
-                  child: ElevatedButton.icon(
-                    onPressed: onSearch,
-                    icon: const Icon(Icons.search),
-                    label: const Text('검색'),
-                  ),
-                ),
-                const SizedBox(width: AppTokens.space2),
-                SizedBox(
-                  height: 44,
-                  child: OutlinedButton(
-                    onPressed: onReset,
-                    child: const Text('초기화'),
-                  ),
+                    const Spacer(),
+                    SizedBox(
+                      height: 44,
+                      child: compact
+                          ? ElevatedButton(
+                              onPressed: onSearch,
+                              child: const Text('검색'),
+                            )
+                          : ElevatedButton.icon(
+                              onPressed: onSearch,
+                              icon: const Icon(Icons.search),
+                              label: const Text('검색'),
+                            ),
+                    ),
+                    const SizedBox(width: AppTokens.space2),
+                    SizedBox(
+                      height: 44,
+                      child: OutlinedButton(
+                        onPressed: onReset,
+                        child: const Text('초기화'),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

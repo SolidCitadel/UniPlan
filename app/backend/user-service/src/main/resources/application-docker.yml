@@ -1,0 +1,81 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: user-service
+
+  # Google OAuth2 설정
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID}
+            client-secret: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET}
+            scope:
+              - email
+              - profile
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: sub
+
+  # MySQL Database (Docker environment)
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false  # 로깅 레벨로 제어
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+        jdbc:
+          batch_size: 100
+        order_inserts: true
+        order_updates: true
+    open-in-view: false
+
+# JWT 설정
+jwt:
+  secret: ${JWT_SECRET:uniplan-jwt-secret-key-minimum-256-bits-for-local-development}
+  expiration: 86400000  # 24시간 (ms)
+  refresh-expiration: 604800000  # 7일 (ms)
+
+# OAuth2 로그인 성공 후 리다이렉트 설정
+app:
+  oauth2:
+    success-redirect-path: /api/v1/auth/login/success
+
+# OAuth2 로그인 성공 후 프론트엔드 리다이렉트 URL
+oauth2:
+  success-redirect-url: ${OAUTH2_SUCCESS_REDIRECT_URL:http://localhost:3000/auth/callback}
+
+# Swagger/OpenAPI 설정
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    tags-sorter: alpha
+    operations-sorter: alpha
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+
+# 데모 시연용 로깅
+logging:
+  level:
+    com.uniplan.user: DEBUG                   # User service 비즈니스 로직
+    org.springframework.security: DEBUG       # JWT, OAuth2 인증 흐름
+    org.hibernate.SQL: DEBUG                  # SQL 쿼리
+    org.hibernate.type.descriptor.sql: INFO   # SQL 바인딩 숨김 (깔끔하게)

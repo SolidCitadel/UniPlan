@@ -5,14 +5,14 @@ spring:
   application:
     name: api-gateway
 
-  # Spring Cloud Gateway 설정
   cloud:
     gateway:
-      # 전역 CORS 설정
+      # Global CORS for Docker environment
       globalcors:
+        add-to-simple-url-handler-mapping: true
         cors-configurations:
           '[/**]':
-            allowed-origins: ${CORS_ALLOWED_ORIGINS:https://uniplan.com}
+            allowed-origin-patterns: "*" # Allow frontend container
             allowed-methods:
               - GET
               - POST
@@ -24,54 +24,53 @@ spring:
             allow-credentials: true
             max-age: 3600
 
-      # 라우트 설정은 FilterConfig.java에서 프로그래밍 방식으로 관리
+      # Routing is managed programmatically in FilterConfig.java
       routes:
-        # User Service Swagger Docs 라우팅 (운영 환경에서는 비활성화 권장)
+        # User Service Swagger Docs
         - id: user-service-docs
-          uri: ${USER_SERVICE_URI}
+          uri: http://user-service:8081
           predicates:
             - Path=/user-service/v3/api-docs
           filters:
             - RewritePath=/user-service/v3/api-docs, /v3/api-docs
 
-        # Planner Service Swagger Docs 라우팅
+        # Planner Service Swagger Docs
         - id: planner-service-docs
-          uri: ${PLANNER_SERVICE_URI}
+          uri: http://planner-service:8082
           predicates:
             - Path=/planner-service/v3/api-docs
           filters:
             - RewritePath=/planner-service/v3/api-docs, /v3/api-docs
 
-        # Catalog Service Swagger Docs 라우팅
+        # Catalog Service Swagger Docs
         - id: catalog-service-docs
-          uri: ${CATALOG_SERVICE_URI}
+          uri: http://catalog-service:8083
           predicates:
             - Path=/catalog-service/v3/api-docs
           filters:
             - RewritePath=/catalog-service/v3/api-docs, /v3/api-docs
 
-# 마이크로서비스 URI 설정 (운영 환경 - K8s Service 또는 로드밸런서)
+# Microservice URIs (Docker network)
 services:
   user-service:
-    uri: ${USER_SERVICE_URI}
+    uri: http://user-service:8081
   planner-service:
-    uri: ${PLANNER_SERVICE_URI}
+    uri: http://planner-service:8082
   catalog-service:
-    uri: ${CATALOG_SERVICE_URI}
+    uri: http://catalog-service:8083
 
-# JWT 설정 (운영 환경에서는 반드시 환경변수 사용)
+# JWT config
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:uniplan-jwt-secret-key-minimum-256-bits-for-local-development}
 
-# Swagger/OpenAPI 설정 (운영 환경에서는 비활성화 권장)
+# Swagger/OpenAPI
 springdoc:
   api-docs:
     path: /v3/api-docs
-    enabled: ${SWAGGER_ENABLED:false}
   swagger-ui:
     path: /swagger-ui.html
-    enabled: ${SWAGGER_ENABLED:false}
-    # 각 서비스의 OpenAPI 스펙 URL 지정 (드롭다운으로 선택)
+    enabled: true
+    use-root-path: true
     urls:
       - name: "User Service"
         url: /user-service/v3/api-docs
@@ -81,14 +80,15 @@ springdoc:
         url: /catalog-service/v3/api-docs
       - name: "Gateway (Actuator)"
         url: /v3/api-docs
-    # UI에서 기본 선택될 서비스
     urls-primary-name: "User Service"
+  webjars:
+    prefix: ""
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
 
-# 로깅 설정
+# 데모 시연용 로깅
 logging:
   level:
-    root: INFO
-    com.uniplan: INFO
-
+    com.uniplan.gateway: DEBUG              # Gateway 비즈니스 로직
+    org.springframework.cloud.gateway: DEBUG # Gateway 라우팅, 필터 체인
+    org.springframework.web: DEBUG           # HTTP 요청/응답

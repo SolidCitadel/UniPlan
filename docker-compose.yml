@@ -27,7 +27,7 @@ services:
       args:
         SERVICE: user-service
     environment:
-      SPRING_PROFILES_ACTIVE: local
+      SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:mysql://uniplan-mysql:3306/uniplan_user?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: password
@@ -46,7 +46,7 @@ services:
       args:
         SERVICE: catalog-service
     environment:
-      SPRING_PROFILES_ACTIVE: local
+      SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:mysql://uniplan-mysql:3306/uniplan_catalog?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: password
@@ -61,7 +61,7 @@ services:
       args:
         SERVICE: planner-service
     environment:
-      SPRING_PROFILES_ACTIVE: local
+      SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:mysql://uniplan-mysql:3306/uniplan_planner?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: password
@@ -79,7 +79,7 @@ services:
       args:
         SERVICE: api-gateway
     environment:
-      SPRING_PROFILES_ACTIVE: local
+      SPRING_PROFILES_ACTIVE: docker
       SERVICES_USER_SERVICE_URI: http://user-service:8081
       SERVICES_PLANNER_SERVICE_URI: http://planner-service:8082
       SERVICES_CATALOG_SERVICE_URI: http://catalog-service:8083

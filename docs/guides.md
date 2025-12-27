@@ -69,7 +69,7 @@ planner-service/
 
 **1. 단위 테스트 (Unit Test)**
 - 대상: 도메인 로직, 유틸리티 함수
-- 프레임워크: JUnit 5 (백엔드), Flutter Test (프론트엔드)
+- 프레임워크: JUnit 5 (백엔드), Jest (프론트엔드)
 - 예시:
   ```java
   @Test
@@ -103,125 +103,36 @@ planner-service/
   ```
 
 **3. E2E 테스트 (End-to-End Test)**
-- 대상: 프론트엔드가 사용하는 API Gateway 전체 워크플로우
+- 대상: API Gateway를 통한 전체 시스템
 - 위치: `tests/e2e/`
-- 프레임워크: Dart Test
-- 목적: HTTP API 검증 (프론트엔드는 검증된 명세의 공통 DTO 사용)
-- 접근:
-  - **Signup-first**: 테스트마다 신규 계정 생성
-  - **동적 픽스처**: `/api/v1/courses/import` API로 과목 데이터 생성
-  - **tmpfs**: 인메모리 DB로 빠른 실행 및 격리
+- 프레임워크: pytest (Python, uv)
 
-**구조:**
+**구조 (도메인별 분리):**
 ```
-packages/
-  └── uniplan_models/          # 공통 DTO 패키지 (E2E로 검증됨)
-      ├── pubspec.yaml
-      └── lib/
-          └── src/
-              ├── timetable.dart      # Freezed DTO
-              ├── scenario.dart
-              └── registration.dart
-
-tests/
-  └── e2e/
-      ├── .env                 # 환경 설정 (API_BASE_URL)
-      ├── pubspec.yaml         # Dart 의존성
-      ├── README.md            # 상세 사용법
-      └── test/
-          ├── helpers/
-          │   ├── http_client.dart    # GatewayClient (signup/login/API)
-          │   └── test_context.dart   # E2eContext (리소스 추적/정리/seedCourse)
-          └── full_workflow_test.dart
-
-app/frontend/
-  └── pubspec.yaml             # uniplan_models 의존 (E2E 검증된 명세)
+tests/e2e/
+├── pyproject.toml        # 의존성 (uv)
+├── conftest.py           # fixtures
+├── test_auth.py          # 인증
+├── test_courses.py       # 강의 검색
+├── test_wishlist.py      # 위시리스트
+├── test_timetable.py     # 시간표
+├── test_scenario.py      # 시나리오
+└── test_registration.py  # 수강신청
 ```
 
-**장점:**
-- ✅ 진정한 E2E: 회원가입부터 전체 워크플로우 테스트
-- ✅ 격리된 테스트 환경: docker-compose.test.yml로 독립 DB 사용
-- ✅ 동적 픽스처: API를 통한 데이터 생성으로 외부 의존성 제거
-- ✅ 빠른 실행: tmpfs 인메모리 DB 사용
-- ✅ API 명세 검증: 프론트엔드는 E2E로 검증된 공통 DTO를 안전하게 사용
-
-**예시:**
-```dart
-// tests/e2e/test/full_workflow_test.dart
-import 'package:test/test.dart';
-import 'package:uniplan_models/uniplan_models.dart';  // 검증될 공통 DTO
-import 'helpers/http_client.dart';
-import 'helpers/test_context.dart';
-
-void main() {
-  final env = EnvConfig.load();
-  late E2eContext ctx;
-
-  setUpAll(() async {
-    ctx = E2eContext(env);
-    await ctx.signup();      // 신규 계정 생성 (타임스탬프 기반 유니크 이메일)
-    await ctx.seedCourse();  // 테스트용 과목 생성 (API를 통해 동적 생성)
-  });
-
-  tearDownAll(() async {
-    await ctx.cleanup();  // 생성된 리소스 자동 삭제
-  });
-
-  test('alternative timetable respects excludedCourseIds contract', () async {
-    expect(ctx.fixtureCourseId > 0, isTrue);
-    final courseId = ctx.fixtureCourseId;
-
-    final base = await ctx.createTimetable(
-      name: 'E2E Base Timetable',
-      openingYear: DateTime.now().year,
-      semester: '1',
-    );
-
-    await ctx.addCourse(base.id, courseId);
-
-    final alt = await ctx.createAlternativeTimetable(
-      baseTimetableId: base.id,
-      name: 'E2E Alternative',
-      excludedCourseIds: {courseId},
-    );
-
-    // API 계약 검증: excludedCourseIds -> excludedCourses 변환 확인
-    expect(alt.excludedCourses.map((c) => c.courseId), contains(courseId));
-  });
-}
-```
+각 파일에 Happy Path + Edge Cases 포함.
 
 **실행:**
 ```bash
-# 1. 테스트 환경 실행 (MySQL + 백엔드 서비스)
-docker compose -f docker-compose.test.yml up -d
-
-# 2. E2E 테스트 실행
 cd tests/e2e
-dart pub get
-dart test
-
-# 3. 테스트 환경 종료
-docker compose -f docker-compose.test.yml down
+uv sync
+uv run pytest -v
 ```
-
-**환경 설정 (.env):**
-```bash
-API_BASE_URL=http://localhost:8280
-```
-
-**테스트 환경 (docker-compose.test.yml):**
-- **MySQL**: 포트 3307 (개발 환경과 분리), tmpfs로 인메모리 실행
-- **API Gateway**: 포트 8280 (개발 환경과 분리)
-- **JPA DDL Auto**: `update` 설정으로 테이블 자동 생성/업데이트
-- **프로파일**: 모든 서비스에서 `SPRING_PROFILES_ACTIVE=test`
-- **선택적 실행**: `docker compose -f docker-compose.test.yml up mysql-test -d` (백엔드를 로컬에서 직접 실행할 때)
-- **과목 데이터**: `/api/v1/courses/import` API를 통해 테스트 중 동적 생성
 
 ### 테스트 커버리지 목표
 
 - **백엔드**: 핵심 도메인 로직 80% 이상
-- **프론트엔드**: 주요 비즈니스 로직 (Notifier, Mapper) 60% 이상
+- **프론트엔드**: 주요 비즈니스 로직 60% 이상
 
 ### 품질 게이트
 
@@ -236,15 +147,15 @@ cd app/backend
 **프론트엔드:**
 ```bash
 cd app/frontend
-flutter analyze
-flutter test
+npm run build
+npm run lint
 ```
 
-**E2E (선택적, 주요 변경 시):**
+**E2E 시나리오 테스트 (선택적, 주요 변경 시):**
 ```bash
 cd tests/e2e
-dart pub get
-dart test
+uv sync
+uv run pytest -v
 ```
 
 ---
@@ -287,66 +198,63 @@ public class Timetable { ... }
 - 응답 형태: 일관된 DTO 사용
 - 예외 처리: `@ControllerAdvice`로 전역 처리
 
-### 프론트엔드 (Flutter/Dart)
+### 프론트엔드 (Next.js/TypeScript)
 
 **1. 명명 규칙**
-- 클래스: PascalCase (`TimetableListScreen`)
+- 컴포넌트: PascalCase (`TimetableList`, `WeeklyGrid`)
 - 변수/함수: camelCase (`fetchTimetables`, `selectedTimetable`)
-- 파일: snake_case (`timetable_list_screen.dart`)
-- 상수: lowerCamelCase (`defaultPadding`)
+- 파일: kebab-case (`timetable-list.tsx`, `weekly-grid.tsx`)
+- 타입/인터페이스: PascalCase (`Timetable`, `TimetableItem`)
 
-**2. 상태 관리 (Riverpod 3)**
-- `AsyncNotifier` + `AsyncNotifierProvider`만 사용
-- `StateNotifier`, `AutoDisposeAsyncNotifier` 금지
+**2. 상태 관리 (React Query)**
+- `@tanstack/react-query` 사용
+- 서버 상태: `useQuery`, `useMutation`
+- 로컬 상태: `useState`, `useMemo`
 - 예시:
-  ```dart
-  @riverpod
-  class TimetableList extends AsyncNotifier<List<Timetable>> {
-    @override
-    Future<List<Timetable>> build() async {
-      return ref.read(timetableRepositoryProvider).fetchAll();
-    }
+  ```typescript
+  const { data: timetables, isLoading } = useQuery({
+    queryKey: ['timetables'],
+    queryFn: timetableApi.getAll,
+  });
 
-    Future<void> create(TimetableRequest req) async {
-      state = const AsyncValue.loading();
-      state = await AsyncValue.guard(() async {
-        await ref.read(timetableRepositoryProvider).create(req);
-        return ref.read(timetableRepositoryProvider).fetchAll();
-      });
-    }
+  const createMutation = useMutation({
+    mutationFn: timetableApi.create,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['timetables'] });
+      toast.success('시간표가 생성되었습니다');
+    },
+  });
+  ```
+
+**3. 타입 정의**
+- `src/types/` 디렉토리에 타입 정의
+- 예시:
+  ```typescript
+  export interface Timetable {
+    id: number;
+    name: string;
+    openingYear: number;
+    semester: string;
+    items: TimetableItem[];
+    excludedCourses: ExcludedCourse[];
   }
   ```
 
-**3. 엔티티/DTO (Freezed)**
-- abstract class + freezed 패턴만 사용
+**4. UI 컴포넌트 (shadcn/ui + Tailwind)**
+- shadcn/ui 컴포넌트 사용 (`@/components/ui/`)
+- Tailwind CSS로 스타일링
+- 일관된 디자인 토큰 사용
+
+**5. API 클라이언트**
+- axios 기반 (`@/lib/api/`)
+- 인터셉터로 JWT 토큰 자동 첨부
 - 예시:
-  ```dart
-  @freezed
-  class Timetable with _$Timetable {
-    const factory Timetable({
-      required int id,
-      required String name,
-      required int openingYear,
-      required String semester,
-    }) = _Timetable;
-
-    factory Timetable.fromJson(Map<String, dynamic> json) =>
-        _$TimetableFromJson(json);
-  }
-  ```
-
-**4. 디자인 토큰 (AppTokens)**
-- 색상: `AppTokens.primary`, `AppTokens.surface`
-- 타이포: `AppTokens.heading`, `AppTokens.body`, `AppTokens.caption`
-- 스페이싱: `AppTokens.spacing16`, `AppTokens.spacing24`
-- 라운딩: `AppTokens.radius12`
-- 하드코딩된 색상/폰트 지양
-
-**5. 코드 생성**
-- `*.g.dart`, `*.freezed.dart`는 `build_runner`로 생성
-- 생성 후 반드시 커밋:
-  ```bash
-  flutter pub run build_runner build --delete-conflicting-outputs
+  ```typescript
+  export const timetableApi = {
+    getAll: () => apiClient.get<Timetable[]>('/timetables').then(r => r.data),
+    create: (data: CreateTimetableRequest) =>
+      apiClient.post<Timetable>('/timetables', data).then(r => r.data),
+  };
   ```
 
 ### 공통 규칙
@@ -362,8 +270,7 @@ test: Timetable 단위 테스트 추가
 
 **2. PR 체크리스트**
 - [ ] 관련 테스트 추가/수정
-- [ ] 품질 게이트 통과 (test, analyze)
-- [ ] 코드 생성 파일 갱신 (프론트엔드)
+- [ ] 품질 게이트 통과 (test, build, lint)
 - [ ] 관련 문서 업데이트 (docs/, README)
 - [ ] API 변경 시 Swagger 확인
 
@@ -386,12 +293,12 @@ test: Timetable 단위 테스트 추가
 - 명확한 레이어 분리
 
 ### Test
-- 단위/통합/E2E 테스트
-- E2E: API Gateway 전체 워크플로우 검증 → 프론트엔드는 검증된 공통 DTO 사용
+- 단위 테스트: JUnit 5 + Mockito
+- 통합 테스트: SpringBootTest + MockMvc
+- E2E 테스트: pytest (도메인별 Happy Path + Edge Cases)
 - 품질 게이트 필수 통과
-- 핵심 로직 80% 커버리지 목표
 
 ### Conventions
 - 백엔드: Java/Kotlin 표준 규칙
-- 프론트엔드: Riverpod 3 + Freezed + AppTokens
+- 프론트엔드: React Query + TypeScript + shadcn/ui
 - 공통: 명확한 커밋 메시지, PR 체크리스트, 보안 준수

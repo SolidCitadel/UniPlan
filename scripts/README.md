@@ -1,107 +1,40 @@
 # UniPlan Scripts
 
-Utility scripts for the UniPlan project.
+크롤러 및 유틸리티 스크립트.
 
-## Setup
-
-This directory uses [Poetry](https://python-poetry.org/) for dependency management.
-
-### Installation
+## 설치
 
 ```bash
-# Install dependencies
 cd scripts
-poetry install
+uv sync
 ```
 
-### Running Scripts
+## 크롤러
+
+경희대학교 강의 데이터 크롤링:
 
 ```bash
-# Option 1: Use poetry run
-poetry run python code_metrics.py --category all
+# 메타데이터 크롤링 (학과, 캠퍼스 등)
+uv run python crawler/crawl_metadata.py --year 2025 --semester 1
 
-# Option 2: Activate virtual environment
-poetry shell
-python code_metrics.py --category all
-```
+# 강의 크롤링
+uv run python crawler/run_crawler.py --year 2025 --semester 1
 
-## Available Scripts
-
-### code_metrics.py
-
-Analyzes source code metrics for the project.
-
-**Usage:**
-```bash
-poetry run python code_metrics.py [options]
-
-Options:
-  --category {all,server,client}  Which category to analyze (default: all)
-  --server-roots [ROOTS ...]      Override server roots (default: app/backend)
-  --client-roots [ROOTS ...]      Override client roots (default: app/frontend app/cli-client)
-  --json                          Output JSON instead of text
-```
-
-**Examples:**
-```bash
-# Analyze all code
-poetry run python code_metrics.py
-
-# Server only
-poetry run python code_metrics.py --category server
-
-# JSON output
-poetry run python code_metrics.py --json
-```
-
-### crawler/
-
-Crawls course data from Kyung Hee University.
-
-**Setup:**
-```bash
-# Create .env file in crawler/
-cd crawler
-cp .env.example .env  # Edit with your settings
-```
-
-**Usage:**
-```bash
-# Crawl metadata
-poetry run python crawler/crawl_metadata.py --year 2025 --semester 1
-
-# Crawl courses
-poetry run python crawler/run_crawler.py --year 2025 --semester 1
-
-# Transform data
-poetry run python crawler/transformer.py \
+# 변환 (catalog-service 형식)
+uv run python crawler/transformer.py \
   --metadata output/metadata_2025_1.json \
   --courses output/courses_raw_2025_1.json
 ```
 
-## Dependencies
-
-- **requests**: HTTP client for API calls
-- **beautifulsoup4**: HTML parsing
-- **lxml**: XML/HTML parser
-- **python-dotenv**: Environment variable management
-
-## Development
-
-### Adding Dependencies
+## 코드 메트릭
 
 ```bash
-poetry add package-name
-```
+# 전체 분석
+uv run python code_metrics.py
 
-### Updating Dependencies
+# 서버만
+uv run python code_metrics.py --category server
 
-```bash
-poetry update
-```
-
-### Checking Dependencies
-
-```bash
-poetry show
+# JSON 출력
+uv run python code_metrics.py --json
 ```

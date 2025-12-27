@@ -43,22 +43,20 @@ UniPlan은 대학 수강신청의 불확실성을 해결하기 위한 웹 애플
 - `planner-service` (8082): 시간표, 시나리오, 수강신청 로직
 
 ### 프론트엔드
-- **프레임워크**: Flutter Web
-- **상태관리**: Riverpod 3 (AsyncNotifier)
-- **라우팅**: GoRouter
-- **HTTP**: Dio
-- **직렬화**: Freezed, JSON Serializable
+- **프레임워크**: Next.js 15 (App Router)
+- **언어**: TypeScript
+- **상태관리**: React Query (@tanstack/react-query)
+- **UI**: shadcn/ui + Tailwind CSS
+- **HTTP**: axios
 
 ### 기타
-- **CLI 클라이언트**: Dart (개발/테스트용)
-- **크롤러**: Python 3.x
-- **E2E 테스트**: Dart Test (공통 DTO 패키지 기반)
+- **크롤러/테스트**: Python 3.x (uv)
 
 ## 아키텍처
 
 ```
 ┌─────────────┐
-│   Flutter   │  ← 사용자 인터페이스
+│   Next.js   │  ← 사용자 인터페이스
 │   Web App   │
 └──────┬──────┘
        │ HTTP + JWT
@@ -81,7 +79,7 @@ UniPlan은 대학 수강신청의 불확실성을 해결하기 위한 웹 애플
 
 - **DDD (Domain-Driven Design)**: 서비스별 독립 도메인
 - **API Gateway 패턴**: 단일 진입점, JWT 검증, 경로 변환
-- **공통 DTO**: 프론트엔드와 E2E 테스트가 동일한 DTO 공유 (`packages/uniplan_models`)
+- **백엔드 우선 원칙**: API 계약을 먼저 확정하고 프론트엔드를 맞춤
 
 ## 디렉터리 구조
 
@@ -94,12 +92,9 @@ UniPlan/
 │   │   ├── catalog-service/
 │   │   ├── planner-service/
 │   │   └── common-lib/
-│   ├── frontend/          # Flutter Web
-│   └── cli-client/        # Dart CLI
-├── packages/
-│   └── uniplan_models/    # 공통 DTO 패키지
+│   └── frontend/          # Next.js Web
 ├── tests/
-│   └── e2e/               # E2E 테스트
+│   └── e2e/               # pytest E2E 시나리오 테스트
 ├── scripts/
 │   └── crawler/           # 강의 크롤러 (Python)
 ├── docs/                  # 문서
@@ -115,10 +110,10 @@ UniPlan/
 ### 필수 요구사항
 
 - Java 21+
-- Dart SDK 3.0+
-- Flutter SDK 3.0+
+- Node.js 18+
 - MySQL 8.0+ (또는 Docker)
-- Python 3.11+ (크롤러 사용 시)
+- Python 3.11+ (API 테스트 및 크롤러)
+- uv (Python 패키지 매니저)
 
 ### 1. 백엔드 실행
 
@@ -143,16 +138,13 @@ cd app/backend
 cd app/frontend
 
 # 의존성 설치
-flutter pub get
+npm install
 
-# 코드 생성
-flutter pub run build_runner build --delete-conflicting-outputs
-
-# 웹 실행
-flutter run -d chrome
+# 개발 서버 실행
+npm run dev
 ```
 
-**접속**: http://localhost:8080 (Flutter 개발 서버 포트)
+**접속**: http://localhost:3000
 
 ### 3. Docker Compose (올인원)
 
@@ -178,55 +170,27 @@ cd app/backend
 **프론트엔드:**
 ```bash
 cd app/frontend
-flutter analyze
-flutter test
+npm run build
+npm run lint
 ```
 
-**E2E:**
+**E2E 시나리오 테스트:**
 ```bash
 cd tests/e2e
-dart pub get
-dart test
+uv sync
+uv run pytest -v
 ```
-
-### CLI 클라이언트
-
-개발 및 테스트를 위한 CLI 도구:
-
-```bash
-cd app/cli-client
-dart run bin/uniplan.dart --help
-
-# 예시: 전체 워크플로우
-dart run bin/uniplan.dart auth login test@example.com password123
-dart run bin/uniplan.dart courses list
-dart run bin/uniplan.dart wishlist add 101 1
-dart run bin/uniplan.dart timetable create "Plan A" 2025 "1학기"
-```
-
-자세한 사용법은 `app/cli-client/docs/` 참고
 
 ### 강의 크롤러
 
-경희대학교 강의 데이터 크롤링:
-
 ```bash
 cd scripts
-poetry install  # 의존성 설치
+uv sync
 
-# 메타데이터 크롤링
-poetry run python crawler/crawl_metadata.py --year 2025 --semester 1
-
-# 강의 크롤링
-poetry run python crawler/run_crawler.py --year 2025 --semester 1
-
-# 변환 (catalog-service 형식)
-poetry run python crawler/transformer.py \
-  --metadata output/metadata_2025_1.json \
-  --courses output/courses_raw_2025_1.json
+# 크롤링 및 변환
+uv run python crawler/crawl_metadata.py --year 2025 --semester 1
+uv run python crawler/run_crawler.py --year 2025 --semester 1
 ```
-
-자세한 사용법은 `scripts/README.md` 참고
 
 ## 문서
 
@@ -236,9 +200,7 @@ poetry run python crawler/transformer.py \
 - **[features.md](docs/features.md)**: 기능별 사용자 시나리오
 - **[guides.md](docs/guides.md)**: 개발 가이드 (DDD, 테스트, 컨벤션)
 - **[requirements.md](docs/requirements.md)**: 프로젝트 요구사항
-- **[AGENTS.md](AGENTS.md)**: 공통 개발 원칙 및 명령어
 
 모듈별 문서:
-- `app/frontend/AGENTS.md`: Flutter 프론트엔드 규칙
-- `app/cli-client/docs/`: CLI 사용 가이드
 - `scripts/crawler/docs/`: 크롤러 필드 매핑
+- `tests/e2e/README.md`: E2E 테스트 가이드

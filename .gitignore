@@ -1,18 +1,16 @@
-# Centralized repo-wide ignores
-
 # Environment variables
 .env
 **/.env
+.env.*
 
 # Gradle
 .gradle/
 **/.gradle/
 build/
 **/build/
-# Ensure Gradle wrapper stays tracked even if gradle/ is ignored in the future
 !**/gradle/wrapper/gradle-wrapper.jar
 
-# IDEs / tooling
+# IDEs
 .idea/
 .vscode/
 *.iml
@@ -21,12 +19,10 @@ build/
 .classpath
 .project
 .settings/
-# STS (Spring Tool Suite)
 .apt_generated
 .factorypath
 .springBeans
 .sts4-cache
-# NetBeans
 nbproject/private/
 nbbuild/
 nbdist/
@@ -38,12 +34,15 @@ bin/
 
 # Logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Frontend / Node
+# Node / Frontend
 node_modules/
 **/node_modules/
 dist/
@@ -55,34 +54,15 @@ coverage/
 .parcel-cache/
 .eslintcache
 *.tsbuildinfo
-
-# Dart / Flutter
-.dart_tool/
-**/.dart_tool/
-.packages
-**/.packages
-pubspec.lock
-**/pubspec.lock
-
-# CLI token storage
-.uniplan/
-**/.uniplan/
-
-# Module-specific
-/app/backend/bff/HELP.md
-
-# Additional Flutter/Dart ignores
-.flutter-plugins
-.flutter-plugins-dependencies
-.pub-cache/
-.pub/
-app.*.symbols
-app.*.map.json
-
-# Android Studio build artifacts
-**/android/app/debug
-**/android/app/profile
-**/android/app/release
+.vercel
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+*.pem
 
 # Python
 *.pyc
@@ -91,5 +71,5 @@ __pycache__/
 .pytest_cache/
 **/.pytest_cache/
 *.egg-info/
-scripts/.venv/
-scripts/crawler/.venv/
+.venv/
+**/.venv/

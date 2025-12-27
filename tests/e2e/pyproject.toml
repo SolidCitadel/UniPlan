@@ -1,0 +1,35 @@
+[project]
+name = "uniplan-e2e-tests"
+version = "0.1.0"
+description = "E2E scenario tests for UniPlan - Full workflow testing"
+requires-python = ">=3.11"
+dependencies = [
+    "pytest>=8.0.0",
+    "pytest-env>=1.1.0",
+    "requests>=2.31.0",
+    "python-dotenv>=1.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest-xdist>=3.5.0",
+    "pytest-html>=4.1.0",
+    "ruff>=0.8.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["."]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+env = [
+    "API_BASE_URL=http://localhost:8080",
+]
+markers = []
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]

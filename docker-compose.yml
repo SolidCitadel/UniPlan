@@ -99,10 +99,9 @@ services:
       context: .
       dockerfile: docker/frontend.Dockerfile
       args:
-        FLUTTER_VERSION: beta
-        BASE_URL: http://localhost:8180
+        NEXT_PUBLIC_API_URL: http://localhost:8180
     ports:
-      - "3000:80"
+      - "3000:3000"
     depends_on:
       api-gateway:
         condition: service_started

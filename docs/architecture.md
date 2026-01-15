@@ -24,6 +24,7 @@ API Gateway: RewritePath 적용
 |---------------------|------------------|--------|
 | `/api/v1/auth/**` | `/auth/**` | user-service |
 | `/api/v1/users/**` | `/users/**` | user-service |
+| `/api/v1/universities/**` | `/universities/**` | user-service |
 | `/api/v1/timetables/**` | `/timetables/**` | planner-service |
 | `/api/v1/scenarios/**` | `/scenarios/**` | planner-service |
 | `/api/v1/wishlist/**` | `/wishlist/**` | planner-service |
@@ -333,3 +334,76 @@ POST /api/v1/timetables/1/alternatives
 3. **확장성**: 여러 강의 실패 조합 지원
 4. **데이터 무결성**: Timetable이 제외 과목 검증하여 실수 방지
 5. **자동 네비게이션**: 실패 시 자동으로 대안 시나리오로 이동
+
+---
+
+## University (대학) 구조
+
+### 멀티 대학 지원
+
+UniPlan은 여러 대학을 지원하도록 설계되어 있습니다. 각 대학은 고유한 강의 데이터를 가지며, 사용자는 가입 시 대학을 선택합니다.
+
+### 엔티티 구조
+
+```java
+// user-service
+@Entity
+@Table(name = "university")
+class University {
+    Long id;
+    String name;     // 대학 이름 (예: "경희대학교")
+    String code;     // 대학 코드 (예: "KHU")
+    LocalDateTime createdAt;
+}
+
+// User와 University 관계
+@Entity
+@Table(name = "users")
+class User {
+    // ...
+    @ManyToOne
+    University university;  // 사용자 소속 대학
+}
+
+// catalog-service
+@Entity
+@Table(name = "course")
+class Course {
+    // ...
+    @ManyToOne
+    University university;  // 강의 제공 대학
+}
+```
+
+### API
+
+```
+GET /api/v1/universities         # 대학 목록 조회 (인증 불필요)
+
+# 강의 검색 시 대학 필터링
+GET /api/v1/courses?universityId=1&openingYear=2025&semester=1
+```
+
+### 학기 컨텍스트
+
+프론트엔드에서 학기 선택 시 localStorage에 저장되며, 강의 검색 등에 자동으로 적용됩니다.
+
+```typescript
+interface SemesterContext {
+  openingYear: number;  // 개설 연도 (예: 2025)
+  semester: string;     // 학기 (예: "1" 또는 "2")
+}
+```
+
+### 크롤러 설정
+
+각 대학별 크롤러는 `scripts/crawler/config/` 디렉토리에 설정됩니다.
+
+```python
+# scripts/crawler/config/khu_config.py
+UNIVERSITY_ID = 1        # DB의 University ID
+UNIVERSITY_CODE = "KHU"
+UNIVERSITY_NAME = "경희대학교"
+```
+
+변환된 강의 데이터에는 `universityId`가 포함됩니다.

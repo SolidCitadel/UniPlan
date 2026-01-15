@@ -22,6 +22,11 @@ public class CourseSpecification {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
+            // University filter (required for proper data isolation)
+            if (request.getUniversityId() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("university").get("id"), request.getUniversityId()));
+            }
+
             // Basic filters
             if (request.getOpeningYear() != null) {
                 predicates.add(criteriaBuilder.equal(root.get("openingYear"), request.getOpeningYear()));

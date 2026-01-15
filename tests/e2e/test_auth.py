@@ -21,12 +21,29 @@ class TestAuth:
         password = "Test1234!"
         name = f"Auth Test {unique_id}"
 
-        # 회원가입
+        # 대학 목록 조회
+        response = api_client.get(Endpoints.UNIVERSITIES)
+        assert response.status_code == 200
+        universities = response.json()
+        assert len(universities) > 0, "대학 목록이 비어있습니다"
+        university_id = universities[0]["id"]
+
+        # 회원가입 (universityId 포함)
         response = api_client.post(
             Endpoints.AUTH_SIGNUP,
-            json={"email": email, "password": password, "name": name},
+            json={
+                "email": email,
+                "password": password,
+                "name": name,
+                "universityId": university_id,
+            },
         )
         assert response.status_code in (200, 201)
+
+        # 회원가입 응답에 대학 정보 포함 확인
+        data = response.json()
+        assert data["user"]["universityId"] == university_id
+        assert "universityName" in data["user"]
 
         # 로그인
         response = api_client.post(
@@ -39,6 +56,7 @@ class TestAuth:
         assert "accessToken" in data
         assert "refreshToken" in data
         assert data["user"]["email"] == email
+        assert data["user"]["universityId"] == university_id
 
     def test_get_current_user(self, auth_client: ApiClient, test_user: TestUser):
         """현재 사용자 정보 조회"""
@@ -58,7 +76,8 @@ class TestAuth:
             json={
                 "email": test_user.email,
                 "password": "Test1234!",
-                "name": "Duplicate User"
+                "name": "Duplicate User",
+                "universityId": test_user.university_id,
             }
         )
         assert response.status_code in (400, 409), "중복 이메일은 거부되어야 합니다"
@@ -103,14 +122,21 @@ class TestAuth:
         # 이메일 누락
         response = api_client.post(
             Endpoints.AUTH_SIGNUP,
-            json={"password": "Test1234!", "name": "Test"}
+            json={"password": "Test1234!", "name": "Test", "universityId": 1}
         )
         assert response.status_code == 400
 
         # 비밀번호 누락
         response = api_client.post(
             Endpoints.AUTH_SIGNUP,
-            json={"email": "test@test.com", "name": "Test"}
+            json={"email": "test@test.com", "name": "Test", "universityId": 1}
+        )
+        assert response.status_code == 400
+
+        # universityId 누락
+        response = api_client.post(
+            Endpoints.AUTH_SIGNUP,
+            json={"email": "test@test.com", "password": "Test1234!", "name": "Test"}
         )
         assert response.status_code == 400
 
@@ -121,7 +147,8 @@ class TestAuth:
             json={
                 "email": "not-an-email",
                 "password": "Test1234!",
-                "name": "Test"
+                "name": "Test",
+                "universityId": 1,
             }
         )
         assert response.status_code == 400

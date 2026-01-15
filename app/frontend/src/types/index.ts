@@ -19,12 +19,27 @@ export interface ClassTime {
   endTime: string;
 }
 
+// University
+export interface University {
+  id: number;
+  name: string;
+  code: string;
+}
+
+// Semester Context
+export interface SemesterContext {
+  openingYear: number;
+  semester: string;
+}
+
 // Auth
 export interface User {
   id: number;
   email: string;
   name: string;
   role: string;
+  universityId: number;
+  universityName: string;
 }
 
 export interface LoginRequest {
@@ -42,6 +57,7 @@ export interface SignupRequest {
   email: string;
   password: string;
   name: string;
+  universityId: number;
 }
 
 // Course
@@ -68,6 +84,9 @@ export interface Course {
 }
 
 export interface CourseSearchParams {
+  universityId?: number;
+  openingYear?: number;
+  semester?: string;
   query?: string;
   professor?: string;
   departmentName?: string;

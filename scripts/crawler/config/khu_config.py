@@ -2,6 +2,11 @@
 경희대 수강신청 시스템 설정
 """
 
+# 대학 정보
+UNIVERSITY_ID = 1  # catalog-service의 University 테이블 ID
+UNIVERSITY_CODE = "KHU"
+UNIVERSITY_NAME = "경희대학교"
+
 # API 기본 URL
 BASE_URL = "https://sugang.khu.ac.kr/core"
 DATA_JS_URL = "https://sugang.khu.ac.kr/resources/data/data_{year}.js"

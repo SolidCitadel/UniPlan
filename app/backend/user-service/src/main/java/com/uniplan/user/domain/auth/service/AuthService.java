@@ -3,10 +3,13 @@ package com.uniplan.user.domain.auth.service;
 import com.uniplan.user.domain.auth.dto.AuthResponse;
 import com.uniplan.user.domain.auth.dto.LoginRequest;
 import com.uniplan.user.domain.auth.dto.SignupRequest;
+import com.uniplan.user.domain.university.entity.University;
+import com.uniplan.user.domain.university.repository.UniversityRepository;
 import com.uniplan.user.domain.user.entity.User;
 import com.uniplan.user.domain.user.repository.UserRepository;
 import com.uniplan.user.global.exception.AuthenticationException;
 import com.uniplan.user.global.exception.DuplicateResourceException;
+import com.uniplan.user.global.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final UniversityRepository universityRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
@@ -31,6 +35,10 @@ public class AuthService {
             throw new DuplicateResourceException("이미 사용 중인 이메일입니다");
         }
 
+        // 대학 조회
+        University university = universityRepository.findById(request.getUniversityId())
+                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 대학입니다"));
+
         // 비밀번호 암호화
         String encodedPassword = passwordEncoder.encode(request.getPassword());
 
@@ -38,7 +46,8 @@ public class AuthService {
         User user = User.createLocalUser(
                 request.getEmail(),
                 request.getName(),
-                encodedPassword
+                encodedPassword,
+                university
         );
 
         // 저장
@@ -56,6 +65,8 @@ public class AuthService {
                         .email(savedUser.getEmail())
                         .name(savedUser.getName())
                         .role(savedUser.getRole().name())
+                        .universityId(university.getId())
+                        .universityName(university.getName())
                         .build())
                 .build();
     }
@@ -64,8 +75,8 @@ public class AuthService {
      * 로그인
      */
     public AuthResponse login(LoginRequest request) {
-        // 사용자 조회
-        User user = userRepository.findByEmail(request.getEmail())
+        // 사용자 조회 (대학 정보 포함)
+        User user = userRepository.findByEmailWithUniversity(request.getEmail())
                 .orElseThrow(() -> new AuthenticationException("이메일 또는 비밀번호가 올바르지 않습니다"));
 
         // 비밀번호 검증
@@ -77,6 +88,7 @@ public class AuthService {
         String accessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getEmail(), user.getRole().name());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
 
+        University university = user.getUniversity();
         return AuthResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
@@ -85,6 +97,8 @@ public class AuthService {
                         .email(user.getEmail())
                         .name(user.getName())
                         .role(user.getRole().name())
+                        .universityId(university.getId())
+                        .universityName(university.getName())
                         .build())
                 .build();
     }

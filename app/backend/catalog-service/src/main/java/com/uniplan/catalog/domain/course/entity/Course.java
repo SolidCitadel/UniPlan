@@ -1,5 +1,6 @@
 package com.uniplan.catalog.domain.course.entity;
 
+import com.uniplan.catalog.domain.university.entity.University;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -10,7 +11,8 @@ import java.util.List;
 @Table(name = "courses", indexes = {
     @Index(name = "idx_course_code", columnList = "course_code"),
     @Index(name = "idx_opening_year_semester", columnList = "opening_year,semester"),
-    @Index(name = "idx_professor", columnList = "professor")
+    @Index(name = "idx_professor", columnList = "professor"),
+    @Index(name = "idx_university", columnList = "university_id")
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -21,6 +23,10 @@ public class Course {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "university_id", nullable = false)
+    private University university;
 
     @Column(name = "opening_year", nullable = false)
     private Integer openingYear;

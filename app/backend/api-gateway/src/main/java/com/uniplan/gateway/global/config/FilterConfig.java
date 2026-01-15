@@ -49,6 +49,13 @@ public class FilterConfig {
                                 .rewritePath("/api/v1/(?<segment>.*)", "/${segment}"))
                         .uri(userServiceUri))
 
+                // 인증이 필요 없는 University 라우트 (회원가입 시 대학 목록 조회)
+                .route("user-service-universities", r -> r
+                        .path("/api/v1/universities/**")
+                        .filters(f -> f
+                                .rewritePath("/api/v1/(?<segment>.*)", "/${segment}"))
+                        .uri(userServiceUri))
+
                 // 인증이 필요한 User Service 라우트
                 .route("user-service-protected", r -> r
                         .path("/api/v1/users/**")

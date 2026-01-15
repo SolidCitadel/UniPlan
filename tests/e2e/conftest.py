@@ -19,6 +19,7 @@ class TestUser:
     email: str
     password: str
     name: str
+    university_id: int = 1  # 기본 대학 (경희대)
     access_token: str | None = None
     refresh_token: str | None = None
     user_id: int | None = None
@@ -71,16 +72,34 @@ def api_client(api_base_url: str) -> ApiClient:
 def test_user(api_client: ApiClient) -> Generator[TestUser, None, None]:
     """Create a test user for the session and clean up after."""
     unique_id = uuid.uuid4().hex[:8]
+
+    # Get available university (default to 1 if API fails)
+    university_id = 1
+    try:
+        response = api_client.get("/api/v1/universities")
+        if response.status_code == 200:
+            universities = response.json()
+            if universities:
+                university_id = universities[0]["id"]
+    except Exception:
+        pass  # Use default university_id = 1
+
     user = TestUser(
         email=f"test_{unique_id}@example.com",
         password="Test1234!",
         name=f"Test User {unique_id}",
+        university_id=university_id,
     )
 
-    # Signup
+    # Signup (with universityId)
     response = api_client.post(
         "/api/v1/auth/signup",
-        json={"email": user.email, "password": user.password, "name": user.name},
+        json={
+            "email": user.email,
+            "password": user.password,
+            "name": user.name,
+            "universityId": user.university_id,
+        },
     )
     assert response.status_code in (200, 201), f"Signup failed: {response.text}"
 
@@ -113,6 +132,7 @@ class Endpoints:
     AUTH_LOGIN = "/api/v1/auth/login"
     AUTH_SIGNUP = "/api/v1/auth/signup"
     USER_ME = "/api/v1/users/me"
+    UNIVERSITIES = "/api/v1/universities"
     COURSES = "/api/v1/courses"
     WISHLIST = "/api/v1/wishlist"
     TIMETABLES = "/api/v1/timetables"

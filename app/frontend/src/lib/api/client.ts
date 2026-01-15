@@ -49,6 +49,9 @@ export const API_ENDPOINTS = {
   AUTH_REFRESH: '/api/v1/auth/refresh',
   USER_ME: '/api/v1/users/me',
 
+  // University (public)
+  UNIVERSITIES: '/api/v1/universities',
+
   // Resources
   COURSES: '/api/v1/courses',
   TIMETABLES: '/api/v1/timetables',

@@ -15,9 +15,13 @@ import { courseApi, wishlistApi } from '@/lib/api';
 import type { Course, CourseSearchParams } from '@/types';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/error';
+import { useAuth } from '@/providers/auth-provider';
+import { useSemester } from '@/providers/semester-provider';
 
 export default function CoursesPage() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const { semester } = useSemester();
   const [filters, setFilters] = useState<CourseSearchParams>({
     query: '',
     professor: '',
@@ -28,8 +32,16 @@ export default function CoursesPage() {
   const [priorityModal, setPriorityModal] = useState<Course | null>(null);
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['courses', filters, page],
-    queryFn: () => courseApi.search({ ...filters, page, size: 20 }),
+    queryKey: ['courses', filters, page, user?.universityId, semester],
+    queryFn: () => courseApi.search({
+      ...filters,
+      page,
+      size: 20,
+      universityId: user?.universityId,
+      openingYear: semester.openingYear,
+      semester: semester.semester,
+    }),
+    enabled: !!user?.universityId,
   });
 
   const addWishlist = useMutation({

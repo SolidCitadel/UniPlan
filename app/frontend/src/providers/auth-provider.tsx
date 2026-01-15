@@ -15,7 +15,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, name: string) => Promise<void>;
+  signup: (email: string, password: string, name: string, universityId: number) => Promise<void>;
   logout: () => void;
 }
 
@@ -50,8 +50,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push('/courses');
   };
 
-  const signup = async (email: string, password: string, name: string) => {
-    await authApi.signup({ email, password, name });
+  const signup = async (email: string, password: string, name: string, universityId: number) => {
+    await authApi.signup({ email, password, name, universityId });
     // Auto login after signup
     await login(email, password);
   };

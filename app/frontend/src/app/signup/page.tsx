@@ -2,12 +2,21 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/providers/auth-provider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/error';
+import { universityApi } from '@/lib/api';
 
 export default function SignupPage() {
   const { signup } = useAuth();
@@ -15,10 +24,21 @@ export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [universityId, setUniversityId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const { data: universities = [], isLoading: universitiesLoading } = useQuery({
+    queryKey: ['universities'],
+    queryFn: universityApi.getAll,
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!universityId) {
+      toast.error('대학교를 선택해주세요.');
+      return;
+    }
 
     if (password !== confirmPassword) {
       toast.error('비밀번호가 일치하지 않습니다.');
@@ -33,7 +53,7 @@ export default function SignupPage() {
     setIsLoading(true);
 
     try {
-      await signup(email, password, name);
+      await signup(email, password, name, universityId);
       toast.success('회원가입 성공!');
     } catch (error) {
       toast.error(getErrorMessage(error, '회원가입 실패'));
@@ -63,6 +83,27 @@ export default function SignupPage() {
                 onChange={(e) => setName(e.target.value)}
                 required
               />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="university" className="text-sm font-medium">
+                대학교
+              </label>
+              <Select
+                value={universityId?.toString() || ''}
+                onValueChange={(value) => setUniversityId(Number(value))}
+                disabled={universitiesLoading}
+              >
+                <SelectTrigger id="university">
+                  <SelectValue placeholder={universitiesLoading ? '로딩 중...' : '대학교 선택'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {universities.map((univ) => (
+                    <SelectItem key={univ.id} value={univ.id.toString()}>
+                      {univ.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium">

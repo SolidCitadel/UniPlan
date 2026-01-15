@@ -3,6 +3,8 @@ package com.uniplan.user.domain.auth.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uniplan.user.domain.auth.dto.LoginRequest;
 import com.uniplan.user.domain.auth.dto.SignupRequest;
+import com.uniplan.user.domain.university.entity.University;
+import com.uniplan.user.domain.university.repository.UniversityRepository;
 import com.uniplan.user.domain.user.entity.UserRole;
 import com.uniplan.user.domain.user.entity.UserStatus;
 import com.uniplan.user.domain.user.repository.UserRepository;
@@ -42,11 +44,24 @@ class AuthControllerTest {
     private UserRepository userRepository;
 
     @Autowired
+    private UniversityRepository universityRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
+
+    private University testUniversity;
 
     @BeforeEach
     void setUp() {
         userRepository.deleteAll();
+        // 테스트용 대학 생성 (이미 존재하면 조회)
+        testUniversity = universityRepository.findByCode("TEST")
+            .orElseGet(() -> universityRepository.save(
+                University.builder()
+                    .name("테스트대학교")
+                    .code("TEST")
+                    .build()
+            ));
     }
 
     @Test
@@ -56,7 +71,8 @@ class AuthControllerTest {
         SignupRequest request = new SignupRequest(
                 "newuser@example.com",
                 "password123",
-                "신규사용자"
+                "신규사용자",
+                testUniversity.getId()
         );
 
         // when & then
@@ -69,7 +85,9 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.user.id").isNumber())
                 .andExpect(jsonPath("$.user.email").value("newuser@example.com"))
                 .andExpect(jsonPath("$.user.name").value("신규사용자"))
-                .andExpect(jsonPath("$.user.role").value("USER"));
+                .andExpect(jsonPath("$.user.role").value("USER"))
+                .andExpect(jsonPath("$.user.universityId").value(testUniversity.getId()))
+                .andExpect(jsonPath("$.user.universityName").value("테스트대학교"));
     }
 
     @Test
@@ -79,14 +97,16 @@ class AuthControllerTest {
         User existingUser = User.createLocalUser(
                 "duplicate@example.com",
                 "기존사용자",
-                passwordEncoder.encode("password123")
+                passwordEncoder.encode("password123"),
+                testUniversity
         );
         userRepository.save(existingUser);
 
         SignupRequest request = new SignupRequest(
                 "duplicate@example.com",
                 "password456",
-                "신규사용자"
+                "신규사용자",
+                testUniversity.getId()
         );
 
         // when & then
@@ -103,7 +123,8 @@ class AuthControllerTest {
         SignupRequest request = new SignupRequest(
                 "invalid-email",
                 "password123",
-                "사용자"
+                "사용자",
+                testUniversity.getId()
         );
 
         // when & then
@@ -120,7 +141,8 @@ class AuthControllerTest {
         SignupRequest request = new SignupRequest(
                 "user@example.com",
                 "123",  // 6자 미만
-                "사용자"
+                "사용자",
+                testUniversity.getId()
         );
 
         // when & then
@@ -137,7 +159,8 @@ class AuthControllerTest {
         User user = User.createLocalUser(
                 "test@example.com",
                 "테스트사용자",
-                passwordEncoder.encode("password123")
+                passwordEncoder.encode("password123"),
+                testUniversity
         );
         userRepository.save(user);
 
@@ -156,7 +179,9 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.user.id").isNumber())
                 .andExpect(jsonPath("$.user.email").value("test@example.com"))
                 .andExpect(jsonPath("$.user.name").value("테스트사용자"))
-                .andExpect(jsonPath("$.user.role").value("USER"));
+                .andExpect(jsonPath("$.user.role").value("USER"))
+                .andExpect(jsonPath("$.user.universityId").value(testUniversity.getId()))
+                .andExpect(jsonPath("$.user.universityName").value("테스트대학교"));
     }
 
     @Test
@@ -182,7 +207,8 @@ class AuthControllerTest {
         User user = User.createLocalUser(
                 "test@example.com",
                 "테스트사용자",
-                passwordEncoder.encode("password123")
+                passwordEncoder.encode("password123"),
+                testUniversity
         );
         userRepository.save(user);
 

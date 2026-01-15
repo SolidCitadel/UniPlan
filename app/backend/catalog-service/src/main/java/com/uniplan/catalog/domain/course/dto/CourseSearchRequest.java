@@ -8,6 +8,9 @@ import lombok.Data;
 @Data
 public class CourseSearchRequest {
 
+    // University filter (required)
+    private Long universityId;
+
     // Basic filters
     private Integer openingYear;
     private String semester;

@@ -38,5 +38,11 @@ public class AuthResponse {
 
         @Schema(description = "사용자 역할", example = "USER")
         private String role;
+
+        @Schema(description = "대학 ID")
+        private Long universityId;
+
+        @Schema(description = "대학 이름")
+        private String universityName;
     }
 }

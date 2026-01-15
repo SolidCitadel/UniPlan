@@ -5,6 +5,9 @@ export const courseApi = {
   search: async (params: CourseSearchParams = {}): Promise<Page<Course>> => {
     const response = await apiClient.get<Page<Course>>(API_ENDPOINTS.COURSES, {
       params: {
+        universityId: params.universityId,
+        openingYear: params.openingYear,
+        semester: params.semester,
         courseName: params.query,
         professor: params.professor,
         departmentName: params.departmentName,

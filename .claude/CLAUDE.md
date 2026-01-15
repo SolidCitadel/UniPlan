@@ -31,7 +31,12 @@ scripts/              # 크롤러/유틸리티 (Python, uv)
 ### JWT 인증
 - 헤더: `Authorization: Bearer {token}`
 - Gateway가 검증 후 `X-User-Id`, `X-User-Email` 헤더 추가
-- 인증 불필요: `/api/v1/auth/**`
+- 인증 불필요: `/api/v1/auth/**`, `/api/v1/universities/**`
+
+### 멀티 대학 지원
+- 회원가입 시 대학 선택 필수 (`universityId`)
+- 강의 검색 시 대학 + 학기로 필터링
+- 프론트엔드 학기 선택은 localStorage에 저장
 
 ## 작업 원칙
 

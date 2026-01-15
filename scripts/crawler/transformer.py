@@ -17,6 +17,7 @@ import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from crawler.data_parser import KHUDataParser
+from config.khu_config import UNIVERSITY_ID
 
 
 def main():
@@ -89,6 +90,7 @@ def main():
 
         # 3. 변환
         print("Step 3: Transforming courses...")
+        print(f"  Using university_id: {UNIVERSITY_ID}")
         transformed_courses = KHUDataParser.parse_courses(
             raw_courses=raw_courses,
             year=year,
@@ -97,7 +99,8 @@ def main():
                 'colleges': colleges,
                 'departments': departments,
                 'courseTypes': course_types
-            }
+            },
+            university_id=UNIVERSITY_ID
         )
 
         print(f"Transformed {len(transformed_courses)} courses")

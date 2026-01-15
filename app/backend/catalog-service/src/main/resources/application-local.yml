@@ -6,9 +6,14 @@ spring:
     username: user
     password: password
 
+  sql:
+    init:
+      mode: always
+
   jpa:
     hibernate:
       ddl-auto: update  # 개발: update (데이터 유지), 운영: validate
+    defer-datasource-initialization: true
     show-sql: true
     properties:
       hibernate:

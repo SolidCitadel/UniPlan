@@ -126,7 +126,7 @@ class KHUDataParser:
         return ""
 
     @classmethod
-    def parse_course(cls, raw_course: Dict, year: int, semester: int, metadata: Dict) -> Dict:
+    def parse_course(cls, raw_course: Dict, year: int, semester: int, metadata: Dict, university_id: int = None) -> Dict:
         """
         경희대 API 응답 → catalog-service 형식 변환
 
@@ -135,6 +135,7 @@ class KHUDataParser:
             year: 개설년도
             semester: 학기 (1 또는 2)
             metadata: 메타데이터 (colleges, departments, courseTypes)
+            university_id: 대학 ID (catalog-service의 University 테이블 ID)
 
         Returns:
             catalog-service Course 엔티티 형식의 딕셔너리
@@ -157,7 +158,7 @@ class KHUDataParser:
             course_code = raw_course.get('subjt_cd', '')
             section = ''
 
-        return {
+        result = {
             "openingYear": year,
             "semester": cls.normalize_semester(semester),
             "targetGrade": cls.extract_target_grade(raw_course),
@@ -174,8 +175,14 @@ class KHUDataParser:
             "notes": raw_course.get('bigo', '').strip()
         }
 
+        # university_id가 제공된 경우 추가
+        if university_id is not None:
+            result["universityId"] = university_id
+
+        return result
+
     @classmethod
-    def parse_courses(cls, raw_courses: List[Dict], year: int, semester: int, metadata: Dict) -> List[Dict]:
+    def parse_courses(cls, raw_courses: List[Dict], year: int, semester: int, metadata: Dict, university_id: int = None) -> List[Dict]:
         """
         여러 강의 데이터를 일괄 변환 (중복 제거 및 학과 목록 병합)
 
@@ -184,6 +191,7 @@ class KHUDataParser:
             year: 개설년도
             semester: 학기 (1 또는 2)
             metadata: 메타데이터 (colleges, departments, courseTypes)
+            university_id: 대학 ID (catalog-service의 University 테이블 ID)
 
         Returns:
             변환된 강의 목록 (학과 중복 제거 및 병합)
@@ -192,7 +200,7 @@ class KHUDataParser:
         parsed_courses = []
         for raw in raw_courses:
             try:
-                parsed = cls.parse_course(raw, year, semester, metadata)
+                parsed = cls.parse_course(raw, year, semester, metadata, university_id)
                 parsed_courses.append(parsed)
             except Exception as e:
                 print(f"Failed to parse course: {e}")

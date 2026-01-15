@@ -1,5 +1,6 @@
 package com.uniplan.user.domain.user.entity;
 
+import com.uniplan.user.domain.university.entity.University;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -47,6 +48,10 @@ public class User {
     @Builder.Default
     private UserStatus status = UserStatus.ACTIVE;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "university_id", nullable = false)
+    private University university;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -81,11 +86,12 @@ public class User {
     /**
      * 로컬 회원가입용 생성자 헬퍼
      */
-    public static User createLocalUser(String email, String name, String password) {
+    public static User createLocalUser(String email, String name, String password, University university) {
         return User.builder()
                 .email(email)
                 .name(name)
                 .password(password)
+                .university(university)
                 .role(UserRole.USER)
                 .status(UserStatus.ACTIVE)
                 .build();

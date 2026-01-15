@@ -3,6 +3,8 @@ package com.uniplan.user.domain.auth.service;
 import com.uniplan.user.domain.auth.dto.AuthResponse;
 import com.uniplan.user.domain.auth.dto.LoginRequest;
 import com.uniplan.user.domain.auth.dto.SignupRequest;
+import com.uniplan.user.domain.university.entity.University;
+import com.uniplan.user.domain.university.repository.UniversityRepository;
 import com.uniplan.user.domain.user.entity.User;
 import com.uniplan.user.domain.user.entity.UserRole;
 import com.uniplan.user.domain.user.repository.UserRepository;
@@ -31,6 +33,9 @@ class AuthServiceTest {
     private UserRepository userRepository;
 
     @Mock
+    private UniversityRepository universityRepository;
+
+    @Mock
     private PasswordEncoder passwordEncoder;
 
     @Mock
@@ -42,13 +47,21 @@ class AuthServiceTest {
     private SignupRequest signupRequest;
     private LoginRequest loginRequest;
     private User user;
+    private University university;
 
     @BeforeEach
     void setUp() {
+        university = University.builder()
+                .id(1L)
+                .name("테스트대학교")
+                .code("TEST")
+                .build();
+
         signupRequest = new SignupRequest(
                 "test@example.com",
                 "password123",
-                "테스트사용자"
+                "테스트사용자",
+                1L  // universityId
         );
 
         loginRequest = new LoginRequest(
@@ -62,6 +75,7 @@ class AuthServiceTest {
                 .name("테스트사용자")
                 .password("encodedPassword")
                 .role(UserRole.USER)
+                .university(university)
                 .build();
     }
 
@@ -70,6 +84,7 @@ class AuthServiceTest {
     void signup_Success() {
         // given
         given(userRepository.existsByEmail(anyString())).willReturn(false);
+        given(universityRepository.findById(anyLong())).willReturn(Optional.of(university));
         given(passwordEncoder.encode(anyString())).willReturn("encodedPassword");
         given(userRepository.save(any(User.class))).willReturn(user);
         given(jwtTokenProvider.createAccessToken(anyLong(), anyString(), anyString()))
@@ -89,8 +104,11 @@ class AuthServiceTest {
         assertThat(response.getUser().getEmail()).isEqualTo("test@example.com");
         assertThat(response.getUser().getName()).isEqualTo("테스트사용자");
         assertThat(response.getUser().getRole()).isEqualTo("USER");
+        assertThat(response.getUser().getUniversityId()).isEqualTo(1L);
+        assertThat(response.getUser().getUniversityName()).isEqualTo("테스트대학교");
 
         then(userRepository).should().existsByEmail("test@example.com");
+        then(universityRepository).should().findById(1L);
         then(passwordEncoder).should().encode("password123");
         then(userRepository).should().save(any(User.class));
     }
@@ -115,7 +133,7 @@ class AuthServiceTest {
     @DisplayName("로그인 성공")
     void login_Success() {
         // given
-        given(userRepository.findByEmail(anyString())).willReturn(Optional.of(user));
+        given(userRepository.findByEmailWithUniversity(anyString())).willReturn(Optional.of(user));
         given(passwordEncoder.matches(anyString(), anyString())).willReturn(true);
         given(jwtTokenProvider.createAccessToken(anyLong(), anyString(), anyString()))
                 .willReturn("accessToken");
@@ -133,8 +151,10 @@ class AuthServiceTest {
         assertThat(response.getUser().getId()).isEqualTo(1L);
         assertThat(response.getUser().getEmail()).isEqualTo("test@example.com");
         assertThat(response.getUser().getRole()).isEqualTo("USER");
+        assertThat(response.getUser().getUniversityId()).isEqualTo(1L);
+        assertThat(response.getUser().getUniversityName()).isEqualTo("테스트대학교");
 
-        then(userRepository).should().findByEmail("test@example.com");
+        then(userRepository).should().findByEmailWithUniversity("test@example.com");
         then(passwordEncoder).should().matches("password123", "encodedPassword");
     }
 
@@ -142,14 +162,14 @@ class AuthServiceTest {
     @DisplayName("로그인 실패 - 존재하지 않는 이메일")
     void login_Fail_UserNotFound() {
         // given
-        given(userRepository.findByEmail(anyString())).willReturn(Optional.empty());
+        given(userRepository.findByEmailWithUniversity(anyString())).willReturn(Optional.empty());
 
         // when & then
         assertThatThrownBy(() -> authService.login(loginRequest))
                 .isInstanceOf(AuthenticationException.class)
                 .hasMessage("이메일 또는 비밀번호가 올바르지 않습니다");
 
-        then(userRepository).should().findByEmail("test@example.com");
+        then(userRepository).should().findByEmailWithUniversity("test@example.com");
         then(passwordEncoder).should(never()).matches(anyString(), anyString());
     }
 
@@ -157,7 +177,7 @@ class AuthServiceTest {
     @DisplayName("로그인 실패 - 비밀번호 불일치")
     void login_Fail_InvalidPassword() {
         // given
-        given(userRepository.findByEmail(anyString())).willReturn(Optional.of(user));
+        given(userRepository.findByEmailWithUniversity(anyString())).willReturn(Optional.of(user));
         given(passwordEncoder.matches(anyString(), anyString())).willReturn(false);
 
         // when & then
@@ -165,7 +185,7 @@ class AuthServiceTest {
                 .isInstanceOf(AuthenticationException.class)
                 .hasMessage("이메일 또는 비밀번호가 올바르지 않습니다");
 
-        then(userRepository).should().findByEmail("test@example.com");
+        then(userRepository).should().findByEmailWithUniversity("test@example.com");
         then(passwordEncoder).should().matches("password123", "encodedPassword");
     }
 }

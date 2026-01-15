@@ -85,25 +85,13 @@ services:
       SERVICES_CATALOG_SERVICE_URI: http://catalog-service:8083
       JWT_SECRET: local-dev-jwt-secret-32bytes-long-123456
     ports:
-      - "8180:8080"
+      - "8080:8080"
     depends_on:
       user-service:
         condition: service_started
       planner-service:
         condition: service_started
       catalog-service:
-        condition: service_started
-
-  frontend:
-    build:
-      context: .
-      dockerfile: docker/frontend.Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: http://localhost:8180
-    ports:
-      - "3000:3000"
-    depends_on:
-      api-gateway:
         condition: service_started
 
 volumes:

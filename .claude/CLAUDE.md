@@ -54,8 +54,8 @@ cd app/frontend && npm install && npm run dev
 # E2E 테스트
 cd tests/e2e && uv sync && uv run pytest -v
 
-# Docker (올인원)
-docker compose up --build        # API: :8180, Frontend: :3000
+# Docker (백엔드)
+docker compose up --build        # API: :8080
 docker compose -f docker-compose.test.yml up  # 테스트용 (API: :8280)
 ```
 

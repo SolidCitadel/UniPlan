@@ -53,6 +53,8 @@ public class ScenarioResponse {
             builder.childScenarios(scenario.getChildScenarios().stream()
                     .map(child -> ScenarioResponse.from(child, courseMap, false))
                     .collect(Collectors.toList()));
+        } else {
+            builder.childScenarios(List.of());
         }
 
         return builder.build();

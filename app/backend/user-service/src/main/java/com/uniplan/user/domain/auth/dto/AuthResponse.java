@@ -19,16 +19,24 @@ public class AuthResponse {
     @Schema(description = "리프레시 토큰 (JWT)")
     private String refreshToken;
 
-    @Schema(description = "토큰 타입", example = "Bearer")
-    @Builder.Default
-    private String tokenType = "Bearer";
+    @Schema(description = "사용자 정보")
+    private UserInfo user;
 
-    @Schema(description = "사용자 ID")
-    private Long userId;
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class UserInfo {
+        @Schema(description = "사용자 ID")
+        private Long id;
 
-    @Schema(description = "사용자 이메일")
-    private String email;
+        @Schema(description = "사용자 이메일")
+        private String email;
 
-    @Schema(description = "사용자 이름")
-    private String name;
+        @Schema(description = "사용자 이름")
+        private String name;
+
+        @Schema(description = "사용자 역할", example = "USER")
+        private String role;
+    }
 }

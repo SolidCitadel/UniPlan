@@ -9,6 +9,7 @@ import com.uniplan.planner.domain.timetable.entity.TimetableItem;
 import com.uniplan.planner.domain.timetable.repository.TimetableRepository;
 import com.uniplan.planner.global.client.CatalogClient;
 import com.uniplan.planner.global.client.dto.CourseFullResponse;
+import com.uniplan.planner.global.exception.AlternativeScenarioNotFoundException;
 import com.uniplan.planner.global.exception.ScenarioNotFoundException;
 import com.uniplan.planner.global.exception.TimetableNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -61,14 +62,14 @@ public class ScenarioService {
     @Transactional
     public ScenarioResponse createAlternativeScenario(Long userId, Long parentScenarioId,
                                                      CreateAlternativeScenarioRequest request) {
+        // 부모 시나리오 조회 (먼저 확인)
+        Scenario parentScenario = scenarioRepository.findByIdAndUserId(parentScenarioId, userId)
+                .orElseThrow(() -> new ScenarioNotFoundException(parentScenarioId));
+
         // 시간표 정보 검증
         if (request.getExistingTimetableId() == null && request.getTimetableRequest() == null) {
             throw new IllegalArgumentException("existingTimetableId 또는 timetableRequest 중 하나는 필수입니다");
         }
-
-        // 부모 시나리오 조회
-        Scenario parentScenario = scenarioRepository.findByIdAndUserId(parentScenarioId, userId)
-                .orElseThrow(() -> new ScenarioNotFoundException(parentScenarioId));
 
         // 시간표 생성 또는 기존 시간표 사용
         Timetable timetable;
@@ -188,9 +189,7 @@ public class ScenarioService {
         // 실패한 강의들에 대한 대안 시나리오 찾기
         Scenario nextScenario = scenarioRepository.findAlternativeScenario(
                 currentScenarioId, request.getFailedCourseIds()
-        ).orElseThrow(() -> new RuntimeException(
-                "강의 " + request.getFailedCourseIds() + " 실패에 대한 대안 시나리오가 없습니다"
-        ));
+        ).orElseThrow(() -> new AlternativeScenarioNotFoundException(request.getFailedCourseIds()));
 
         Set<Long> courseIds = new HashSet<>();
         collectCourseIds(nextScenario, courseIds);

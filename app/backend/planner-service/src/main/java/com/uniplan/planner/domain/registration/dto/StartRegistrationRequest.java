@@ -12,6 +12,8 @@ import lombok.NoArgsConstructor;
 @Builder
 public class StartRegistrationRequest {
 
+    private String name;
+
     @NotNull(message = "시작 시나리오 ID는 필수입니다")
     private Long scenarioId;
 }

@@ -66,10 +66,10 @@ class AuthControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.accessToken").isNotEmpty())
                 .andExpect(jsonPath("$.refreshToken").isNotEmpty())
-                .andExpect(jsonPath("$.tokenType").value("Bearer"))
-                .andExpect(jsonPath("$.email").value("newuser@example.com"))
-                .andExpect(jsonPath("$.name").value("신규사용자"))
-                .andExpect(jsonPath("$.userId").isNumber());
+                .andExpect(jsonPath("$.user.id").isNumber())
+                .andExpect(jsonPath("$.user.email").value("newuser@example.com"))
+                .andExpect(jsonPath("$.user.name").value("신규사용자"))
+                .andExpect(jsonPath("$.user.role").value("USER"));
     }
 
     @Test
@@ -153,9 +153,10 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").isNotEmpty())
                 .andExpect(jsonPath("$.refreshToken").isNotEmpty())
-                .andExpect(jsonPath("$.tokenType").value("Bearer"))
-                .andExpect(jsonPath("$.email").value("test@example.com"))
-                .andExpect(jsonPath("$.name").value("테스트사용자"));
+                .andExpect(jsonPath("$.user.id").isNumber())
+                .andExpect(jsonPath("$.user.email").value("test@example.com"))
+                .andExpect(jsonPath("$.user.name").value("테스트사용자"))
+                .andExpect(jsonPath("$.user.role").value("USER"));
     }
 
     @Test

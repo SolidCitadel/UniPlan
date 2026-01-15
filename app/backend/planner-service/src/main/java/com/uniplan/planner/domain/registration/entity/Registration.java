@@ -28,6 +28,9 @@ public class Registration {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    @Column(name = "name")
+    private String name;
+
     // 시작 시나리오 (Plan A)
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "start_scenario_id", nullable = false)

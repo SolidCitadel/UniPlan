@@ -5,6 +5,7 @@ import com.uniplan.catalog.domain.course.dto.CourseSearchRequest;
 import com.uniplan.catalog.domain.course.entity.Course;
 import com.uniplan.catalog.domain.course.repository.CourseRepository;
 import com.uniplan.catalog.domain.course.repository.CourseSpecification;
+import com.uniplan.catalog.global.exception.CourseNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -47,7 +48,7 @@ public class CourseQueryService {
      */
     public CourseResponse getCourseById(Long id) {
         Course course = courseRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Course not found: " + id));
+            .orElseThrow(() -> new CourseNotFoundException(id));
 
         return CourseResponse.from(course);
     }

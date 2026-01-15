@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { wishlistApi } from '@/lib/api';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/error';
 
 export default function WishlistPage() {
   const queryClient = useQueryClient();
@@ -21,6 +22,9 @@ export default function WishlistPage() {
       queryClient.invalidateQueries({ queryKey: ['wishlist'] });
       toast.success('삭제되었습니다');
     },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, '삭제 실패'));
+    },
   });
 
   const updatePriority = useMutation({
@@ -29,6 +33,9 @@ export default function WishlistPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wishlist'] });
       toast.success('우선순위가 변경되었습니다');
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, '우선순위 변경 실패'));
     },
   });
 

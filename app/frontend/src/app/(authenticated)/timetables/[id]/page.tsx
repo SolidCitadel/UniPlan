@@ -17,6 +17,7 @@ import { timetableApi, wishlistApi } from '@/lib/api';
 import { WeeklyGrid, hasOverlap } from '@/components/timetable/weekly-grid';
 import type { WishlistItem, TimetableItem, ClassTime } from '@/types';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/error';
 
 type EditorTab = 'available' | 'conflicts' | 'excluded';
 
@@ -50,7 +51,7 @@ export default function TimetableDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['timetables'] });
       toast.success('과목이 추가되었습니다');
     },
-    onError: () => toast.error('과목 추가 실패'),
+    onError: (error) => toast.error(getErrorMessage(error, '과목 추가 실패')),
   });
 
   const removeCourseMutation = useMutation({
@@ -60,7 +61,7 @@ export default function TimetableDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['timetables'] });
       toast.success('과목이 제거되었습니다');
     },
-    onError: () => toast.error('과목 제거 실패'),
+    onError: (error) => toast.error(getErrorMessage(error, '과목 제거 실패')),
   });
 
   const createAltMutation = useMutation({
@@ -77,7 +78,7 @@ export default function TimetableDetailPage() {
       setExcluded(new Set());
       router.push(`/timetables/${newTimetable.id}`);
     },
-    onError: () => toast.error('대안 시간표 생성 실패'),
+    onError: (error) => toast.error(getErrorMessage(error, '대안 시간표 생성 실패')),
   });
 
   // Convert wishlist item to timetable item for preview

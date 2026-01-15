@@ -7,6 +7,12 @@ export interface Page<T> {
   totalPages: number;
 }
 
+// API Error Response
+export interface ApiError {
+  status: number;
+  message: string;
+}
+
 export interface ClassTime {
   day: string;
   startTime: string;
@@ -51,10 +57,13 @@ export interface Course {
   credits: number;
   classroom?: string;
   campus: string;
+  notes?: string;
   departmentCode?: string;
   departmentName?: string;
   collegeCode?: string;
   collegeName?: string;
+  courseTypeCode?: string;
+  courseTypeName?: string;
   classTimes: ClassTime[];
 }
 
@@ -72,12 +81,14 @@ export interface CourseSearchParams {
 // Wishlist
 export interface WishlistItem {
   id: number;
+  userId: number;
   courseId: number;
   courseName: string;
   professor: string;
   priority: number;
   classroom?: string;
   classTimes: ClassTime[];
+  addedAt: string;
 }
 
 export interface AddWishlistRequest {
@@ -89,27 +100,37 @@ export interface AddWishlistRequest {
 export interface TimetableItem {
   id: number;
   courseId: number;
+  courseCode?: string;
   courseName: string;
   professor: string;
+  credits?: number;
   classroom?: string;
+  campus?: string;
   classTimes: ClassTime[];
+  addedAt?: string;
 }
 
 export interface TimetableCourse {
   courseId: number;
+  courseCode?: string;
   courseName: string;
   professor: string;
+  credits?: number;
   classroom?: string;
+  campus?: string;
   classTimes: ClassTime[];
 }
 
 export interface Timetable {
   id: number;
+  userId: number;
   name: string;
   openingYear: number;
   semester: string;
-  excludedCourses: TimetableCourse[];
+  createdAt: string;
+  updatedAt: string;
   items: TimetableItem[];
+  excludedCourses: TimetableCourse[];
 }
 
 export interface CreateTimetableRequest {
@@ -132,13 +153,16 @@ export interface CreateAlternativeRequest {
 // Scenario
 export interface Scenario {
   id: number;
+  userId: number;
   name: string;
   description?: string;
-  parentId?: number;
-  timetableId: number;
-  timetable: Timetable;
+  parentScenarioId?: number;
   failedCourseIds: number[];
-  children: Scenario[];
+  orderIndex?: number;
+  timetable: Timetable;
+  childScenarios: Scenario[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateScenarioRequest {
@@ -154,7 +178,7 @@ export interface CreateAlternativeScenarioRequest {
 }
 
 // Registration
-export type RegistrationStatus = 'inProgress' | 'completed' | 'cancelled';
+export type RegistrationStatus = 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 
 export interface RegistrationStep {
   id: number;
@@ -166,6 +190,7 @@ export interface RegistrationStep {
   nextScenarioId?: number;
   nextScenarioName?: string;
   notes?: string;
+  timestamp: string;
 }
 
 export interface Registration {
@@ -175,6 +200,8 @@ export interface Registration {
   startScenario: Scenario;
   currentScenario: Scenario;
   status: RegistrationStatus;
+  startedAt: string;
+  completedAt?: string;
   succeededCourses: number[];
   failedCourses: number[];
   canceledCourses: number[];
@@ -182,7 +209,7 @@ export interface Registration {
 }
 
 export interface CreateRegistrationRequest {
-  name: string;
+  name?: string;
   scenarioId: number;
 }
 

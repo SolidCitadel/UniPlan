@@ -15,6 +15,7 @@ import {
 import { scenarioApi, timetableApi } from '@/lib/api';
 import type { Scenario, Timetable, TimetableItem } from '@/types';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/error';
 import { cn } from '@/lib/utils';
 
 export default function ScenarioDetailPage() {
@@ -54,7 +55,7 @@ export default function ScenarioDetailPage() {
       setExcludedCourseIds(new Set());
       router.push(`/scenarios/${newScenario.id}`);
     },
-    onError: () => toast.error('생성 실패'),
+    onError: (error) => toast.error(getErrorMessage(error, '대안 시나리오 생성 실패')),
   });
 
   const deleteMutation = useMutation({
@@ -64,13 +65,13 @@ export default function ScenarioDetailPage() {
       toast.success('시나리오가 삭제되었습니다');
       router.push('/scenarios');
     },
-    onError: () => toast.error('삭제 실패'),
+    onError: (error) => toast.error(getErrorMessage(error, '시나리오 삭제 실패')),
   });
 
   // Get base timetable
   const baseTimetable = useMemo(() => {
     if (!scenario) return null;
-    return timetables.find((t) => t.id === scenario.timetableId) ?? null;
+    return timetables.find((t) => t.id === scenario.timetable.id) ?? null;
   }, [scenario, timetables]);
 
   // Get compatible timetables (don't contain excluded courses)
@@ -339,7 +340,7 @@ function ScenarioTreeNode({
         )}
       </div>
 
-      {scenario.children.map((child) => (
+      {scenario.childScenarios.map((child) => (
         <ScenarioTreeNode
           key={child.id}
           scenario={child}

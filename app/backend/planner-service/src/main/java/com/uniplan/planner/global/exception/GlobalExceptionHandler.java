@@ -19,6 +19,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
+    @ExceptionHandler(CourseNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleCourseNotFoundException(CourseNotFoundException e) {
+        ErrorResponse error = new ErrorResponse(HttpStatus.NOT_FOUND.value(), e.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
     @ExceptionHandler(DuplicateCourseException.class)
     public ResponseEntity<ErrorResponse> handleDuplicateCourseException(DuplicateCourseException e) {
         ErrorResponse error = new ErrorResponse(HttpStatus.CONFLICT.value(), e.getMessage());
@@ -33,6 +39,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ScenarioNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleScenarioNotFoundException(ScenarioNotFoundException e) {
+        ErrorResponse error = new ErrorResponse(HttpStatus.NOT_FOUND.value(), e.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(AlternativeScenarioNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleAlternativeScenarioNotFoundException(AlternativeScenarioNotFoundException e) {
         ErrorResponse error = new ErrorResponse(HttpStatus.NOT_FOUND.value(), e.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }

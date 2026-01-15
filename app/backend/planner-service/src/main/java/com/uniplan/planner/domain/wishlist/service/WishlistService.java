@@ -6,6 +6,7 @@ import com.uniplan.planner.domain.wishlist.entity.WishlistItem;
 import com.uniplan.planner.domain.wishlist.repository.WishlistItemRepository;
 import com.uniplan.planner.global.client.CatalogClient;
 import com.uniplan.planner.global.client.dto.CourseFullResponse;
+import com.uniplan.planner.global.exception.CourseNotFoundException;
 import com.uniplan.planner.global.exception.DuplicateWishlistItemException;
 import com.uniplan.planner.global.exception.WishlistItemNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,12 @@ public class WishlistService {
 
     @Transactional
     public WishlistItemResponse addToWishlist(Long userId, AddToWishlistRequest request) {
+        // 강의 존재 확인
+        CourseFullResponse course = catalogClient.getFullCourseById(request.getCourseId());
+        if (course == null) {
+            throw new CourseNotFoundException(request.getCourseId());
+        }
+
         // 중복 체크
         if (wishlistItemRepository.existsByUserIdAndCourseId(userId, request.getCourseId())) {
             throw new DuplicateWishlistItemException(request.getCourseId());
@@ -77,5 +84,14 @@ public class WishlistService {
 
     public boolean isInWishlist(Long userId, Long courseId) {
         return wishlistItemRepository.existsByUserIdAndCourseId(userId, courseId);
+    }
+
+    @Transactional
+    public WishlistItemResponse updatePriority(Long userId, Long courseId, Integer priority) {
+        WishlistItem item = wishlistItemRepository.findByUserIdAndCourseId(userId, courseId)
+                .orElseThrow(() -> new WishlistItemNotFoundException(courseId));
+
+        item.updatePriority(priority);
+        return WishlistItemResponse.from(item);
     }
 }

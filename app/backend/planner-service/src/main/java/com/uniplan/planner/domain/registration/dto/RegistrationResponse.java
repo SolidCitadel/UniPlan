@@ -22,6 +22,7 @@ public class RegistrationResponse {
 
     private Long id;
     private Long userId;
+    private String name;
     private ScenarioResponse startScenario;
     private ScenarioResponse currentScenario;
     private RegistrationStatus status;
@@ -36,6 +37,7 @@ public class RegistrationResponse {
         return RegistrationResponse.builder()
                 .id(registration.getId())
                 .userId(registration.getUserId())
+                .name(registration.getName())
                 .startScenario(ScenarioResponse.fromWithFullTree(registration.getStartScenario(), courseMap))
                 .currentScenario(ScenarioResponse.fromWithFullTree(registration.getCurrentScenario(), courseMap))
                 .status(registration.getStatus())

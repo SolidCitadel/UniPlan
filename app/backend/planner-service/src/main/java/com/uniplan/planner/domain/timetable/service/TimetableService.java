@@ -7,6 +7,7 @@ import com.uniplan.planner.domain.timetable.repository.TimetableItemRepository;
 import com.uniplan.planner.domain.timetable.repository.TimetableRepository;
 import com.uniplan.planner.global.client.CatalogClient;
 import com.uniplan.planner.global.client.dto.CourseFullResponse;
+import com.uniplan.planner.global.exception.CourseNotFoundException;
 import com.uniplan.planner.global.exception.DuplicateCourseException;
 import com.uniplan.planner.global.exception.ExcludedCourseException;
 import com.uniplan.planner.global.exception.TimetableNotFoundException;
@@ -159,6 +160,12 @@ public class TimetableService {
         Timetable timetable = timetableRepository.findByIdAndUserId(timetableId, userId)
                 .orElseThrow(() -> new TimetableNotFoundException(timetableId));
 
+        // 강의 존재 확인
+        CourseFullResponse course = catalogClient.getFullCourseById(request.getCourseId());
+        if (course == null) {
+            throw new CourseNotFoundException(request.getCourseId());
+        }
+
         // 제외된 과목 체크
         if (timetable.getExcludedCourseIds().contains(request.getCourseId())) {
             throw new ExcludedCourseException(request.getCourseId());
@@ -176,35 +183,30 @@ public class TimetableService {
 
         TimetableItem savedItem = timetableItemRepository.save(item);
 
-        // Fetch full course details
-        CourseFullResponse course = catalogClient.getFullCourseById(request.getCourseId());
-        if (course != null) {
-            List<TimetableItemResponse.ClassTimeInfo> classTimes = List.of();
-            if (course.getClassTimes() != null) {
-                classTimes = course.getClassTimes().stream()
-                        .map(ct -> TimetableItemResponse.ClassTimeInfo.builder()
-                                .day(ct.getDay())
-                                .startTime(ct.getStartTime())
-                                .endTime(ct.getEndTime())
-                                .build())
-                        .collect(Collectors.toList());
-            }
-
-            return TimetableItemResponse.builder()
-                    .id(savedItem.getId())
-                    .courseId(savedItem.getCourseId())
-                    .courseCode(course.getCourseCode())
-                    .courseName(course.getCourseName())
-                    .professor(course.getProfessor())
-                    .credits(course.getCredits())
-                    .classroom(course.getClassroom())
-                    .campus(course.getCampus())
-                    .classTimes(classTimes)
-                    .addedAt(savedItem.getAddedAt())
-                    .build();
-        } else {
-            return TimetableItemResponse.from(savedItem);
+        // course details 사용 (이미 조회됨)
+        List<TimetableItemResponse.ClassTimeInfo> classTimes = List.of();
+        if (course.getClassTimes() != null) {
+            classTimes = course.getClassTimes().stream()
+                    .map(ct -> TimetableItemResponse.ClassTimeInfo.builder()
+                            .day(ct.getDay())
+                            .startTime(ct.getStartTime())
+                            .endTime(ct.getEndTime())
+                            .build())
+                    .collect(Collectors.toList());
         }
+
+        return TimetableItemResponse.builder()
+                .id(savedItem.getId())
+                .courseId(savedItem.getCourseId())
+                .courseCode(course.getCourseCode())
+                .courseName(course.getCourseName())
+                .professor(course.getProfessor())
+                .credits(course.getCredits())
+                .classroom(course.getClassroom())
+                .campus(course.getCampus())
+                .classTimes(classTimes)
+                .addedAt(savedItem.getAddedAt())
+                .build();
     }
 
     @Transactional

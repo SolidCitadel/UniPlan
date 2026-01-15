@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/error';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -22,7 +23,7 @@ export default function LoginPage() {
       await login(email, password);
       toast.success('로그인 성공!');
     } catch (error) {
-      toast.error('로그인 실패. 이메일과 비밀번호를 확인해주세요.');
+      toast.error(getErrorMessage(error, '로그인 실패'));
     } finally {
       setIsLoading(false);
     }

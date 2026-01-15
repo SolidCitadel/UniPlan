@@ -27,13 +27,13 @@ class TestScenario:
         # 시나리오 생성
         response = auth_client.post(
             Endpoints.SCENARIOS,
-            json={"name": "Plan A", "timetableId": timetable_id}
+            json={"name": "Plan A", "existingTimetableId": timetable_id}
         )
         assert response.status_code in (200, 201)
 
         data = response.json()
         assert data["name"] == "Plan A"
-        assert data["timetableId"] == timetable_id
+        assert data["timetable"]["id"] == timetable_id
 
     def test_get_scenarios(self, auth_client: ApiClient):
         """시나리오 목록 조회"""
@@ -125,7 +125,7 @@ class TestScenario:
 
         response = auth_client.post(
             Endpoints.SCENARIOS,
-            json={"name": "삭제용 시나리오", "timetableId": timetable_id}
+            json={"name": "삭제용 시나리오", "existingTimetableId": timetable_id}
         )
         if response.status_code not in (200, 201):
             pytest.skip("시나리오 생성 실패")
@@ -141,7 +141,7 @@ class TestScenario:
         """존재하지 않는 시간표로 시나리오 생성"""
         response = auth_client.post(
             Endpoints.SCENARIOS,
-            json={"name": "Invalid", "timetableId": 999999999}
+            json={"name": "Invalid", "existingTimetableId": 999999999}
         )
         assert response.status_code in (400, 404)
 
@@ -160,7 +160,7 @@ class TestScenario:
 
         response = auth_client.post(
             f"{Endpoints.SCENARIOS}/999999999/alternatives",
-            json={"name": "Orphan", "timetableId": timetable_id, "failedCourseIds": []}
+            json={"name": "Orphan", "existingTimetableId": timetable_id, "failedCourseIds": [1]}
         )
         assert response.status_code == 404
 

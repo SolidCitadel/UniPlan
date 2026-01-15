@@ -1,6 +1,7 @@
 package com.uniplan.planner.domain.wishlist.controller;
 
 import com.uniplan.planner.domain.wishlist.dto.AddToWishlistRequest;
+import com.uniplan.planner.domain.wishlist.dto.UpdateWishlistRequest;
 import com.uniplan.planner.domain.wishlist.dto.WishlistItemResponse;
 import com.uniplan.planner.domain.wishlist.service.WishlistService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,6 +38,16 @@ public class WishlistController {
             @Parameter(hidden = true) @RequestHeader("X-User-Id") Long userId) {
         List<WishlistItemResponse> responses = wishlistService.getMyWishlist(userId);
         return ResponseEntity.ok(responses);
+    }
+
+    @Operation(summary = "희망과목 우선순위 수정", description = "희망과목의 우선순위를 수정합니다")
+    @PatchMapping("/{courseId}")
+    public ResponseEntity<WishlistItemResponse> updatePriority(
+            @Parameter(hidden = true) @RequestHeader("X-User-Id") Long userId,
+            @PathVariable Long courseId,
+            @Valid @RequestBody UpdateWishlistRequest request) {
+        WishlistItemResponse response = wishlistService.updatePriority(userId, courseId, request.getPriority());
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "희망과목 삭제", description = "강의를 희망과목에서 삭제합니다")

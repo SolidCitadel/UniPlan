@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { timetableApi } from '@/lib/api';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/error';
 import Link from 'next/link';
 
 export default function TimetablesPage() {
@@ -33,6 +34,9 @@ export default function TimetablesPage() {
       setShowCreate(false);
       setNewName('');
     },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, '시간표 생성 실패'));
+    },
   });
 
   const deleteMutation = useMutation({
@@ -40,6 +44,9 @@ export default function TimetablesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['timetables'] });
       toast.success('시간표가 삭제되었습니다');
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, '시간표 삭제 실패'));
     },
   });
 

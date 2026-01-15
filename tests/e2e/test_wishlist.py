@@ -44,11 +44,11 @@ class TestWishlist:
             pytest.skip("위시리스트가 비어있습니다")
 
         item = response.json()[0]
-        item_id = item["id"]
+        course_id = item["courseId"]
         new_priority = 3 if item.get("priority", 1) != 3 else 2
 
         response = auth_client.patch(
-            f"{Endpoints.WISHLIST}/{item_id}",
+            f"{Endpoints.WISHLIST}/{course_id}",
             json={"priority": new_priority}
         )
         assert response.status_code == 200
@@ -68,13 +68,9 @@ class TestWishlist:
         course_id = courses[0]["id"]
         auth_client.post(Endpoints.WISHLIST, json={"courseId": course_id, "priority": 5})
 
-        # 삭제할 항목 찾기
-        response = auth_client.get(Endpoints.WISHLIST)
-        items = response.json()
-        if items:
-            item_id = items[-1]["id"]
-            response = auth_client.delete(f"{Endpoints.WISHLIST}/{item_id}")
-            assert response.status_code in (200, 204)
+        # 삭제 (courseId로 삭제)
+        response = auth_client.delete(f"{Endpoints.WISHLIST}/{course_id}")
+        assert response.status_code in (200, 204)
 
     # ==================== Edge Cases ====================
 

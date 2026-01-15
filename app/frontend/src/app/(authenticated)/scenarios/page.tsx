@@ -39,9 +39,9 @@ export default function ScenariosPage() {
               <p className="text-sm text-muted-foreground">
                 기준 시간표: {scenario.timetable.name}
               </p>
-              {scenario.children.length > 0 && (
+              {scenario.childScenarios.length > 0 && (
                 <p className="text-xs text-muted-foreground">
-                  하위 시나리오 {scenario.children.length}개
+                  하위 시나리오 {scenario.childScenarios.length}개
                 </p>
               )}
             </Card>

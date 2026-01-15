@@ -41,6 +41,7 @@ public class RegistrationService {
         // 수강신청 세션 생성
         Registration registration = Registration.builder()
                 .userId(userId)
+                .name(request.getName())
                 .startScenario(startScenario)
                 .currentScenario(startScenario)
                 .status(RegistrationStatus.IN_PROGRESS)

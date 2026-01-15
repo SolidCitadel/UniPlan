@@ -7,15 +7,15 @@ import { registrationApi } from '@/lib/api';
 import Link from 'next/link';
 
 const statusLabels: Record<string, string> = {
-  inProgress: '진행 중',
-  completed: '완료',
-  cancelled: '취소됨',
+  IN_PROGRESS: '진행 중',
+  COMPLETED: '완료',
+  CANCELLED: '취소됨',
 };
 
 const statusColors: Record<string, 'default' | 'secondary' | 'destructive'> = {
-  inProgress: 'default',
-  completed: 'secondary',
-  cancelled: 'destructive',
+  IN_PROGRESS: 'default',
+  COMPLETED: 'secondary',
+  CANCELLED: 'destructive',
 };
 
 export default function RegistrationsPage() {

@@ -9,6 +9,7 @@ import { registrationApi } from '@/lib/api';
 import { WeeklyGrid } from '@/components/timetable/weekly-grid';
 import type { TimetableItem, Scenario } from '@/types';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/error';
 import { cn } from '@/lib/utils';
 
 type MarkAction = 'toSuccess' | 'toFail' | 'toPending';
@@ -53,7 +54,7 @@ export default function RegistrationDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['registration', registrationId] });
       toast.success('다음 단계가 저장되었습니다');
     },
-    onError: () => toast.error('저장 실패'),
+    onError: (error) => toast.error(getErrorMessage(error, '단계 저장 실패')),
   });
 
   const completeMutation = useMutation({
@@ -63,7 +64,7 @@ export default function RegistrationDetailPage() {
       toast.success('수강신청이 완료되었습니다');
       router.push('/registrations');
     },
-    onError: () => toast.error('완료 처리 실패'),
+    onError: (error) => toast.error(getErrorMessage(error, '완료 처리 실패')),
   });
 
   const cancelMutation = useMutation({
@@ -73,7 +74,7 @@ export default function RegistrationDetailPage() {
       toast.success('수강신청이 취소되었습니다');
       router.push('/registrations');
     },
-    onError: () => toast.error('취소 처리 실패'),
+    onError: (error) => toast.error(getErrorMessage(error, '취소 처리 실패')),
   });
 
   const deleteMutation = useMutation({
@@ -83,7 +84,7 @@ export default function RegistrationDetailPage() {
       toast.success('수강신청이 삭제되었습니다');
       router.push('/registrations');
     },
-    onError: () => toast.error('삭제 실패'),
+    onError: (error) => toast.error(getErrorMessage(error, '삭제 실패')),
   });
 
   // Collect courses from scenario
@@ -102,7 +103,7 @@ export default function RegistrationDetailPage() {
       for (const item of s.timetable.items) {
         map.set(item.courseId, item);
       }
-      for (const child of s.children) {
+      for (const child of s.childScenarios) {
         addScenario(child);
       }
     };

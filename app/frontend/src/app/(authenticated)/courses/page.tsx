@@ -14,6 +14,7 @@ import {
 import { courseApi, wishlistApi } from '@/lib/api';
 import type { Course, CourseSearchParams } from '@/types';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/error';
 
 export default function CoursesPage() {
   const queryClient = useQueryClient();
@@ -39,8 +40,8 @@ export default function CoursesPage() {
       toast.success('위시리스트에 추가되었습니다');
       setPriorityModal(null);
     },
-    onError: () => {
-      toast.error('추가 실패. 다시 시도해주세요.');
+    onError: (error) => {
+      toast.error(getErrorMessage(error, '위시리스트 추가 실패'));
     },
   });
 

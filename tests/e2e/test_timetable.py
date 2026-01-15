@@ -61,7 +61,8 @@ class TestTimetable:
         course_id = courses[0]["id"]
 
         response = auth_client.post(
-            f"{Endpoints.TIMETABLES}/{timetable_id}/courses/{course_id}"
+            f"{Endpoints.TIMETABLES}/{timetable_id}/courses",
+            json={"courseId": course_id}
         )
         # 이미 추가되었거나 시간 충돌일 수 있음
         assert response.status_code in (200, 201, 400, 409)
@@ -132,7 +133,8 @@ class TestTimetable:
         timetable_id = response.json()[0]["id"]
 
         response = auth_client.post(
-            f"{Endpoints.TIMETABLES}/{timetable_id}/courses/999999999"
+            f"{Endpoints.TIMETABLES}/{timetable_id}/courses",
+            json={"courseId": 999999999}
         )
         assert response.status_code in (400, 404)
 
@@ -149,7 +151,8 @@ class TestTimetable:
                 excluded_course_id = excluded[0]["courseId"]
 
                 response = auth_client.post(
-                    f"{Endpoints.TIMETABLES}/{timetable_id}/courses/{excluded_course_id}"
+                    f"{Endpoints.TIMETABLES}/{timetable_id}/courses",
+                    json={"courseId": excluded_course_id}
                 )
                 assert response.status_code in (400, 409), "제외된 과목은 추가 불가"
                 return

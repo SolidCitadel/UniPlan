@@ -84,9 +84,11 @@ class AuthServiceTest {
         assertThat(response).isNotNull();
         assertThat(response.getAccessToken()).isEqualTo("accessToken");
         assertThat(response.getRefreshToken()).isEqualTo("refreshToken");
-        assertThat(response.getUserId()).isEqualTo(1L);
-        assertThat(response.getEmail()).isEqualTo("test@example.com");
-        assertThat(response.getName()).isEqualTo("테스트사용자");
+        assertThat(response.getUser()).isNotNull();
+        assertThat(response.getUser().getId()).isEqualTo(1L);
+        assertThat(response.getUser().getEmail()).isEqualTo("test@example.com");
+        assertThat(response.getUser().getName()).isEqualTo("테스트사용자");
+        assertThat(response.getUser().getRole()).isEqualTo("USER");
 
         then(userRepository).should().existsByEmail("test@example.com");
         then(passwordEncoder).should().encode("password123");
@@ -127,8 +129,10 @@ class AuthServiceTest {
         assertThat(response).isNotNull();
         assertThat(response.getAccessToken()).isEqualTo("accessToken");
         assertThat(response.getRefreshToken()).isEqualTo("refreshToken");
-        assertThat(response.getUserId()).isEqualTo(1L);
-        assertThat(response.getEmail()).isEqualTo("test@example.com");
+        assertThat(response.getUser()).isNotNull();
+        assertThat(response.getUser().getId()).isEqualTo(1L);
+        assertThat(response.getUser().getEmail()).isEqualTo("test@example.com");
+        assertThat(response.getUser().getRole()).isEqualTo("USER");
 
         then(userRepository).should().findByEmail("test@example.com");
         then(passwordEncoder).should().matches("password123", "encodedPassword");

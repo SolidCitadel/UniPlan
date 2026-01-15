@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/error';
 
 export default function SignupPage() {
   const { signup } = useAuth();
@@ -35,7 +36,7 @@ export default function SignupPage() {
       await signup(email, password, name);
       toast.success('회원가입 성공!');
     } catch (error) {
-      toast.error('회원가입 실패. 다시 시도해주세요.');
+      toast.error(getErrorMessage(error, '회원가입 실패'));
     } finally {
       setIsLoading(false);
     }

@@ -37,4 +37,8 @@ public class WishlistItem {
     @CreationTimestamp
     @Column(name = "added_at", nullable = false, updatable = false)
     private LocalDateTime addedAt;
+
+    public void updatePriority(Integer priority) {
+        this.priority = priority;
+    }
 }

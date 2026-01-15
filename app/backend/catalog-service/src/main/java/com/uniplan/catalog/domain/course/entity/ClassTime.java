@@ -22,7 +22,7 @@ public class ClassTime {
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
-    @Column(nullable = false, length = 10)
+    @Column(name = "`day`", nullable = false, length = 10)
     private String day;
 
     @Column(name = "start_time", nullable = false)

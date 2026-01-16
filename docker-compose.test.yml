@@ -93,7 +93,7 @@ services:
       SERVICES_CATALOG_SERVICE_URI: http://catalog-service-test:8083
       JWT_SECRET: test-jwt-secret-32bytes-long-1234567
     ports:
-      - "8280:8080"
+      - "8080:8080"
     depends_on:
       user-service-test:
         condition: service_started

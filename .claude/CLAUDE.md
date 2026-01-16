@@ -56,12 +56,15 @@ cd app/backend && ./gradlew clean build
 # 프론트엔드
 cd app/frontend && npm install && npm run dev
 
-# E2E 테스트
+# E2E 테스트 (테스트용 컨테이너 필수)
+docker compose -f docker-compose.test.yml up -d --build
+sleep 20
 cd tests/e2e && uv sync && uv run pytest -v
+docker compose -f docker-compose.test.yml down
 
 # Docker (백엔드)
-docker compose up --build        # API: :8080
-docker compose -f docker-compose.test.yml up  # 테스트용 (API: :8280)
+docker compose up --build                      # 개발용 (API: :8080)
+docker compose -f docker-compose.test.yml up   # 테스트용 (API: :8080, tmpfs DB)
 ```
 
 ## 상세 문서

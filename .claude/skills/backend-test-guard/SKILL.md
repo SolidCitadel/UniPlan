@@ -65,9 +65,22 @@ cd app/backend
 ### E2E 테스트 (주요 API 변경 시)
 
 ```bash
+# 1. 개발 컨테이너가 떠있다면 중지
+docker compose down
+
+# 2. 테스트용 컨테이너 실행 (tmpfs로 매번 깨끗한 DB)
+docker compose -f docker-compose.test.yml up -d --build
+
+# 3. 서비스 준비 대기 (약 20초)
+sleep 20
+
+# 4. E2E 테스트 실행
 cd tests/e2e
 uv sync
 uv run pytest -v
+
+# 5. 테스트 완료 후 정리
+docker compose -f docker-compose.test.yml down
 ```
 
 **E2E 테스트 실행 조건:**

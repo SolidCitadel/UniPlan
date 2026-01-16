@@ -73,13 +73,11 @@ public class WishlistService {
     }
 
     @Transactional
-    public void removeFromWishlist(Long userId, Long courseId) {
-        // 존재 여부 확인
-        if (!wishlistItemRepository.existsByUserIdAndCourseId(userId, courseId)) {
-            throw new WishlistItemNotFoundException(courseId);
-        }
+    public void removeFromWishlist(Long userId, Long wishlistItemId) {
+        WishlistItem item = wishlistItemRepository.findByIdAndUserId(wishlistItemId, userId)
+                .orElseThrow(() -> new WishlistItemNotFoundException("위시리스트 아이템을 찾을 수 없습니다: id=" + wishlistItemId));
 
-        wishlistItemRepository.deleteByUserIdAndCourseId(userId, courseId);
+        wishlistItemRepository.delete(item);
     }
 
     public boolean isInWishlist(Long userId, Long courseId) {
@@ -87,9 +85,9 @@ public class WishlistService {
     }
 
     @Transactional
-    public WishlistItemResponse updatePriority(Long userId, Long courseId, Integer priority) {
-        WishlistItem item = wishlistItemRepository.findByUserIdAndCourseId(userId, courseId)
-                .orElseThrow(() -> new WishlistItemNotFoundException(courseId));
+    public WishlistItemResponse updatePriority(Long userId, Long wishlistItemId, Integer priority) {
+        WishlistItem item = wishlistItemRepository.findByIdAndUserId(wishlistItemId, userId)
+                .orElseThrow(() -> new WishlistItemNotFoundException("위시리스트 아이템을 찾을 수 없습니다: id=" + wishlistItemId));
 
         item.updatePriority(priority);
         return WishlistItemResponse.from(item);

@@ -144,3 +144,115 @@ class Endpoints:
 def endpoints() -> type[Endpoints]:
     """Get API endpoints."""
     return Endpoints
+
+
+@pytest.fixture(scope="session")
+def catalog_service_url() -> str:
+    """Get catalog-service URL for direct import API calls."""
+    return os.getenv("CATALOG_SERVICE_URL", "http://localhost:8083")
+
+
+@pytest.fixture(scope="session")
+def test_course(api_client: ApiClient, catalog_service_url: str) -> dict | None:
+    """Create a test course for the session via import APIs.
+    
+    Calls catalog-service directly for import, then uses API gateway to fetch.
+    Returns the created course data or None if creation fails.
+    """
+    import requests
+    
+    # 1. Import metadata (college, department, courseType) - direct to catalog-service
+    metadata_request = {
+        "year": 2026,
+        "semester": 1,
+        "crawled_at": "2026-01-17T00:00:00",
+        "colleges": {
+            "TEST_COL": {
+                "code": "TEST_COL",
+                "name": "테스트단과대학",
+                "nameEn": "Test College"
+            }
+        },
+        "departments": {
+            "TEST_DEPT": {
+                "code": "TEST_DEPT",
+                "name": "테스트학과",
+                "nameEn": "Test Department",
+                "collegeCode": "TEST_COL",
+                "level": "학부"
+            }
+        },
+        "courseTypes": {
+            "TEST_TYPE": {
+                "code": "TEST_TYPE",
+                "nameKr": "테스트과목유형",
+                "nameEn": "Test Course Type"
+            }
+        }
+    }
+    
+    try:
+        response = requests.post(
+            f"{catalog_service_url}/metadata/import",
+            json=metadata_request,
+            headers={"Content-Type": "application/json"},
+            timeout=30
+        )
+        if response.status_code != 200:
+            print(f"Metadata import failed: {response.status_code} - {response.text[:200]}")
+            return None
+    except Exception as e:
+        print(f"Metadata import error: {e}")
+        return None
+    
+    # 2. Import course - direct to catalog-service
+    course_request = [{
+        "openingYear": 2026,
+        "semester": "1학기",
+        "targetGrade": 1,
+        "courseCode": "TEST001",
+        "section": "01",
+        "courseName": "테스트과목",
+        "professor": "테스트교수",
+        "credits": 3,
+        "classroom": "테스트관 101",
+        "campus": "서울",
+        "departmentCodes": ["TEST_DEPT"],
+        "courseTypeCode": "TEST_TYPE",
+        "notes": "E2E 테스트용 과목",
+        "classTime": [
+            {"day": "월", "startTime": "09:00", "endTime": "10:30"},
+            {"day": "수", "startTime": "09:00", "endTime": "10:30"}
+        ],
+        "universityId": 1
+    }]
+    
+    try:
+        response = requests.post(
+            f"{catalog_service_url}/courses/import",
+            json=course_request,
+            headers={"Content-Type": "application/json"},
+            timeout=30
+        )
+        if response.status_code != 200:
+            print(f"Course import failed: {response.status_code} - {response.text[:200]}")
+            return None
+    except Exception as e:
+        print(f"Course import error: {e}")
+        return None
+    
+    # 3. Fetch the created course directly from catalog-service (no auth needed)
+    try:
+        response = requests.get(
+            f"{catalog_service_url}/courses?query=테스트과목&size=1",
+            timeout=10
+        )
+        if response.status_code == 200:
+            data = response.json()
+            courses = data.get("content", data) if isinstance(data, dict) else data
+            if courses:
+                return courses[0]
+    except Exception as e:
+        print(f"Course fetch error: {e}")
+    
+    return None

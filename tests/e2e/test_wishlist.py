@@ -12,18 +12,12 @@ class TestWishlist:
 
     # ==================== Happy Path ====================
 
-    def test_add_course_to_wishlist(self, auth_client: ApiClient):
+    def test_add_course_to_wishlist(self, auth_client: ApiClient, test_course: dict | None):
         """과목을 위시리스트에 추가"""
-        response = auth_client.get(f"{Endpoints.COURSES}?size=1")
-        if response.status_code != 200:
-            pytest.skip("과목 데이터가 없습니다")
+        if not test_course:
+            pytest.skip("테스트 과목이 생성되지 않았습니다")
 
-        data = response.json()
-        courses = data.get("content", data) if isinstance(data, dict) else data
-        if not courses:
-            pytest.skip("과목이 없습니다")
-
-        course_id = courses[0]["id"]
+        course_id = test_course["id"]
 
         response = auth_client.post(
             Endpoints.WISHLIST,
@@ -44,48 +38,42 @@ class TestWishlist:
             pytest.skip("위시리스트가 비어있습니다")
 
         item = response.json()[0]
-        course_id = item["courseId"]
+        item_id = item["id"]
         new_priority = 3 if item.get("priority", 1) != 3 else 2
 
         response = auth_client.patch(
-            f"{Endpoints.WISHLIST}/{course_id}",
+            f"{Endpoints.WISHLIST}/{item_id}",
             json={"priority": new_priority}
         )
         assert response.status_code == 200
 
-    def test_delete_wishlist_item(self, auth_client: ApiClient):
+    def test_delete_wishlist_item(self, auth_client: ApiClient, test_course: dict | None):
         """위시리스트 항목 삭제"""
-        # 먼저 추가
-        response = auth_client.get(f"{Endpoints.COURSES}?size=1")
-        if response.status_code != 200:
-            pytest.skip("과목 데이터가 없습니다")
+        if not test_course:
+            pytest.skip("테스트 과목이 생성되지 않았습니다")
 
-        data = response.json()
-        courses = data.get("content", data) if isinstance(data, dict) else data
-        if not courses:
-            pytest.skip("과목이 없습니다")
-
-        course_id = courses[0]["id"]
+        course_id = test_course["id"]
         auth_client.post(Endpoints.WISHLIST, json={"courseId": course_id, "priority": 5})
 
-        # 삭제 (courseId로 삭제)
-        response = auth_client.delete(f"{Endpoints.WISHLIST}/{course_id}")
+        # 추가된 아이템의 id 확인
+        wishlist_response = auth_client.get(Endpoints.WISHLIST)
+        items = wishlist_response.json()
+        item = next((i for i in items if i["courseId"] == course_id), None)
+        if not item:
+            pytest.skip("위시리스트 아이템을 찾을 수 없습니다")
+
+        # 삭제 (item id로 삭제)
+        response = auth_client.delete(f"{Endpoints.WISHLIST}/{item['id']}")
         assert response.status_code in (200, 204)
 
     # ==================== Edge Cases ====================
 
-    def test_add_duplicate_course(self, auth_client: ApiClient):
+    def test_add_duplicate_course(self, auth_client: ApiClient, test_course: dict | None):
         """같은 과목 중복 추가 시 거부"""
-        response = auth_client.get(f"{Endpoints.COURSES}?size=1")
-        if response.status_code != 200:
-            pytest.skip("과목 데이터가 없습니다")
+        if not test_course:
+            pytest.skip("테스트 과목이 생성되지 않았습니다")
 
-        data = response.json()
-        courses = data.get("content", data) if isinstance(data, dict) else data
-        if not courses:
-            pytest.skip("과목이 없습니다")
-
-        course_id = courses[0]["id"]
+        course_id = test_course["id"]
 
         # 첫 번째 추가
         auth_client.post(Endpoints.WISHLIST, json={"courseId": course_id, "priority": 1})

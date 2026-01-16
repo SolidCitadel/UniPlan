@@ -41,21 +41,21 @@ public class WishlistController {
     }
 
     @Operation(summary = "희망과목 우선순위 수정", description = "희망과목의 우선순위를 수정합니다")
-    @PatchMapping("/{courseId}")
+    @PatchMapping("/{id}")
     public ResponseEntity<WishlistItemResponse> updatePriority(
             @Parameter(hidden = true) @RequestHeader("X-User-Id") Long userId,
-            @PathVariable Long courseId,
+            @PathVariable Long id,
             @Valid @RequestBody UpdateWishlistRequest request) {
-        WishlistItemResponse response = wishlistService.updatePriority(userId, courseId, request.getPriority());
+        WishlistItemResponse response = wishlistService.updatePriority(userId, id, request.getPriority());
         return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "희망과목 삭제", description = "강의를 희망과목에서 삭제합니다")
-    @DeleteMapping("/{courseId}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> removeFromWishlist(
             @Parameter(hidden = true) @RequestHeader("X-User-Id") Long userId,
-            @PathVariable Long courseId) {
-        wishlistService.removeFromWishlist(userId, courseId);
+            @PathVariable Long id) {
+        wishlistService.removeFromWishlist(userId, id);
         return ResponseEntity.noContent().build();
     }
 

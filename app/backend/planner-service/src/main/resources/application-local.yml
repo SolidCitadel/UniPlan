@@ -1,31 +1,19 @@
-# MySQL Database (로컬 개발용)
+# Local development configuration
+# Activate with: -Dspring.profiles.active=local
+
+# Environment variable overrides for local development
+SERVER_PORT: 8082
+DB_URL: jdbc:mysql://localhost:3306/uniplan_planner?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+DB_USER: user
+DB_PASSWORD: password
+CATALOG_SERVICE_URL: http://localhost:8083
+
+# Local overrides
 spring:
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/uniplan_planner?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: user
-    password: password
-
   jpa:
-    hibernate:
-      ddl-auto: update  # 개발: update (데이터 유지), 운영: validate
     show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.MySQLDialect
-        jdbc:
-          batch_size: 100
-        order_inserts: true
-        order_updates: true
-    open-in-view: false
 
-# 외부 서비스 URL
-services:
-  catalog:
-    url: http://localhost:8083
-
-# 로깅
+# Debug logging
 logging:
   level:
     com.uniplan.planner: DEBUG

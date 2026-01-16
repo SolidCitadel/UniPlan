@@ -1,87 +1,17 @@
-server:
-  port: 8080
+# Local development configuration
+# Activate with: -Dspring.profiles.active=local
 
-spring:
-  application:
-    name: api-gateway
+# Environment variable overrides for local development
+SERVER_PORT: 8080
+USER_SERVICE_URI: http://localhost:8081
+PLANNER_SERVICE_URI: http://localhost:8082
+CATALOG_SERVICE_URI: http://localhost:8083
+JWT_SECRET: uniplan-jwt-secret-key-minimum-256-bits-for-local-development
+CORS_ALLOWED_ORIGINS: "*"
 
-  cloud:
-    gateway:
-      # Global CORS for local dev
-      globalcors:
-        add-to-simple-url-handler-mapping: true
-        cors-configurations:
-          '[/**]':
-            allowed-origin-patterns: "*" # Flutter web (dev)
-            allowed-methods:
-              - GET
-              - POST
-              - PUT
-              - DELETE
-              - PATCH
-              - OPTIONS
-            allowed-headers: "*"
-            allow-credentials: true
-            max-age: 3600
-
-      # Routing is managed programmatically in FilterConfig.java
-      routes:
-        # User Service Swagger Docs
-        - id: user-service-docs
-          uri: http://localhost:8081
-          predicates:
-            - Path=/user-service/v3/api-docs
-          filters:
-            - RewritePath=/user-service/v3/api-docs, /v3/api-docs
-
-        # Planner Service Swagger Docs (reserved for later)
-        - id: planner-service-docs
-          uri: http://localhost:8082
-          predicates:
-            - Path=/planner-service/v3/api-docs
-          filters:
-            - RewritePath=/planner-service/v3/api-docs, /v3/api-docs
-
-        # Catalog Service Swagger Docs (reserved for later)
-        - id: catalog-service-docs
-          uri: http://localhost:8083
-          predicates:
-            - Path=/catalog-service/v3/api-docs
-          filters:
-            - RewritePath=/catalog-service/v3/api-docs, /v3/api-docs
-
-# Microservice URIs (local)
-services:
-  user-service:
-    uri: http://localhost:8081
-  planner-service:
-    uri: http://localhost:8082
-  catalog-service:
-    uri: http://localhost:8083
-
-# JWT config (shared secret for local)
-jwt:
-  secret: ${JWT_SECRET:uniplan-jwt-secret-key-minimum-256-bits-for-local-development}
-
-# Swagger/OpenAPI (dev only)
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-    enabled: true
-    use-root-path: true
-    urls:
-      - name: "User Service"
-        url: /user-service/v3/api-docs
-      - name: "Planner Service"
-        url: /planner-service/v3/api-docs
-      - name: "Catalog Service"
-        url: /catalog-service/v3/api-docs
-      - name: "Gateway (Actuator)"
-        url: /v3/api-docs
-    urls-primary-name: "User Service"
-  webjars:
-    prefix: ""
-  default-consumes-media-type: application/json
-  default-produces-media-type: application/json
+# Debug logging
+logging:
+  level:
+    com.uniplan.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web: DEBUG

@@ -26,18 +26,13 @@ services:
       args:
         SERVICE: user-service
     environment:
-      SPRING_PROFILES_ACTIVE: test
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-test:3306/uniplan_user?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-      SPRING_DATASOURCE_USERNAME: user
-      SPRING_DATASOURCE_PASSWORD: password
-      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQLDialect
-      SPRING_JPA_DEFER_DATASOURCE_INITIALIZATION: true
-      SPRING_SQL_INIT_MODE: always
-      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID: dummy
-      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET: dummy
-      OAUTH2_SUCCESS_REDIRECT_URL: http://localhost:3000/auth/callback
+      SERVER_PORT: 8081
+      DB_URL: jdbc:mysql://mysql-test:3306/uniplan_user?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      DB_USER: user
+      DB_PASSWORD: password
+      GOOGLE_CLIENT_ID: dummy
+      GOOGLE_CLIENT_SECRET: dummy
+      OAUTH2_REDIRECT_URL: http://localhost:3000/auth/callback
       JWT_SECRET: test-jwt-secret-32bytes-long-1234567
     depends_on:
       mysql-test:
@@ -50,15 +45,10 @@ services:
       args:
         SERVICE: catalog-service
     environment:
-      SPRING_PROFILES_ACTIVE: test
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-test:3306/uniplan_catalog?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-      SPRING_DATASOURCE_USERNAME: user
-      SPRING_DATASOURCE_PASSWORD: password
-      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQLDialect
-      SPRING_JPA_DEFER_DATASOURCE_INITIALIZATION: true
-      SPRING_SQL_INIT_MODE: always
+      SERVER_PORT: 8083
+      DB_URL: jdbc:mysql://mysql-test:3306/uniplan_catalog?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      DB_USER: user
+      DB_PASSWORD: password
     ports:
       - "8083:8083"
     depends_on:
@@ -72,14 +62,11 @@ services:
       args:
         SERVICE: planner-service
     environment:
-      SPRING_PROFILES_ACTIVE: test
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-test:3306/uniplan_planner?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-      SPRING_DATASOURCE_USERNAME: user
-      SPRING_DATASOURCE_PASSWORD: password
-      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQLDialect
-      SERVICES_CATALOG_URL: http://catalog-service-test:8083
+      SERVER_PORT: 8082
+      DB_URL: jdbc:mysql://mysql-test:3306/uniplan_planner?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      DB_USER: user
+      DB_PASSWORD: password
+      CATALOG_SERVICE_URL: http://catalog-service-test:8083
     depends_on:
       mysql-test:
         condition: service_healthy
@@ -93,11 +80,12 @@ services:
       args:
         SERVICE: api-gateway
     environment:
-      SPRING_PROFILES_ACTIVE: test
-      SERVICES_USER_SERVICE_URI: http://user-service-test:8081
-      SERVICES_PLANNER_SERVICE_URI: http://planner-service-test:8082
-      SERVICES_CATALOG_SERVICE_URI: http://catalog-service-test:8083
+      SERVER_PORT: 8080
+      USER_SERVICE_URI: http://user-service-test:8081
+      PLANNER_SERVICE_URI: http://planner-service-test:8082
+      CATALOG_SERVICE_URI: http://catalog-service-test:8083
       JWT_SECRET: test-jwt-secret-32bytes-long-1234567
+      CORS_ALLOWED_ORIGINS: "*"
     ports:
       - "8080:8080"
     depends_on:

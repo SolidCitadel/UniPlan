@@ -285,6 +285,119 @@ test: Timetable 단위 테스트 추가
 
 ---
 
+## Configuration Management
+
+### 설계 원칙
+
+UniPlan은 **12-Factor App** 방식을 따라 환경변수로 설정을 주입합니다:
+
+1. **application.yml**: 플레이스홀더만 (기본값 없음)
+2. **application-local.yml**: 로컬 개발용 값 (bootRun 전용)
+3. **docker-compose.yml**: Docker 환경 값 (하드코딩)
+4. **.env**: 프로덕션 값 (gitignore)
+
+### 파일 구조
+
+```
+각 서비스/src/main/resources/
+├── application.yml        # 플레이스홀더만 (${VAR_NAME})
+└── application-local.yml  # 로컬 개발용 값
+
+프로젝트 루트/
+├── docker-compose.yml     # 개발용 (하드코딩)
+├── docker-compose.test.yml# 테스트용 (하드코딩, tmpfs)
+└── .env.example           # 프로덕션 템플릿
+```
+
+### 환경변수 목록
+
+| 변수명 | 서비스 | 설명 |
+|--------|--------|------|
+| `SERVER_PORT` | 전체 | 서버 포트 |
+| `DB_URL` | user, catalog, planner | MySQL JDBC URL |
+| `DB_USER` | user, catalog, planner | DB 사용자명 |
+| `DB_PASSWORD` | user, catalog, planner | DB 비밀번호 |
+| `JWT_SECRET` | user, api-gateway | JWT 서명 키 (32+ bytes) |
+| `GOOGLE_CLIENT_ID` | user | Google OAuth2 클라이언트 ID |
+| `GOOGLE_CLIENT_SECRET` | user | Google OAuth2 클라이언트 시크릿 |
+| `OAUTH2_REDIRECT_URL` | user | 로그인 성공 후 프론트엔드 콜백 URL |
+| `USER_SERVICE_URI` | api-gateway | user-service 주소 |
+| `PLANNER_SERVICE_URI` | api-gateway | planner-service 주소 |
+| `CATALOG_SERVICE_URI` | api-gateway | catalog-service 주소 |
+| `CATALOG_SERVICE_URL` | planner | catalog-service 주소 |
+| `CORS_ALLOWED_ORIGINS` | api-gateway | CORS 허용 도메인 |
+
+### 로컬 개발 (bootRun)
+
+IDE 또는 커맨드라인에서 `local` 프로필 활성화:
+
+```bash
+# Gradle
+cd app/backend
+./gradlew :api-gateway:bootRun --args='--spring.profiles.active=local'
+
+# IntelliJ IDEA
+# Run Configuration → VM Options: -Dspring.profiles.active=local
+```
+
+**주의**: 로컬 MySQL이 필요합니다 (localhost:3306).
+
+### Docker 개발 환경
+
+```bash
+# 시작 (모든 서비스)
+docker compose up --build
+
+# 재시작 (특정 서비스만)
+docker compose up --build api-gateway
+
+# 종료
+docker compose down
+
+# 볼륨 포함 종료 (DB 초기화)
+docker compose down -v
+```
+
+환경변수는 `docker-compose.yml`에 하드코딩되어 있으며, 별도 설정 불필요.
+
+### E2E 테스트 환경
+
+```bash
+# 테스트 컨테이너 시작 (tmpfs DB)
+docker compose -f docker-compose.test.yml up -d --build
+
+# 대기 (서비스 준비)
+sleep 20
+
+# 테스트 실행
+cd tests/e2e && uv sync && uv run pytest -v
+
+# 종료
+docker compose -f docker-compose.test.yml down
+```
+
+### 프로덕션 배포
+
+1. `.env.example`을 `.env`로 복사
+2. 실제 값 입력 (DB 비밀번호, JWT 시크릿, OAuth 키 등)
+3. docker-compose에서 `.env` 파일 참조하도록 구성
+
+```bash
+# .env 파일 사용 예시
+cp .env.example .env
+# .env 파일 편집...
+
+# docker-compose.prod.yml에서 .env 참조
+docker compose -f docker-compose.prod.yml up -d
+```
+
+**보안 주의사항**:
+- `.env` 파일은 절대 커밋하지 않음 (gitignore에 포함)
+- JWT 시크릿은 최소 32바이트 이상의 랜덤 문자열 사용
+- 프로덕션 DB 비밀번호는 강력한 비밀번호 사용
+
+---
+
 ## 요약
 
 ### DDD
@@ -302,3 +415,9 @@ test: Timetable 단위 테스트 추가
 - 백엔드: Java/Kotlin 표준 규칙
 - 프론트엔드: React Query + TypeScript + shadcn/ui
 - 공통: 명확한 커밋 메시지, PR 체크리스트, 보안 준수
+
+### Configuration
+- application.yml: 플레이스홀더만 (기본값 없음)
+- application-local.yml: 로컬 개발용
+- docker-compose: 환경별 값 하드코딩
+- .env: 프로덕션용 (gitignore)

@@ -1,15 +1,37 @@
 server:
-  port: 8082
+  port: ${SERVER_PORT}
 
 spring:
   application:
     name: planner-service
 
-  # Profile 활성화 (로컬 개발 시 기본값)
-  profiles:
-    active: local
+  # MySQL Database
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
 
-# Swagger/OpenAPI 설정 (기본)
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+        jdbc:
+          batch_size: 100
+        order_inserts: true
+        order_updates: true
+    open-in-view: false
+
+# 외부 서비스 URL
+services:
+  catalog:
+    url: ${CATALOG_SERVICE_URL}
+
+# Swagger/OpenAPI 설정
 springdoc:
   api-docs:
     path: /v3/api-docs

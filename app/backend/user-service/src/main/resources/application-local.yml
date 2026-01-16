@@ -1,86 +1,22 @@
-server:
-  port: 8081
+# Local development configuration
+# Activate with: -Dspring.profiles.active=local
 
+# Environment variable overrides for local development
+SERVER_PORT: 8081
+DB_URL: jdbc:mysql://localhost:3306/uniplan_user?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+DB_USER: user
+DB_PASSWORD: password
+GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:dummy-local-client-id}
+GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:dummy-local-client-secret}
+JWT_SECRET: uniplan-jwt-secret-key-minimum-256-bits-for-local-development
+OAUTH2_REDIRECT_URL: http://localhost:3000/auth/callback
+
+# Local overrides
 spring:
-  application:
-    name: user-service
-
-  # Google OAuth2 설정
-  security:
-    oauth2:
-      client:
-        registration:
-          google:
-            client-id: ${GOOGLE_CLIENT_ID}
-            client-secret: ${GOOGLE_CLIENT_SECRET}
-            scope:
-              - email
-              - profile
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-        provider:
-          google:
-            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
-            token-uri: https://oauth2.googleapis.com/token
-            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
-            user-name-attribute: sub
-
-  # MySQL Database (로컬 개발용)
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/uniplan_user?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: user
-    password: password
-
-  sql:
-    init:
-      mode: always
-
   jpa:
-    hibernate:
-      ddl-auto: update  # 개발: update (데이터 유지), 운영: validate
-    defer-datasource-initialization: true
     show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.MySQLDialect
-        jdbc:
-          batch_size: 100
-        order_inserts: true
-        order_updates: true
-    open-in-view: false
 
-# JWT 설정 (커스텀)
-jwt:
-  secret: ${JWT_SECRET:uniplan-jwt-secret-key-minimum-256-bits-for-local-development}
-  expiration: 86400000  # 24시간 (ms)
-  refresh-expiration: 604800000  # 7일 (ms)
-
-# OAuth2 로그인 성공 후 리다이렉트 설정
-app:
-  oauth2:
-    # Gateway를 통한 접근 시 X-Forwarded-* 헤더를 자동으로 사용
-    # 직접 접근 시(8081) 기본값으로 자기 자신(8081)로 리다이렉트
-    success-redirect-path: /api/v1/auth/login/success
-
-# OAuth2 로그인 성공 후 프론트엔드 리다이렉트 URL
-oauth2:
-  # 프론트엔드 콜백 URL (토큰을 쿼리 파라미터로 전달)
-  success-redirect-url: ${OAUTH2_SUCCESS_REDIRECT_URL:http://localhost:3000/auth/callback}
-
-# Swagger/OpenAPI 설정
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-    enabled: true
-    tags-sorter: alpha
-    operations-sorter: alpha
-  default-consumes-media-type: application/json
-  default-produces-media-type: application/json
-
-# 로깅
+# Debug logging
 logging:
   level:
     com.uniplan.user: DEBUG

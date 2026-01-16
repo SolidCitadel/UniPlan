@@ -1,15 +1,71 @@
 server:
-  port: 8081
+  port: ${SERVER_PORT}
 
 spring:
   application:
     name: user-service
 
-  # Profile 활성화 (로컬 개발 시 기본값)
-  profiles:
-    active: local
+  # Google OAuth2 설정
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - email
+              - profile
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: sub
 
-# Swagger/OpenAPI 설정 (기본)
+  # MySQL Database
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+
+  sql:
+    init:
+      mode: always
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    defer-datasource-initialization: true
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+        jdbc:
+          batch_size: 100
+        order_inserts: true
+        order_updates: true
+    open-in-view: false
+
+# JWT 설정
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 86400000      # 24시간 (ms)
+  refresh-expiration: 604800000 # 7일 (ms)
+
+# OAuth2 로그인 성공 후 리다이렉트 설정
+app:
+  oauth2:
+    success-redirect-path: /api/v1/auth/login/success
+
+# OAuth2 로그인 성공 후 프론트엔드 리다이렉트 URL
+oauth2:
+  success-redirect-url: ${OAUTH2_REDIRECT_URL}
+
+# Swagger/OpenAPI 설정
 springdoc:
   api-docs:
     path: /v3/api-docs
@@ -20,9 +76,3 @@ springdoc:
     operations-sorter: alpha
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
-
-# JWT 설정 (기본값)
-jwt:
-  secret: ${JWT_SECRET:uniplan-jwt-secret-key-minimum-256-bits-for-local-development}
-  expiration: 86400000      # 24시간 (ms)
-  refresh-expiration: 604800000 # 7일 (ms)

@@ -1,15 +1,37 @@
 server:
-  port: 8083
+  port: ${SERVER_PORT}
 
 spring:
   application:
     name: catalog-service
 
-  # Profile 활성화 (로컬 개발 시 기본값)
-  profiles:
-    active: local
+  # MySQL Database
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
 
-# Swagger/OpenAPI 설정 (기본)
+  sql:
+    init:
+      mode: always
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    defer-datasource-initialization: true
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+        jdbc:
+          batch_size: 100
+        order_inserts: true
+        order_updates: true
+    open-in-view: false
+
+# Swagger/OpenAPI 설정
 springdoc:
   api-docs:
     path: /v3/api-docs

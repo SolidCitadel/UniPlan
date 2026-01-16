@@ -11,6 +11,8 @@ import com.uniplan.catalog.domain.course.repository.CollegeRepository;
 import com.uniplan.catalog.domain.course.repository.CourseRepository;
 import com.uniplan.catalog.domain.course.repository.CourseTypeRepository;
 import com.uniplan.catalog.domain.course.repository.DepartmentRepository;
+import com.uniplan.catalog.domain.university.entity.University;
+import com.uniplan.catalog.domain.university.repository.UniversityRepository;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +34,7 @@ public class CourseImportService {
     private final DepartmentRepository departmentRepository;
     private final CourseTypeRepository courseTypeRepository;
     private final CollegeRepository collegeRepository;
+    private final UniversityRepository universityRepository;
     private final EntityManager entityManager;
 
     private static final int BATCH_SIZE = 100;
@@ -45,9 +48,10 @@ public class CourseImportService {
         int failureCount = 0;
         int skippedCount = 0;
 
-        // Cache for departments and course types to reduce DB queries
+        // Cache for departments, course types, and universities to reduce DB queries
         Map<String, Department> departmentCache = new HashMap<>();
         Map<String, CourseType> courseTypeCache = new HashMap<>();
+        Map<Long, University> universityCache = new HashMap<>();
 
         List<Course> courseBatch = new ArrayList<>();
 
@@ -88,8 +92,20 @@ public class CourseImportService {
                     code -> getOrCreateCourseType(code)
                 );
 
+                // Get university (required)
+                Long universityId = request.getUniversityId();
+                if (universityId == null) {
+                    universityId = 1L; // Default to KHU
+                }
+                University university = universityCache.computeIfAbsent(
+                    universityId,
+                    id -> universityRepository.findById(id)
+                        .orElseThrow(() -> new IllegalArgumentException("University not found: " + id))
+                );
+
                 // Build course entity
                 Course course = Course.builder()
+                    .university(university)
                     .openingYear(request.getOpeningYear())
                     .semester(request.getSemester())
                     .targetGrade(request.getTargetGrade())

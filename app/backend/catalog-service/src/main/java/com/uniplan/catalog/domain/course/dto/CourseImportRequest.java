@@ -21,6 +21,7 @@ public class CourseImportRequest {
     private String courseTypeCode;
     private String notes;
     private List<ClassTimeDto> classTime;
+    private Long universityId;
 
     @Data
     public static class ClassTimeDto {

@@ -8,8 +8,8 @@ env/
 venv/
 ENV/
 
-# Output files
-output/*.json
+# Output files (crawled data - regenerable)
+output/*
 !output/.gitkeep
 
 # Logs

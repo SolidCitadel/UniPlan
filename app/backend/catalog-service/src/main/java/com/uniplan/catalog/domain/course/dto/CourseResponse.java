@@ -1,11 +1,14 @@
 package com.uniplan.catalog.domain.course.dto;
 
 import com.uniplan.catalog.domain.course.entity.Course;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
 
 /**
  * Course response DTO
@@ -14,14 +17,20 @@ import java.util.stream.Collectors;
 @Builder
 public class CourseResponse {
 
+    @Schema(requiredMode = REQUIRED)
     private Long id;
+    @Schema(requiredMode = REQUIRED)
     private Integer openingYear;
+    @Schema(requiredMode = REQUIRED)
     private String semester;
     private Integer targetGrade;
+    @Schema(requiredMode = REQUIRED)
     private String courseCode;
     private String section;
+    @Schema(requiredMode = REQUIRED)
     private String courseName;
     private String professor;
+    @Schema(requiredMode = REQUIRED)
     private Integer credits;
     private String classroom;
     private String campus;
@@ -32,17 +41,23 @@ public class CourseResponse {
     private String departmentName;
     private String collegeCode;
     private String collegeName;
+    @Schema(requiredMode = REQUIRED)
     private String courseTypeCode;
+    @Schema(requiredMode = REQUIRED)
     private String courseTypeName;
 
     // Class times
+    @Schema(requiredMode = REQUIRED)
     private List<ClassTimeResponse> classTimes;
 
     @Data
     @Builder
     public static class ClassTimeResponse {
+        @Schema(requiredMode = REQUIRED)
         private String day;
+        @Schema(requiredMode = REQUIRED)
         private String startTime;
+        @Schema(requiredMode = REQUIRED)
         private String endTime;
 
         public static ClassTimeResponse from(com.uniplan.catalog.domain.course.entity.ClassTime classTime) {

@@ -6,7 +6,7 @@ import type { components as CatalogComponents } from './generated/catalog-servic
 // Auth (user-service)
 // ============================================
 export type LoginResponse = UserComponents['schemas']['AuthResponse'];
-export type User = UserComponents['schemas']['UserResponse'];
+export type User = UserComponents['schemas']['UserInfo'];
 export type LoginRequest = UserComponents['schemas']['LoginRequest'];
 export type SignupRequest = UserComponents['schemas']['SignupRequest'];
 
@@ -29,7 +29,7 @@ export type TimetableItem = PlannerComponents['schemas']['TimetableItemResponse'
 export type TimetableCourse = PlannerComponents['schemas']['TimetableCourseResponse'];
 export type CreateTimetableRequest = PlannerComponents['schemas']['CreateTimetableRequest'];
 export type UpdateTimetableRequest = PlannerComponents['schemas']['UpdateTimetableRequest'];
-export type CreateAlternativeRequest = PlannerComponents['schemas']['CreateAlternativeRequest'];
+export type CreateAlternativeRequest = PlannerComponents['schemas']['CreateAlternativeTimetableRequest'];
 
 // ============================================
 // Wishlist (planner-service)
@@ -49,6 +49,6 @@ export type CreateAlternativeScenarioRequest = PlannerComponents['schemas']['Cre
 // ============================================
 export type Registration = PlannerComponents['schemas']['RegistrationResponse'];
 export type RegistrationStep = PlannerComponents['schemas']['RegistrationStepResponse'];
-export type RegistrationStatus = PlannerComponents['schemas']['RegistrationStatus'];
-export type CreateRegistrationRequest = PlannerComponents['schemas']['CreateRegistrationRequest'];
+export type RegistrationStatus = 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+export type CreateRegistrationRequest = PlannerComponents['schemas']['StartRegistrationRequest'];
 export type AddStepRequest = PlannerComponents['schemas']['AddStepRequest'];

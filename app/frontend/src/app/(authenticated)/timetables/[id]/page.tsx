@@ -88,7 +88,8 @@ export default function TimetableDetailPage() {
     courseName: w.courseName,
     professor: w.professor,
     classroom: w.classroom,
-    classTimes: w.classTimes,
+    classTimes: w.classTimes ?? [],
+    addedAt: w.addedAt,
   });
 
   // Categorize wishlist items
@@ -102,10 +103,11 @@ export default function TimetableDetailPage() {
     const conflict: WishlistItem[] = [];
 
     for (const w of notInTimetable) {
+      const wClassTimes = w.classTimes ?? [];
       const overlaps = timetable.items.some((item) =>
-        hasOverlap(w.classTimes as ClassTime[], item.classTimes)
+        hasOverlap(wClassTimes as ClassTime[], item.classTimes)
       );
-      if (overlaps || w.classTimes.length === 0) {
+      if (overlaps || wClassTimes.length === 0) {
         conflict.push(w);
       } else {
         avail.push(w);

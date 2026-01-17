@@ -1,6 +1,7 @@
 package com.uniplan.catalog.domain.course.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.util.Map;
@@ -8,7 +9,9 @@ import java.util.Map;
 @Data
 public class MetadataImportRequest {
 
+    @NotNull
     private Integer year;
+    @NotNull
     private Integer semester;
 
     @JsonProperty("crawled_at")

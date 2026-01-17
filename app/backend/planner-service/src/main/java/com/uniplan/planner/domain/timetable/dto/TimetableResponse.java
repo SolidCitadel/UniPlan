@@ -2,6 +2,7 @@ package com.uniplan.planner.domain.timetable.dto;
 
 import com.uniplan.planner.domain.timetable.entity.Timetable;
 import com.uniplan.planner.global.client.dto.CourseFullResponse;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,20 +14,31 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class TimetableResponse {
 
+    @Schema(requiredMode = REQUIRED)
     private Long id;
+    @Schema(requiredMode = REQUIRED)
     private Long userId;
+    @Schema(requiredMode = REQUIRED)
     private String name;
+    @Schema(requiredMode = REQUIRED)
     private Integer openingYear;
+    @Schema(requiredMode = REQUIRED)
     private String semester;
+    @Schema(requiredMode = REQUIRED)
     private LocalDateTime createdAt;
+    @Schema(requiredMode = REQUIRED)
     private LocalDateTime updatedAt;
+    @Schema(requiredMode = REQUIRED)
     private List<TimetableItemResponse> items;
+    @Schema(requiredMode = REQUIRED)
     private List<TimetableCourseResponse> excludedCourses;
 
     public static TimetableResponse from(Timetable timetable, Map<Long, CourseFullResponse> courseMap) {

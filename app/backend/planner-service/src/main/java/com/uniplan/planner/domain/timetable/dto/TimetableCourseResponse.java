@@ -1,6 +1,7 @@
 package com.uniplan.planner.domain.timetable.dto;
 
 import com.uniplan.planner.global.client.dto.CourseFullResponse;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,6 +10,8 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
 
 /**
  * Excluded course payload for timetable responses.
@@ -20,6 +23,7 @@ import java.util.stream.Collectors;
 @Builder
 public class TimetableCourseResponse {
 
+    @Schema(requiredMode = REQUIRED)
     private Long courseId;
     private String courseCode;
     private String courseName;
@@ -27,6 +31,7 @@ public class TimetableCourseResponse {
     private Integer credits;
     private String classroom;
     private String campus;
+    @Schema(requiredMode = REQUIRED)
     private List<TimetableItemResponse.ClassTimeInfo> classTimes;
 
     public static TimetableCourseResponse from(CourseFullResponse course) {

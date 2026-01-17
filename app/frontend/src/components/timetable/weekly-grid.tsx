@@ -119,7 +119,7 @@ export function WeeklyGrid({
     if (failedCourseIds.has(item.courseId)) return 'bg-red-100 border-red-400 opacity-60';
     if (pendingCourseIds.has(item.courseId)) return 'bg-gray-100 border-gray-300 opacity-60';
 
-    const isConflict = Array.from(conflicts).some((c) => c.includes(item.courseName));
+    const isConflict = Array.from(conflicts).some((c) => c.includes(item.courseName ?? ''));
     if (isConflict) return 'bg-red-50 border-red-300';
 
     return 'bg-blue-50 border-blue-200';

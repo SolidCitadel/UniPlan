@@ -44,7 +44,7 @@ export default function ScenarioDetailPage() {
     mutationFn: () =>
       scenarioApi.createAlternative(scenarioId, {
         name: altName,
-        timetableId: selectedTimetable!.id,
+        existingTimetableId: selectedTimetable!.id,
         failedCourseIds: Array.from(excludedCourseIds),
       }),
     onSuccess: (newScenario) => {
@@ -119,7 +119,7 @@ export default function ScenarioDetailPage() {
   const findCourseName = (courseId: number): string => {
     for (const t of timetables) {
       const item = t.items.find((i) => i.courseId === courseId);
-      if (item) return item.courseName;
+      if (item?.courseName) return item.courseName;
     }
     return `과목 ${courseId}`;
   };

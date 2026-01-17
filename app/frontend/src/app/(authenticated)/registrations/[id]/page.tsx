@@ -147,6 +147,7 @@ export default function RegistrationDetailPage() {
         professor: '',
         classroom: '',
         classTimes: [],
+        addedAt: new Date().toISOString(),
       };
     });
   };

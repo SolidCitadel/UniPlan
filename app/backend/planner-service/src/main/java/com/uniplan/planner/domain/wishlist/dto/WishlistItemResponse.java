@@ -2,6 +2,7 @@ package com.uniplan.planner.domain.wishlist.dto;
 
 import com.uniplan.planner.domain.wishlist.entity.WishlistItem;
 import com.uniplan.planner.global.client.dto.CourseFullResponse;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,20 +11,27 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class WishlistItemResponse {
 
+    @Schema(requiredMode = REQUIRED)
     private Long id;
+    @Schema(requiredMode = REQUIRED)
     private Long userId;
+    @Schema(requiredMode = REQUIRED)
     private Long courseId;
     private String courseName;
     private String professor;
+    @Schema(requiredMode = REQUIRED)
     private Integer priority;
     private String classroom;
     private List<ClassTimeDto> classTimes;
+    @Schema(requiredMode = REQUIRED)
     private LocalDateTime addedAt;
 
     @Data
@@ -31,8 +39,11 @@ public class WishlistItemResponse {
     @AllArgsConstructor
     @Builder
     public static class ClassTimeDto {
+        @Schema(requiredMode = REQUIRED)
         private String day;
+        @Schema(requiredMode = REQUIRED)
         private String startTime;
+        @Schema(requiredMode = REQUIRED)
         private String endTime;
 
         public static ClassTimeDto from(CourseFullResponse.ClassTimeResponse classTime) {

@@ -1,5 +1,6 @@
 package com.uniplan.catalog.domain.course.dto;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 /**
@@ -9,6 +10,7 @@ import lombok.Data;
 public class CourseSearchRequest {
 
     // University filter (required)
+    @NotNull
     private Long universityId;
 
     // Basic filters

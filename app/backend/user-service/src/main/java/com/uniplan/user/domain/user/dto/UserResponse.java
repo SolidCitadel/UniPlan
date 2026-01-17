@@ -3,6 +3,7 @@ package com.uniplan.user.domain.user.dto;
 import com.uniplan.user.domain.user.entity.User;
 import com.uniplan.user.domain.user.entity.UserRole;
 import com.uniplan.user.domain.user.entity.UserStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -10,20 +11,27 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class UserResponse {
 
+    @Schema(requiredMode = REQUIRED)
     private Long id;
     private String googleId;
+    @Schema(requiredMode = REQUIRED)
     private String email;
     private String name;
     private String picture;
     private String displayName;
+    @Schema(requiredMode = REQUIRED)
     private UserRole role;
+    @Schema(requiredMode = REQUIRED)
     private UserStatus status;
+    @Schema(requiredMode = REQUIRED)
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

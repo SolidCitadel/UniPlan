@@ -412,6 +412,75 @@ test: Timetable 단위 테스트 추가
 
 ---
 
+## OpenAPI Type Generation
+
+프론트엔드 타입을 백엔드 OpenAPI 스펙에서 자동 생성합니다. 백엔드 DTO 변경 시 프론트엔드에서 **컴파일 에러로 즉시 감지**됩니다.
+
+### 디렉토리 구조
+
+```
+app/frontend/
+├── scripts/
+│   └── generate-types-index.mjs  # 인덱스 생성 스크립트
+├── src/types/
+│   ├── generated/                # 자동 생성 (Git 추적)
+│   │   ├── user-service.ts
+│   │   ├── planner-service.ts
+│   │   ├── catalog-service.ts
+│   │   └── index.ts
+│   ├── aliases.ts                # 타입 별칭 (편의용)
+│   ├── common.ts                 # 프론트엔드 전용 타입
+│   └── index.ts                  # 통합 export
+```
+
+### 타입 생성 명령어
+
+```bash
+# 백엔드 시작 (Docker)
+docker compose up -d
+
+# 타입 생성 (http://localhost:8080 에서 OpenAPI 스펙 가져옴)
+cd app/frontend
+npm run types:generate
+
+# TypeScript 체크
+npm run types:check
+```
+
+### 개발 워크플로우
+
+1. **백엔드 DTO 변경 시**:
+   - 백엔드 서비스 재시작
+   - `npm run types:generate` 실행
+   - 생성된 타입 파일 커밋
+
+2. **프론트엔드 개발 시**:
+   - `@/types`에서 타입 import (기존과 동일)
+   - 백엔드 변경 시 TypeScript 컴파일 에러로 불일치 감지
+
+3. **CI에서** (수동 실행):
+   - GitHub Actions > "OpenAPI Type Sync" > Run workflow
+   - 생성된 타입이 커밋된 것과 다르면 빌드 실패
+
+### 타입 사용 예시
+
+```typescript
+// 기본 사용법 (권장)
+import type { Timetable, CreateTimetableRequest } from '@/types';
+
+// 직접 생성 타입 접근 (고급)
+import type { components } from '@/types/generated/planner-service';
+type RawTimetable = components['schemas']['TimetableResponse'];
+```
+
+### 주의사항
+
+- `src/types/generated/*.ts` 파일은 **수동 수정 금지**
+- 백엔드가 실행 중이어야 타입 생성 가능 (OpenAPI 엔드포인트 필요)
+- `aliases.ts`에서 타입 별칭 매핑 관리
+
+---
+
 ## Configuration Management
 
 ### 설계 원칙

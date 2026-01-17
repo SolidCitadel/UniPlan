@@ -3,7 +3,6 @@
 
 Happy path + Edge cases for course search operations.
 """
-import pytest
 from conftest import ApiClient, Endpoints
 
 
@@ -30,39 +29,26 @@ class TestCourses:
         content = data.get("content", data) if isinstance(data, dict) else data
         assert len(content) <= 10
 
-    def test_search_by_course_name(self, auth_client: ApiClient):
+    def test_search_by_course_name(self, auth_client: ApiClient, test_course: dict):
         """과목명으로 검색"""
-        response = auth_client.get(f"{Endpoints.COURSES}?size=1")
-        if response.status_code != 200:
-            pytest.skip("과목 데이터가 없습니다")
-
-        data = response.json()
-        courses = data.get("content", data) if isinstance(data, dict) else data
-        if not courses:
-            pytest.skip("과목이 없습니다")
-
-        # 첫 번째 과목명의 일부로 검색
-        course_name = courses[0].get("courseName", "")[:3]
-        if not course_name:
-            pytest.skip("과목명이 없습니다")
+        course_name = test_course["courseName"][:5]  # 앞 5글자로 검색
 
         response = auth_client.get(f"{Endpoints.COURSES}?courseName={course_name}")
         assert response.status_code == 200
 
-    def test_get_course_by_id(self, auth_client: ApiClient):
-        """강의 상세 조회"""
-        response = auth_client.get(f"{Endpoints.COURSES}?size=1")
-        if response.status_code != 200:
-            pytest.skip("과목 데이터가 없습니다")
-
         data = response.json()
         courses = data.get("content", data) if isinstance(data, dict) else data
-        if not courses:
-            pytest.skip("과목이 없습니다")
+        assert len(courses) > 0, f"No courses found with name containing '{course_name}'"
 
-        course_id = courses[0]["id"]
+    def test_get_course_by_id(self, auth_client: ApiClient, test_course: dict):
+        """강의 상세 조회"""
+        course_id = test_course["id"]
+
         response = auth_client.get(f"{Endpoints.COURSES}/{course_id}")
         assert response.status_code == 200
+
+        data = response.json()
+        assert data["id"] == course_id
 
     # ==================== Edge Cases ====================
 
@@ -82,14 +68,14 @@ class TestCourses:
         response = auth_client.get(
             f"{Endpoints.COURSES}?courseName=<script>alert('xss')</script>"
         )
-        # XSS 시도는 안전하게 처리되어야 함
-        assert response.status_code in (200, 400)
+        # 특수문자는 안전하게 처리되어 빈 결과 반환
+        assert response.status_code == 200
 
     def test_search_very_long_query(self, auth_client: ApiClient):
         """매우 긴 검색어"""
         long_query = "a" * 1000
         response = auth_client.get(f"{Endpoints.COURSES}?courseName={long_query}")
-        assert response.status_code in (200, 400, 414)
+        assert response.status_code == 200, "긴 검색어도 빈 결과로 처리"
 
     def test_pagination_beyond_results(self, auth_client: ApiClient):
         """결과 범위를 벗어난 페이지 요청"""
@@ -103,12 +89,12 @@ class TestCourses:
     def test_invalid_pagination_negative_page(self, auth_client: ApiClient):
         """음수 페이지 파라미터"""
         response = auth_client.get(f"{Endpoints.COURSES}?page=-1&size=20")
-        assert response.status_code in (200, 400)
+        assert response.status_code == 200, "음수 페이지는 0으로 처리"
 
     def test_invalid_pagination_negative_size(self, auth_client: ApiClient):
         """음수 사이즈 파라미터"""
         response = auth_client.get(f"{Endpoints.COURSES}?page=0&size=-1")
-        assert response.status_code in (200, 400)
+        assert response.status_code == 200, "음수 사이즈는 기본값으로 처리"
 
     def test_get_nonexistent_course(self, auth_client: ApiClient):
         """존재하지 않는 강의 조회"""

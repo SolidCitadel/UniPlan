@@ -23,7 +23,7 @@ class TestWishlist:
             Endpoints.WISHLIST,
             json={"courseId": course_id, "priority": 1}
         )
-        assert response.status_code in (200, 201, 409)  # 409 = already exists
+        assert response.status_code == 201, "새 위시리스트 추가는 201 Created"
 
     def test_get_wishlist(self, auth_client: ApiClient):
         """위시리스트 조회"""
@@ -64,7 +64,7 @@ class TestWishlist:
 
         # 삭제 (item id로 삭제)
         response = auth_client.delete(f"{Endpoints.WISHLIST}/{item['id']}")
-        assert response.status_code in (200, 204)
+        assert response.status_code == 204, "삭제 성공은 204 No Content"
 
     # ==================== Edge Cases ====================
 
@@ -83,7 +83,7 @@ class TestWishlist:
             Endpoints.WISHLIST,
             json={"courseId": course_id, "priority": 2}
         )
-        assert response.status_code in (400, 409), "중복 추가는 거부되어야 함"
+        assert response.status_code == 409, "중복 추가는 409 Conflict"
 
     def test_add_nonexistent_course(self, auth_client: ApiClient):
         """존재하지 않는 과목 추가 시 거부"""
@@ -91,9 +91,9 @@ class TestWishlist:
             Endpoints.WISHLIST,
             json={"courseId": 999999999, "priority": 1}
         )
-        assert response.status_code in (400, 404), "존재하지 않는 과목은 거부되어야 함"
+        assert response.status_code == 404, "존재하지 않는 과목은 404 Not Found"
 
     def test_delete_nonexistent_item(self, auth_client: ApiClient):
         """존재하지 않는 항목 삭제"""
         response = auth_client.delete(f"{Endpoints.WISHLIST}/999999999")
-        assert response.status_code in (204, 404)
+        assert response.status_code == 404, "존재하지 않는 항목 삭제는 404 Not Found"

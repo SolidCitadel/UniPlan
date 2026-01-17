@@ -38,7 +38,7 @@ class TestAuth:
                 "universityId": university_id,
             },
         )
-        assert response.status_code in (200, 201)
+        assert response.status_code == 201
 
         # 회원가입 응답에 대학 정보 포함 확인
         data = response.json()
@@ -80,7 +80,7 @@ class TestAuth:
                 "universityId": test_user.university_id,
             }
         )
-        assert response.status_code in (400, 409), "중복 이메일은 거부되어야 합니다"
+        assert response.status_code == 409, "중복 이메일은 409 Conflict"
 
     def test_login_wrong_password(self, api_client: ApiClient, test_user: TestUser):
         """잘못된 비밀번호로 로그인 시도"""
@@ -91,7 +91,7 @@ class TestAuth:
                 "password": "WrongPassword123!"
             }
         )
-        assert response.status_code in (400, 401)
+        assert response.status_code == 401, "잘못된 비밀번호는 401 Unauthorized"
 
     def test_login_nonexistent_email(self, api_client: ApiClient):
         """존재하지 않는 이메일로 로그인 시도"""
@@ -102,7 +102,7 @@ class TestAuth:
                 "password": "Test1234!"
             }
         )
-        assert response.status_code in (400, 401, 404)
+        assert response.status_code == 401, "존재하지 않는 이메일은 401 Unauthorized"
 
     def test_access_without_token(self, api_client: ApiClient):
         """토큰 없이 인증 필수 엔드포인트 접근"""

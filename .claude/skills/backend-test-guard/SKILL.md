@@ -42,6 +42,11 @@ description: |
 
 ## 3. 테스트 코드 점검
 
+> **핵심 원칙: 테스트는 최대한 적극적으로 실패를 유발해야 한다.**
+>
+> E2E 테스트는 **프론트엔드 개발자가 컨트롤러를 확인하지 않고도 API를 구현할 수 있는 계약서**.
+> 상태 코드, DTO 필드, 응답 구조 등 모든 세부사항을 명시적으로 검증해야 한다.
+
 각 테스트 파일에서 확인:
 
 - [ ] DTO 필드 변경 → 테스트의 assertion이 새 구조에 맞는지
@@ -52,6 +57,52 @@ description: |
 ## 4. 테스트 수정 (필요시)
 
 변경된 구조에 맞게 테스트 코드 업데이트.
+
+### 엄격한 검증 규칙 (필수 준수)
+
+**1. 단일 상태 코드 검증**
+```python
+# ❌ 금지 - 느슨한 검증
+assert response.status_code in (200, 400, 409)
+
+# ✅ 필수 - 정확한 상태 코드
+assert response.status_code == 201
+assert response.status_code == 409, "중복 리소스는 409 Conflict"
+```
+
+**2. RESTful 상태 코드 규칙**
+| 동작 | 상태 코드 |
+|------|-----------|
+| POST (리소스 생성) | **201 Created** |
+| POST (상태 변경) | **200 OK** |
+| GET | **200 OK** |
+| DELETE | **204 No Content** |
+| 중복 리소스 | **409 Conflict** |
+| 잘못된 요청 | **400 Bad Request** |
+| 리소스 없음 | **404 Not Found** |
+| 인증 실패 | **401 Unauthorized** |
+
+**3. DTO 필드 완전 검증**
+```python
+# 필수 필드 존재 확인
+assert "id" in data
+assert "name" in data
+assert "createdAt" in data
+
+# 타입 검증
+assert isinstance(data["id"], int)
+assert isinstance(data["items"], list)
+
+# 값 검증
+assert data["name"] == expected_name
+```
+
+**4. 에러 응답도 검증**
+```python
+# 에러 구조 확인 (프론트엔드가 메시지를 표시할 수 있도록)
+error = response.json()
+assert "message" in error or "error" in error
+```
 
 ## 5. 테스트 실행 및 검증
 

@@ -134,6 +134,133 @@ uv run pytest -v
 - **백엔드**: 핵심 도메인 로직 80% 이상
 - **프론트엔드**: 주요 비즈니스 로직 60% 이상
 
+### 테스트 작성 원칙
+
+> **핵심 원칙: 테스트는 최대한 적극적으로 실패를 유발해야 한다.**
+>
+> E2E 테스트는 **프론트엔드 개발자가 백엔드 컨트롤러를 확인하지 않고도 API를 구현할 수 있는 계약서** 역할을 한다.
+> 상태 코드, DTO 필드, 응답 구조 등 모든 세부사항을 명시적으로 검증해야 한다.
+
+**1. 단일 상태 코드 검증 (느슨한 검증 금지)**
+```python
+# ❌ Bad - 느슨한 검증은 API 계약을 모호하게 만듦
+assert response.status_code in (200, 400, 409)
+assert response.status_code in (200, 201)  # 어느 것이 정확한 응답인지 알 수 없음
+
+# ✅ Good - 정확한 상태 코드 검증
+assert response.status_code == 201, f"Expected 201, got {response.status_code}: {response.text}"
+assert response.status_code == 409, "중복 리소스는 409 Conflict"
+```
+
+**RESTful 상태 코드 규칙:**
+| 동작 | 상태 코드 | 설명 |
+|------|-----------|------|
+| POST (리소스 생성) | **201 Created** | 새 리소스 생성 |
+| POST (상태 변경) | **200 OK** | complete, cancel, navigate 등 |
+| GET | **200 OK** | 조회 성공 |
+| PUT/PATCH | **200 OK** | 수정 성공 |
+| DELETE | **204 No Content** | 삭제 성공 (본문 없음) |
+| 중복 리소스 | **409 Conflict** | 이미 존재 |
+| 잘못된 요청 | **400 Bad Request** | 유효성 검증 실패 |
+| 리소스 없음 | **404 Not Found** | 존재하지 않는 리소스 |
+| 인증 실패 | **401 Unauthorized** | 토큰 없음/만료 |
+
+**2. DTO 필드 완전 검증**
+```python
+# ❌ Bad - 일부 필드만 검증
+def test_create_timetable(auth_client):
+    response = auth_client.post("/timetables", json={...})
+    assert response.status_code == 201
+    assert response.json()["id"] is not None  # 나머지 필드는?
+
+# ✅ Good - 모든 필수 필드 검증 (프론트엔드 계약)
+def test_create_timetable(auth_client):
+    response = auth_client.post("/timetables", json={
+        "name": "Test", "openingYear": 2026, "semester": "1"
+    })
+    assert response.status_code == 201
+
+    data = response.json()
+    # 필수 필드 존재 검증
+    assert "id" in data
+    assert "name" in data
+    assert "openingYear" in data
+    assert "semester" in data
+    assert "items" in data
+    assert "excludedCourses" in data
+    assert "createdAt" in data
+    assert "updatedAt" in data
+
+    # 타입 검증
+    assert isinstance(data["id"], int)
+    assert isinstance(data["items"], list)
+    assert isinstance(data["excludedCourses"], list)
+
+    # 값 검증
+    assert data["name"] == "Test"
+    assert data["openingYear"] == 2026
+```
+
+**3. 에러 응답도 구체적으로 검증**
+```python
+# ❌ Bad - 에러 코드만 검증
+def test_duplicate_email(api_client):
+    response = api_client.post("/auth/signup", json={...})
+    assert response.status_code in (400, 409)  # 어느 것?
+
+# ✅ Good - 에러 코드와 메시지 구조 검증
+def test_duplicate_email(api_client):
+    response = api_client.post("/auth/signup", json={...})
+    assert response.status_code == 409
+
+    error = response.json()
+    assert "message" in error or "error" in error
+    # 프론트엔드가 에러 메시지를 표시할 수 있도록
+```
+
+**4. Skip 금지 - 예상치 못한 상황은 Fail**
+```python
+# ❌ Bad - skip으로 문제를 숨김
+def test_search_course(auth_client):
+    response = auth_client.get("/courses?size=1")
+    if not response.json():
+        pytest.skip("과목이 없습니다")  # 문제가 숨겨짐!
+
+# ✅ Good - fixture로 데이터 준비
+@pytest.fixture
+def test_course(catalog_client):
+    """테스트용 과목 생성"""
+    return catalog_client.create_course({...})
+
+def test_search_course(auth_client, test_course):
+    response = auth_client.get(f"/courses?name={test_course['name']}")
+    assert response.status_code == 200
+    assert len(response.json()) > 0
+```
+
+**5. 테스트는 자체적으로 데이터 준비**
+- fixture를 통해 필요한 데이터 생성
+- 외부 상태에 의존하지 않음
+- 테스트 간 독립성 보장
+
+**6. Skip 허용 케이스 (예외적)**
+- 특정 환경에서만 실행 가능한 테스트 (OS, 외부 서비스)
+- `@pytest.mark.skipif(condition, reason="...")` 사용
+- reason에 명확한 사유 기록
+
+**7. Edge Case도 명확한 계약**
+```python
+# ❌ Bad - 여러 에러 코드 허용
+def test_add_excluded_course(auth_client, timetable_id, excluded_course_id):
+    response = auth_client.post(f"/timetables/{timetable_id}/courses", json={"courseId": excluded_course_id})
+    assert response.status_code in (400, 409)  # 둘 중 뭐가 맞아?
+
+# ✅ Good - 백엔드 계약에 따라 하나만
+def test_add_excluded_course(auth_client, timetable_id, excluded_course_id):
+    response = auth_client.post(f"/timetables/{timetable_id}/courses", json={"courseId": excluded_course_id})
+    assert response.status_code == 409, "제외된 과목 추가 시 409 Conflict"
+```
+
 ### 품질 게이트
 
 모든 PR은 다음 테스트를 통과해야 합니다:
@@ -409,6 +536,7 @@ docker compose -f docker-compose.prod.yml up -d
 - 단위 테스트: JUnit 5 + Mockito
 - 통합 테스트: SpringBootTest + MockMvc
 - E2E 테스트: pytest (도메인별 Happy Path + Edge Cases)
+- **Skip 금지**: 예상치 못한 상황은 fail, fixture로 데이터 준비
 - 품질 게이트 필수 통과
 
 ### Conventions

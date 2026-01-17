@@ -38,7 +38,7 @@
 
 ### 프론트엔드
 
-- **프레임워크**: Next.js 15 (App Router)
+- **프레임워크**: Next.js 16 (App Router)
 - **상태관리**: React Query
 - **UI**: shadcn/ui + Tailwind CSS
 

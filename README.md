@@ -43,7 +43,7 @@ UniPlan은 대학 수강신청의 불확실성을 해결하기 위한 웹 애플
 - `planner-service` (8082): 시간표, 시나리오, 수강신청 로직
 
 ### 프론트엔드
-- **프레임워크**: Next.js 15 (App Router)
+- **프레임워크**: Next.js 16 (App Router)
 - **언어**: TypeScript
 - **상태관리**: React Query (@tanstack/react-query)
 - **UI**: shadcn/ui + Tailwind CSS
@@ -96,13 +96,19 @@ UniPlan/
 ├── tests/
 │   └── e2e/               # pytest E2E 시나리오 테스트
 ├── scripts/
-│   └── crawler/           # 강의 크롤러 (Python)
+│   ├── crawler/           # 강의 크롤러 (Python)
+│   └── README.md
 ├── docs/                  # 문서
 │   ├── architecture.md    # 아키텍처 설계
 │   ├── features.md        # 기능 명세
 │   ├── guides.md          # 개발 가이드
+│   ├── requirements.md    # 프로젝트 요구사항
 │   └── adr/               # Architecture Decision Records
-└── docker/                # Docker 설정
+├── docker/                # Docker 설정 파일
+│   ├── backend.Dockerfile
+│   └── mysql/
+├── docker-compose.yml     # 개발용 Docker Compose
+└── docker-compose.test.yml # 테스트용 Docker Compose
 ```
 
 ## 빠른 시작
@@ -187,9 +193,17 @@ uv run pytest -v
 cd scripts
 uv sync
 
-# 크롤링 및 변환
-uv run python crawler/crawl_metadata.py --year 2025 --semester 1
-uv run python crawler/run_crawler.py --year 2025 --semester 1
+# 메타데이터 크롤링
+uv run python crawler/run.py metadata --university khu --year 2026 --semester 1
+
+# 강의 크롤링
+uv run python crawler/run.py courses --university khu --year 2026 --semester 1
+
+# 업로드
+uv run python crawler/run.py upload --university khu --year 2026 --semester 1
+
+# 전체 파이프라인 (메타데이터 + 강의 + 업로드)
+uv run python crawler/run.py full --university khu --year 2026 --semester 1
 ```
 
 ## 문서

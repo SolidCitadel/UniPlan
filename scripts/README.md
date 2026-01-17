@@ -17,5 +17,5 @@ scripts/
 ```bash
 cd scripts/crawler
 uv sync
-uv run python run.py full -u khu -y 2026 -s 1
+uv run python run.py full --university khu --year 2026 --semester 1
 ```

@@ -1,6 +1,8 @@
 """
 경희대학교 데이터 파서
 KHU Data Parser - transforms raw API responses to catalog-service format.
+
+Raw data 필드 명세는 README.md를 참조하세요.
 """
 import re
 from typing import Dict, List, Optional
@@ -41,7 +43,7 @@ class KHUParser:
         matches = re.findall(pattern, rows_section)
 
         for name, code in matches:
-            colleges[code] = {"name": name}
+            colleges[code] = {"code": code, "name": name}
 
         return colleges
 
@@ -68,19 +70,19 @@ class KHUParser:
 
         rows_section = js_content[start_idx:end_idx]
 
-        # Pattern includes college code (daehak_cd)
-        pattern = r'"nm"\s*:\s*"([^"]+)"[^}]*"cd"\s*:\s*"([^"]+)"[^}]*"daehak_cd"\s*:\s*"([^"]+)"'
+        # Pattern includes college code (dh field)
+        pattern = r'"nm"\s*:\s*"([^"]+)"[^}]*"cd"\s*:\s*"([^"]+)"[^}]*"dh"\s*:\s*"([^"]+)"'
         matches = re.findall(pattern, rows_section)
 
         for name, code, college_code in matches:
-            departments[code] = {"name": name, "collegeCode": college_code}
+            departments[code] = {"code": code, "name": name, "collegeCode": college_code}
 
         # If pattern didn't work, try simpler pattern
         if not departments:
             pattern = r'"nm"\s*:\s*"([^"]+)"[^}]*"cd"\s*:\s*"([^"]+)"'
             matches = re.findall(pattern, rows_section)
             for name, code in matches:
-                departments[code] = {"name": name, "collegeCode": code}
+                departments[code] = {"code": code, "name": name, "collegeCode": code}
 
         return departments
 
@@ -110,14 +112,14 @@ class KHUParser:
         matches = re.findall(pattern, rows_section)
 
         for name, code in matches:
-            course_types[code] = {"nameKr": name, "nameEn": name}
+            course_types[code] = {"code": code, "nameKr": name, "nameEn": name}
 
         # KHU-specific course types (교양)
         khu_types = {
-            "14": {"nameKr": "후마니타스", "nameEn": "Humanitas"},
-            "15": {"nameKr": "자유이수과목", "nameEn": "Free Elective"},
-            "16": {"nameKr": "기초교양", "nameEn": "Basic Liberal Arts"},
-            "17": {"nameKr": "자율이수", "nameEn": "Autonomous"},
+            "14": {"code": "14", "nameKr": "후마니타스", "nameEn": "Humanitas"},
+            "15": {"code": "15", "nameKr": "자유이수과목", "nameEn": "Free Elective"},
+            "16": {"code": "16", "nameKr": "기초교양", "nameEn": "Basic Liberal Arts"},
+            "17": {"code": "17", "nameKr": "자율이수", "nameEn": "Autonomous"},
         }
         for code, info in khu_types.items():
             if code not in course_types:

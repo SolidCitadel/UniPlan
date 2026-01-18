@@ -78,6 +78,69 @@ routes:
 
 ---
 
+## Internal Service Communication
+
+### 서비스 간 통신 (East-West)
+
+Planner Service가 Catalog Service의 강의 정보를 조회할 때 사용하는 내부 통신 구조입니다.
+
+```
+Planner Service  ─────────────────────────>  Catalog Service
+                   OpenFeign (HTTP/REST)
+                   /internal/courses?ids=1,2,3
+```
+
+### 구성 요소
+
+| 컴포넌트 | 설명 |
+|----------|------|
+| `CatalogFeignClient` | OpenFeign 선언적 HTTP 클라이언트 인터페이스 |
+| `CatalogClient` | 비즈니스 로직용 Facade (Feign 클라이언트 래핑) |
+| `InternalCourseController` | Catalog Service의 내부 전용 API 컨트롤러 |
+
+### Internal API 규칙
+
+- **경로**: `/internal/**` 프리픽스
+- **보안**: Gateway에서 외부 접근 차단 (404 반환)
+- **용도**: 서비스 간 통신 전용
+
+```java
+// catalog-service: InternalCourseController
+@RestController
+@RequestMapping("/internal/courses")
+public class InternalCourseController {
+    @GetMapping
+    public List<CourseResponse> getCoursesByIds(@RequestParam List<Long> ids) {
+        return courseQueryService.getCoursesByIds(ids);
+    }
+}
+```
+
+### OpenFeign 클라이언트
+
+```java
+// planner-service: CatalogFeignClient
+@FeignClient(name = "catalog-service", url = "${services.catalog.url}")
+public interface CatalogFeignClient {
+    @GetMapping("/internal/courses")
+    List<CourseFullResponse> getCoursesByIds(@RequestParam("ids") List<Long> ids);
+    
+    @GetMapping("/courses/{id}")
+    CourseFullResponse getCourseById(@PathVariable("id") Long id);
+}
+```
+
+### Batch API
+
+다수의 강의를 효율적으로 조회하기 위해 Batch API를 사용합니다.
+
+```
+GET /internal/courses?ids=1,2,3,4,5
+→ 단일 요청으로 여러 강의 정보 반환
+```
+
+---
+
 ## Swagger Documentation
 
 ### 구조

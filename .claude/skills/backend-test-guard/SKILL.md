@@ -28,7 +28,7 @@ description: |
 | **Unit** | `unit/` | 비즈니스 로직, 엣지 케이스, 예외 처리 |
 | **Component** | `component/` | 단일 서비스 전체 레이어, TestContainers MySQL |
 | **Contract** | `contract/` | 다른 서비스 API 계약 |
-| **Integration** | `tests/integration/` | 전체 시스템 Happy Path |
+| **Integration** | `tests/integration/` | 도메인: Happy Path, `infra/`: 보안/인프라 |
 
 ### 테스트 파일 매핑
 
@@ -54,7 +54,7 @@ description: |
 
 > **핵심 원칙:**
 > - **Unit/Component**: 비즈니스 로직, 엣지 케이스, 예외 처리 검증
-> - **Integration**: Happy Path만, 실제 환경 통합 검증
+> - **Integration**: 도메인은 Happy Path, `infra/`는 Cross-Cutting Concerns (보안, 인증 전파)
 
 각 테스트 파일에서 확인:
 

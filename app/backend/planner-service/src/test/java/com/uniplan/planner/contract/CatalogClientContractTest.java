@@ -107,16 +107,17 @@ class CatalogClientContractTest {
     }
 
     @Test
-    @DisplayName("getFullCoursesByIds - 여러 과목 조회")
+    @DisplayName("getFullCoursesByIds - 여러 과목 조회 (Batch)")
     void getFullCoursesByIds_success() {
         // given
-        stubFor(get(urlEqualTo("/courses/101"))
+        stubFor(get(urlPathEqualTo("/internal/courses"))
+                .withQueryParam("ids", containing("101"))
+                .withQueryParam("ids", containing("102"))
                 .willReturn(okJson("""
-                        {"id": 101, "courseName": "자료구조", "professor": "김교수", "credits": 3}
-                        """)));
-        stubFor(get(urlEqualTo("/courses/102"))
-                .willReturn(okJson("""
-                        {"id": 102, "courseName": "알고리즘", "professor": "이교수", "credits": 3}
+                        [
+                            {"id": 101, "courseName": "자료구조", "professor": "김교수", "credits": 3},
+                            {"id": 102, "courseName": "알고리즘", "professor": "이교수", "credits": 3}
+                        ]
                         """)));
 
         // when
@@ -126,6 +127,10 @@ class CatalogClientContractTest {
         assertThat(courses).hasSize(2);
         assertThat(courses.get(101L).getCourseName()).isEqualTo("자료구조");
         assertThat(courses.get(102L).getCourseName()).isEqualTo("알고리즘");
+
+        verify(getRequestedFor(urlPathEqualTo("/internal/courses"))
+                .withQueryParam("ids", containing("101"))
+                .withQueryParam("ids", containing("102")));
     }
 
     @Test

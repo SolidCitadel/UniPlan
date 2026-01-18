@@ -56,36 +56,64 @@ public class CatalogClient {
     }
 
     /**
-     * Get multiple simple courses by IDs
-     * Returns a map of courseId -> CourseSimpleResponse
+     * Get multiple simple courses by IDs (Batch)
+     * Calls internal API /internal/courses?ids=...
      */
     public Map<Long, CourseSimpleResponse> getCoursesByIds(List<Long> courseIds) {
-        Map<Long, CourseSimpleResponse> result = new HashMap<>();
-
-        for (Long courseId : courseIds) {
-            CourseSimpleResponse course = getCourseById(courseId);
-            if (course != null) {
-                result.put(courseId, course);
-            }
+        if (courseIds == null || courseIds.isEmpty()) {
+            return new HashMap<>();
         }
 
-        return result;
+        // Use internal batch API
+        String url = catalogServiceUrl + "/internal/courses?ids=" + String.join(",", 
+            courseIds.stream().map(String::valueOf).toArray(String[]::new));
+
+        try {
+            CourseSimpleResponse[] response = restTemplate.getForObject(url, CourseSimpleResponse[].class);
+            if (response == null) {
+                return new HashMap<>();
+            }
+
+            Map<Long, CourseSimpleResponse> result = new HashMap<>();
+            for (CourseSimpleResponse course : response) {
+                result.put(course.getId(), course);
+            }
+            return result;
+
+        } catch (Exception e) {
+            log.error("Failed to fetch courses from catalog-service (batch). error={}", e.getMessage());
+            return new HashMap<>();
+        }
     }
 
     /**
-     * Get multiple full courses by IDs
-     * Returns a map of courseId -> CourseFullResponse
+     * Get multiple full courses by IDs (Batch)
+     * Calls internal API /internal/courses?ids=...
      */
     public Map<Long, CourseFullResponse> getFullCoursesByIds(List<Long> courseIds) {
-        Map<Long, CourseFullResponse> result = new HashMap<>();
-
-        for (Long courseId : courseIds) {
-            CourseFullResponse course = getFullCourseById(courseId);
-            if (course != null) {
-                result.put(courseId, course);
-            }
+        if (courseIds == null || courseIds.isEmpty()) {
+            return new HashMap<>();
         }
 
-        return result;
+        // Use internal batch API
+        String url = catalogServiceUrl + "/internal/courses?ids=" + String.join(",", 
+            courseIds.stream().map(String::valueOf).toArray(String[]::new));
+
+        try {
+            CourseFullResponse[] response = restTemplate.getForObject(url, CourseFullResponse[].class);
+            if (response == null) {
+                return new HashMap<>();
+            }
+
+            Map<Long, CourseFullResponse> result = new HashMap<>();
+            for (CourseFullResponse course : response) {
+                result.put(course.getId(), course);
+            }
+            return result;
+
+        } catch (Exception e) {
+            log.error("Failed to fetch courses from catalog-service (batch). error={}", e.getMessage());
+            return new HashMap<>();
+        }
     }
 }

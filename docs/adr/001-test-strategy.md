@@ -28,7 +28,10 @@
 1. **Slice Test 미사용**: `@WebMvcTest`, `@DataJpaTest` 등은 Component 테스트와 중복
 2. **H2 사용 금지**: MySQL과 동작 차이가 있으므로 TestContainers MySQL 사용
 3. **기존 `tests/e2e/` → `tests/integration/`로 이름 변경**: 실제 UI 테스트가 아니므로
-4. **Integration 테스트는 Happy Path만**: 엣지 케이스는 Unit/Component에서 검증
+4. **Integration 테스트 범위**:
+   - **도메인 테스트**: Happy Path 중심 (엣지 케이스는 Unit/Component에서)
+   - **인프라/보안 테스트**: Cross-Cutting Concerns (Gateway 보안, 인증 전파 등)
+   - 폴더 구조: `tests/integration/` (도메인), `tests/integration/infra/` (인프라)
 
 ## Rationale
 

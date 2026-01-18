@@ -52,4 +52,17 @@ public class CourseQueryService {
 
         return CourseResponse.from(course);
     }
+
+    /**
+     * Get multiple courses by IDs (Batch)
+     */
+    public java.util.List<CourseResponse> getCoursesByIds(java.util.List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return java.util.List.of();
+        }
+
+        return courseRepository.findAllById(ids).stream()
+                .map(CourseResponse::from)
+                .collect(java.util.stream.Collectors.toList());
+    }
 }

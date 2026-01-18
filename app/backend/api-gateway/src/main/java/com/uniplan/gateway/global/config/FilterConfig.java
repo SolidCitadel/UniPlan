@@ -94,6 +94,12 @@ public class FilterConfig {
                                 .rewritePath("/api/v1/admin/planner/(?<segment>.*)", "/admin/${segment}"))
                         .uri(plannerServiceUri))
 
+                // 내부 API 접근 차단 (외부에서 접근 시 404/403 반환)
+                .route("block-internal", r -> r
+                        .path("/internal/**", "/**/internal/**")
+                        .filters(f -> f.setStatus(404)) // 존재하지 않는 것처럼 404 반환
+                        .uri("no://op"))
+
                 .build();
     }
 }

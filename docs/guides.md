@@ -213,10 +213,11 @@ docker compose -f docker-compose.test.yml down
 ```
 
 **테스트 대상:**
-- Happy Path 중심 (주요 사용자 시나리오)
+- **도메인 테스트**: Happy Path 중심 (주요 사용자 시나리오)
+- **인프라/보안 테스트 (`infra/`)**: Cross-Cutting Concerns (Gateway 보안, 인증 전파 등)
 - 서비스 간 통신, 실제 환경 설정 검증
 
-> **Note:** 엣지 케이스와 비즈니스 로직은 Unit/Component Test에서 검증. Integration Test는 전체 흐름만 확인.
+> **Note:** 엣지 케이스와 비즈니스 로직은 Unit/Component Test에서 검증. Integration Test는 전체 흐름과 보안 확인.
 
 ---
 
@@ -727,7 +728,7 @@ docker compose -f docker-compose.prod.yml up -d
 - Component: 단일 서비스 전체 (TestContainers MySQL)
 - Contract: 서비스 간 API 계약 (WireMock)
 - Integration: docker-compose 전체 시스템 (pytest)
-- **엣지 케이스는 Unit/Component에서 검증, Integration은 Happy Path만**
+- **도메인 테스트**: Happy Path 중심, **인프라/보안 테스트 (`infra/`)**: Cross-Cutting Concerns
 - 품질 게이트 필수 통과
 
 ### Conventions

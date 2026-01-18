@@ -64,20 +64,25 @@ API_BASE_URL=http://localhost:8080
 
 ## 테스트 구조
 
-도메인별로 파일을 분리하고, **Happy Path 중심**으로 테스트합니다.
+도메인별로 파일을 분리하고, 테스트 범위를 구분합니다:
+
+- **도메인 테스트**: Happy Path 중심
+- **인프라/보안 테스트 (`infra/`)**: Cross-Cutting Concerns (Gateway 보안, 인증 전파 등)
 
 > **Note:** 엣지 케이스와 비즈니스 로직은 Unit/Component Test에서 검증합니다.
 
 ```
 tests/integration/
-├── conftest.py           # pytest fixtures
-├── test_auth.py          # 인증 (회원가입, 로그인)
-├── test_courses.py       # 강의 검색
-├── test_wishlist.py      # 위시리스트
-├── test_timetable.py     # 시간표
-├── test_scenario.py      # 시나리오 트리
-├── test_university.py    # 대학 정보
-└── test_registration.py  # 수강신청
+├── conftest.py              # pytest fixtures
+├── test_auth.py             # 인증 (회원가입, 로그인)
+├── test_courses.py          # 강의 검색
+├── test_wishlist.py         # 위시리스트
+├── test_timetable.py        # 시간표
+├── test_scenario.py         # 시나리오 트리
+├── test_university.py       # 대학 정보
+├── test_registration.py     # 수강신청
+└── infra/                   # 인프라/보안 테스트
+    └── test_gateway_security.py  # Gateway 보안
 ```
 
 ## 도메인별 테스트

@@ -14,7 +14,7 @@ app/backend/          # Spring Boot MSA (Java 21)
 app/frontend/         # Next.js (TypeScript)
   └── React Query + shadcn/ui + Tailwind
 
-tests/e2e/            # pytest E2E 테스트
+tests/integration/      # pytest Integration 테스트
 scripts/              # 크롤러/유틸리티 (Python, uv)
 ```
 
@@ -56,10 +56,10 @@ cd app/backend && ./gradlew clean build
 # 프론트엔드
 cd app/frontend && npm install && npm run dev
 
-# E2E 테스트 (테스트용 컨테이너 필수)
+# Integration 테스트 (테스트용 컨테이너 필수)
 docker compose -f docker-compose.test.yml up -d --build
 sleep 20
-cd tests/e2e && uv sync && uv run pytest -v
+cd tests/integration && uv sync && uv run pytest -v
 docker compose -f docker-compose.test.yml down
 
 # Docker (백엔드)

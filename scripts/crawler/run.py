@@ -189,7 +189,9 @@ def cmd_upload(args):
         print("\nStep 1: Uploading metadata...")
         with open(metadata_file, 'r', encoding='utf-8') as f:
             metadata = json.load(f)
-        upload_metadata(metadata, host=args.host, port=args.port)
+        if not upload_metadata(metadata, host=args.host, port=args.port):
+            print("ERROR: Metadata upload failed")
+            return 1
     else:
         print(f"WARNING: Metadata file not found: {metadata_file}")
 

@@ -45,11 +45,12 @@ dependencies {
 
 	compileOnly("org.projectlombok:lombok")
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
-	runtimeOnly("com.h2database:h2")
 	runtimeOnly("com.mysql:mysql-connector-j")
 	annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.security:spring-security-test")
+	testImplementation("org.testcontainers:junit-jupiter:1.20.6")
+	testImplementation("org.testcontainers:mysql:1.20.6")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

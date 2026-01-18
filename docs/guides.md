@@ -65,51 +65,128 @@ planner-service/
 
 ## Test Strategy
 
-### 테스트 레벨
+### 테스트 분류
 
-**1. 단위 테스트 (Unit Test)**
-- 대상: 도메인 로직, 유틸리티 함수
-- 프레임워크: JUnit 5 (백엔드), Jest (프론트엔드)
-- 예시:
-  ```java
-  @Test
-  void shouldRejectExcludedCourseWhenAddingToTimetable() {
-      Timetable timetable = new Timetable();
-      timetable.addExcludedCourse(101L);
+UniPlan은 다음 5가지 테스트 레벨을 사용합니다:
 
-      assertThrows(IllegalArgumentException.class, () -> {
-          timetable.addCourse(101L);
-      });
-  }
-  ```
+| 유형 | 정의 | DB | 외부 서비스 | 위치 |
+|------|------|-----|------------|------|
+| **Unit** | 단일 클래스, 모든 의존성 Mock | Mock | Mock | `unit/` |
+| **Component** | 단일 서비스 전체 레이어 | TestContainers MySQL | Mock | `component/` |
+| **Contract** | 다른 서비스 API 계약 검증 | 필요 시 TestContainers | WireMock | `contract/` |
+| **Integration** | docker-compose 전체 시스템 | 실제 | 실제 | `tests/integration/` |
+| **E2E** | 사용자 여정 (UI 포함) | 실제 | 실제 | (향후 Flutter) |
 
-**2. 통합 테스트 (Integration Test)**
-- 대상: Controller + Service + Repository
-- 프레임워크: Spring Boot Test, MockMvc
-- 예시:
-  ```java
-  @SpringBootTest
-  @AutoConfigureMockMvc
-  class TimetableControllerTest {
-      @Test
-      void shouldCreateTimetable() throws Exception {
-          mockMvc.perform(post("/timetables")
-                  .contentType(APPLICATION_JSON)
-                  .content("{\"name\":\"Plan A\"}"))
-              .andExpect(status().isOk())
-              .andExpect(jsonPath("$.name").value("Plan A"));
-      }
-  }
-  ```
+> **Slice Test**는 Component와 중복되므로 사용하지 않음.
 
-**3. E2E 테스트 (End-to-End Test)**
-- 대상: API Gateway를 통한 전체 시스템
-- 위치: `tests/e2e/`
-- 프레임워크: pytest (Python, uv)
+---
 
-**구조 (도메인별 분리):**
+### 1. Unit Test (단위 테스트)
+
+**범위:** 단일 클래스의 비즈니스 로직  
+**의존성:** 모든 의존성을 Mock으로 대체  
+**프레임워크:** JUnit 5 + Mockito
+
+```java
+@ExtendWith(MockitoExtension.class)
+class WishlistServiceTest {
+    @Mock WishlistItemRepository repository;
+    @Mock CatalogClient catalogClient;
+    @InjectMocks WishlistService service;
+
+    @Test
+    @DisplayName("중복 과목 추가 시 예외 발생")
+    void addToWishlist_duplicate_throwsException() {
+        when(catalogClient.getFullCourseById(101L)).thenReturn(mockCourse());
+        when(repository.existsByUserIdAndCourseId(1L, 101L)).thenReturn(true);
+
+        assertThatThrownBy(() -> service.addToWishlist(1L, request))
+            .isInstanceOf(DuplicateWishlistItemException.class);
+    }
+}
 ```
-tests/e2e/
+
+**테스트 대상:**
+- 비즈니스 로직, 유효성 검증, 엣지 케이스
+- 예외 처리 (중복, 존재하지 않는 리소스 등)
+
+---
+
+### 2. Component Test (컴포넌트 테스트)
+
+**범위:** 단일 서비스의 전체 레이어 (Controller → Service → Repository)  
+**의존성:** TestContainers MySQL, 외부 서비스는 Mock  
+**프레임워크:** Spring Boot Test + MockMvc + TestContainers
+
+```java
+@SpringBootTest
+@AutoConfigureMockMvc
+@Testcontainers
+class WishlistTest {
+    @Container
+    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0");
+
+    @Autowired MockMvc mockMvc;
+    @MockBean CatalogClient catalogClient;  // 외부 서비스만 Mock
+
+    @Test
+    void shouldCreateWishlistItem() throws Exception {
+        mockMvc.perform(post("/wishlist")
+                .header("X-User-Id", 1L)
+                .contentType(APPLICATION_JSON)
+                .content("{\"courseId\": 101, \"priority\": 1}"))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.id").exists());
+    }
+}
+```
+
+**테스트 대상:**
+- Spring DI, AOP, 트랜잭션
+- HTTP 요청/응답 매핑
+- 실제 MySQL과의 동작 (H2 사용 금지)
+
+---
+
+### 3. Contract Test (계약 테스트)
+
+**범위:** 다른 마이크로서비스 API 호출 검증  
+**의존성:** WireMock 또는 실제 서비스  
+**프레임워크:** Spring Cloud Contract 또는 WireMock
+
+```java
+@SpringBootTest
+@AutoConfigureWireMock(port = 0)
+class CatalogClientContractTest {
+    @Autowired CatalogClient catalogClient;
+
+    @Test
+    void shouldGetCourseById() {
+        stubFor(get(urlEqualTo("/courses/101"))
+            .willReturn(okJson("{\"id\": 101, \"name\": \"Test Course\"}")));
+
+        CourseFullResponse course = catalogClient.getFullCourseById(101L);
+
+        assertThat(course.getId()).isEqualTo(101L);
+        assertThat(course.getName()).isEqualTo("Test Course");
+    }
+}
+```
+
+**테스트 대상:**
+- API 호출 형식, 필드 매핑
+- 네트워크 오류 처리
+
+---
+
+### 4. Integration Test (통합 테스트)
+
+**범위:** 실제 docker-compose 환경에서 전체 시스템  
+**의존성:** 모든 서비스 + 실제 DB + 실제 네트워크  
+**프레임워크:** pytest (Python)
+
+```
+tests/integration/
 ├── pyproject.toml        # 의존성 (uv)
 ├── conftest.py           # fixtures
 ├── test_auth.py          # 인증
@@ -120,13 +197,57 @@ tests/e2e/
 └── test_registration.py  # 수강신청
 ```
 
-각 파일에 Happy Path + Edge Cases 포함.
-
 **실행:**
 ```bash
-cd tests/e2e
+# docker-compose 환경 시작
+docker compose -f docker-compose.test.yml up -d --build
+sleep 30
+
+# 테스트 실행
+cd tests/integration
 uv sync
 uv run pytest -v
+
+# 정리
+docker compose -f docker-compose.test.yml down
+```
+
+**테스트 대상:**
+- Happy Path 중심 (주요 사용자 시나리오)
+- 서비스 간 통신, 실제 환경 설정 검증
+
+> **Note:** 엣지 케이스와 비즈니스 로직은 Unit/Component Test에서 검증. Integration Test는 전체 흐름만 확인.
+
+---
+
+### 5. E2E Test (종단 간 테스트)
+
+**범위:** 사용자 관점의 완전한 여정 (UI 포함)  
+**의존성:** Flutter 앱 + 모든 백엔드 서비스  
+**상태:** 향후 구현 예정
+
+---
+
+### 폴더 구조
+
+**백엔드 (권장):**
+```
+app/backend/*/src/test/java/com/uniplan/*/
+├── unit/
+│   └── wishlist/
+│       └── WishlistServiceTest.java
+├── component/
+│   └── wishlist/
+│       └── WishlistTest.java
+└── contract/
+    └── CatalogClientContractTest.java
+```
+
+**Integration 테스트:**
+```
+tests/integration/
+├── test_*.py
+└── conftest.py
 ```
 
 ### 테스트 커버리지 목표
@@ -556,17 +677,17 @@ docker compose down -v
 
 환경변수는 `docker-compose.yml`에 하드코딩되어 있으며, 별도 설정 불필요.
 
-### E2E 테스트 환경
+### Integration 테스트 환경
 
 ```bash
 # 테스트 컨테이너 시작 (tmpfs DB)
 docker compose -f docker-compose.test.yml up -d --build
 
 # 대기 (서비스 준비)
-sleep 20
+sleep 30
 
 # 테스트 실행
-cd tests/e2e && uv sync && uv run pytest -v
+cd tests/integration && uv sync && uv run pytest -v
 
 # 종료
 docker compose -f docker-compose.test.yml down
@@ -602,10 +723,11 @@ docker compose -f docker-compose.prod.yml up -d
 - 명확한 레이어 분리
 
 ### Test
-- 단위 테스트: JUnit 5 + Mockito
-- 통합 테스트: SpringBootTest + MockMvc
-- E2E 테스트: pytest (도메인별 Happy Path + Edge Cases)
-- **Skip 금지**: 예상치 못한 상황은 fail, fixture로 데이터 준비
+- Unit: 비즈니스 로직, 엣지 케이스 (JUnit 5 + Mockito)
+- Component: 단일 서비스 전체 (TestContainers MySQL)
+- Contract: 서비스 간 API 계약 (WireMock)
+- Integration: docker-compose 전체 시스템 (pytest)
+- **엣지 케이스는 Unit/Component에서 검증, Integration은 Happy Path만**
 - 품질 게이트 필수 통과
 
 ### Conventions

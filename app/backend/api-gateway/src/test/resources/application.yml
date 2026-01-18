@@ -1,0 +1,32 @@
+server:
+  port: 0  # Random port for testing
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      # 테스트용으로 빈 라우트 설정 (프로덕션 라우트 오버라이드)
+      routes: []
+      globalcors:
+        cors-configurations: {}
+
+# 마이크로서비스 URI 설정 (테스트용 더미 값)
+services:
+  user-service:
+    uri: http://localhost:8081
+  planner-service:
+    uri: http://localhost:8082
+  catalog-service:
+    uri: http://localhost:8083
+
+# JWT 설정 (테스트용)
+jwt:
+  secret: test-jwt-secret-key-minimum-256-bits-for-testing-purposes-only
+
+# Logging
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    com.uniplan.gateway: DEBUG

@@ -21,18 +21,28 @@ description: |
 
 ## 2. 관련 테스트 파일 식별
 
-### 단위/통합 테스트 (app/backend/**/src/test/)
+### 테스트 레벨
+
+| 유형 | 위치 | 테스트 대상 |
+|------|------|------------|
+| **Unit** | `unit/` | 비즈니스 로직, 엣지 케이스, 예외 처리 |
+| **Component** | `component/` | 단일 서비스 전체 레이어, TestContainers MySQL |
+| **Contract** | `contract/` | 다른 서비스 API 계약 |
+| **Integration** | `tests/integration/` | 전체 시스템 Happy Path |
+
+### 테스트 파일 매핑
 
 | 변경 파일 | 테스트 파일 |
 |----------|------------|
-| `*Controller.java` | `*ControllerTest.java` |
-| `*Service.java` | `*ServiceTest.java` |
-| `*Response.java` / `*Request.java` | Controller/Service 테스트의 assertion |
+| `*Service.java` | `unit/*ServiceTest.java` |
+| `*Controller.java` + Service + Repository | `component/*Test.java` |
+| `*Client.java` (외부 서비스 호출) | `contract/*ContractTest.java` |
+| API 엔드포인트/응답 구조 | `tests/integration/test_*.py` |
 
-### E2E 테스트 (tests/e2e/)
+### Integration 테스트 매핑 (tests/integration/)
 
-| 변경 도메인 | E2E 테스트 파일 |
-|------------|----------------|
+| 변경 도메인 | Integration 테스트 파일 |
+|------------|------------------------|
 | user-service (인증) | `test_auth.py` |
 | catalog-service (강의) | `test_courses.py` |
 | planner-service (위시리스트) | `test_wishlist.py` |
@@ -42,10 +52,9 @@ description: |
 
 ## 3. 테스트 코드 점검
 
-> **핵심 원칙: 테스트는 최대한 적극적으로 실패를 유발해야 한다.**
->
-> E2E 테스트는 **프론트엔드 개발자가 컨트롤러를 확인하지 않고도 API를 구현할 수 있는 계약서**.
-> 상태 코드, DTO 필드, 응답 구조 등 모든 세부사항을 명시적으로 검증해야 한다.
+> **핵심 원칙:**
+> - **Unit/Component**: 비즈니스 로직, 엣지 케이스, 예외 처리 검증
+> - **Integration**: Happy Path만, 실제 환경 통합 검증
 
 각 테스트 파일에서 확인:
 
@@ -106,14 +115,14 @@ assert "message" in error or "error" in error
 
 ## 5. 테스트 실행 및 검증
 
-### 단위/통합 테스트 (필수)
+### Unit/Component 테스트 (필수)
 
 ```bash
 cd app/backend
 ./gradlew test
 ```
 
-### E2E 테스트 (주요 API 변경 시)
+### Integration 테스트 (주요 API 변경 시)
 
 ```bash
 # 1. 개발 컨테이너가 떠있다면 중지
@@ -122,11 +131,11 @@ docker compose down
 # 2. 테스트용 컨테이너 실행 (tmpfs로 매번 깨끗한 DB)
 docker compose -f docker-compose.test.yml up -d --build
 
-# 3. 서비스 준비 대기 (약 20초)
-sleep 20
+# 3. 서비스 준비 대기 (약 30초)
+sleep 30
 
-# 4. E2E 테스트 실행
-cd tests/e2e
+# 4. Integration 테스트 실행
+cd tests/integration
 uv sync
 uv run pytest -v
 
@@ -134,7 +143,7 @@ uv run pytest -v
 docker compose -f docker-compose.test.yml down
 ```
 
-**E2E 테스트 실행 조건:**
+**Integration 테스트 실행 조건:**
 - API 엔드포인트 추가/삭제/변경
 - 요청/응답 구조 변경
 - 인증 흐름 변경
@@ -147,8 +156,8 @@ docker compose -f docker-compose.test.yml down
 
 ## 완료 조건
 
-- [ ] 모든 관련 단위/통합 테스트 파일 점검 완료
+- [ ] 모든 관련 Unit/Component 테스트 파일 점검 완료
 - [ ] 필요한 테스트 수정 완료
 - [ ] `./gradlew test` 전체 통과
-- [ ] (주요 변경 시) E2E 테스트 통과
+- [ ] (주요 변경 시) Integration 테스트 통과
 - [ ] **이 조건 충족 전까지 백엔드 작업 미완료로 간주**

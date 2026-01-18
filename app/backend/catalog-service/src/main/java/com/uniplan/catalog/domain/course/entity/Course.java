@@ -82,4 +82,30 @@ public class Course {
         this.classTimes.add(classTime);
         classTime.setCourse(this);
     }
+
+    /**
+     * Update course with new data (for import upsert)
+     */
+    public void update(String courseName, Integer credits, String classroom,
+                       String campus, String notes, Integer targetGrade,
+                       CourseType courseType, List<Department> departments) {
+        this.courseName = courseName;
+        this.credits = credits;
+        this.classroom = classroom;
+        this.campus = campus;
+        this.notes = notes;
+        this.targetGrade = targetGrade;
+        this.courseType = courseType;
+        this.departments = departments;
+    }
+
+    /**
+     * Clear and replace class times
+     */
+    public void replaceClassTimes(List<ClassTime> newClassTimes) {
+        this.classTimes.clear();
+        for (ClassTime ct : newClassTimes) {
+            addClassTime(ct);
+        }
+    }
 }

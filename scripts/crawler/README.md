@@ -2,6 +2,19 @@
 
 대학별 수강신청 시스템에서 강의 정보를 크롤링합니다.
 
+## 워크플로우
+
+```
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│  metadata   │ → │   courses   │ → │  transform  │ → │   upload    │
+│  (크롤링)   │    │  (크롤링)   │    │   (변환)    │    │  (업로드)   │
+└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
+       ↓                  ↓                  ↓
+  metadata.json    courses_raw.json   transformed.json
+```
+
+> 💡 `courses`는 네트워크 비용이 높아 **한 번만** 실행하고, `transform`은 로직 수정 후 **여러 번** 재실행 가능!
+
 ## 구조
 
 ```
@@ -13,9 +26,13 @@ scripts/crawler/
 │
 ├── universities/           # 대학별 크롤러
 │   └── khu/               # 경희대학교
-│       ├── config.py      # KHU 설정 (URL, 학기 코드 등)
+│       ├── README.md      # KHU 전용 문서 (필드 명세 등)
+│       ├── config.py      # 설정 (URL, 학기 코드 등)
 │       ├── crawler.py     # API 크롤러
 │       └── parser.py      # 데이터 파싱/변환
+│
+├── tests/                  # 유닛 테스트
+│   └── test_khu_parser.py # KHU 파서 테스트
 │
 ├── output/                 # 출력 파일 (gitignore)
 ├── run.py                  # 통합 CLI
@@ -28,7 +45,7 @@ scripts/crawler/
 
 ```bash
 cd scripts/crawler
-uv sync  # 또는 pip install -r requirements.txt
+uv sync
 ```
 
 ### 명령어
@@ -37,13 +54,16 @@ uv sync  # 또는 pip install -r requirements.txt
 # 1. 메타데이터 크롤링 (대학, 학과, 이수구분 코드)
 uv run python run.py metadata -u khu -y 2026 -s 1
 
-# 2. 강의 크롤링 + 변환
+# 2. 강의 크롤링 (raw 데이터 저장)
 uv run python run.py courses -u khu -y 2026 -s 1
 
-# 3. catalog-service로 업로드
+# 3. 변환 (raw → catalog-service 형식)
+uv run python run.py transform -u khu -y 2026 -s 1
+
+# 4. catalog-service로 업로드
 uv run python run.py upload -u khu -y 2026 -s 1
 
-# 전체 파이프라인 (1+2+3)
+# 전체 파이프라인 (1+2+3+4)
 uv run python run.py full -u khu -y 2026 -s 1
 ```
 
@@ -58,61 +78,38 @@ uv run python run.py courses -u khu -y 2026 -s 1 --departments A10451,A00430
 uv run python run.py upload -u khu -y 2026 -s 1 --host localhost --port 8083
 ```
 
+## 출력 파일
+
+| 파일 | 설명 | 생성 커맨드 |
+|------|------|-------------|
+| `metadata_*.json` | 대학/학과/이수구분 코드 | `metadata` |
+| `courses_raw_*.json` | 크롤링한 원본 강의 데이터 | `courses` |
+| `transformed_*.json` | catalog-service 형식 강의 데이터 | `transform` |
+
 ## 새 대학 추가
 
 1. `universities/<code>/` 폴더 생성
 2. 필수 파일 구현:
    - `config.py` - UNIVERSITY_ID, URL 등
    - `crawler.py` - 데이터 수집 로직
-   - `parser.py` - 데이터 변환 (common/schema.py 형식으로)
+   - `parser.py` - 데이터 변환
+   - `README.md` - 대학별 필드 명세
 3. `run.py`의 `get_university_module()` 수정
-
-### 예시: 서울대 추가
-
-```python
-# universities/snu/config.py
-UNIVERSITY_ID = 2
-UNIVERSITY_CODE = "SNU"
-BASE_URL = "https://sugang.snu.ac.kr/..."
-
-# universities/snu/crawler.py
-class SNUCrawler:
-    def fetch_courses(self, year, semester): ...
-
-# universities/snu/parser.py
-class SNUParser:
-    def parse_courses(self, raw_courses, year, semester): ...
-```
-
-## 출력 형식
-
-모든 대학 크롤러는 동일한 출력 형식을 사용합니다 (catalog-service CourseImportRequest DTO):
-
-```json
-{
-  "universityId": 1,
-  "openingYear": 2026,
-  "semester": "1",
-  "courseCode": "CSE302",
-  "section": "01",
-  "courseName": "컴퓨터네트워크",
-  "professor": "홍길동",
-  "credits": 3,
-  "classTime": [
-    {"day": "월", "startTime": "15:00", "endTime": "16:15"}
-  ],
-  "classroom": "공A101",
-  "courseTypeCode": "04",
-  "campus": "서울",
-  "departmentCodes": ["A10627"],
-  "notes": ""
-}
-```
 
 ## 지원 대학
 
 | 코드 | 대학명 | 상태 |
 |------|--------|------|
 | khu | 경희대학교 | ✅ |
-| snu | 서울대학교 | 🚧 (향후) |
-| yonsei | 연세대학교 | 🚧 (향후) |
+
+## 테스트
+
+```bash
+# 테스트 실행
+uv run pytest tests/ -v
+
+# 특정 테스트만 실행
+uv run pytest tests/test_khu_parser.py -v
+```
+
+새 대학 추가 시 `tests/test_<code>_parser.py` 테스트도 추가해야 합니다.

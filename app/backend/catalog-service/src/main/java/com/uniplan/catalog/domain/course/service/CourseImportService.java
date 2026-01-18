@@ -46,7 +46,7 @@ public class CourseImportService {
         int totalCount = requests.size();
         int successCount = 0;
         int failureCount = 0;
-        int skippedCount = 0;
+        int updatedCount = 0;
 
         // Cache for departments, course types, and universities to reduce DB queries
         Map<String, Department> departmentCache = new HashMap<>();
@@ -59,8 +59,8 @@ public class CourseImportService {
             CourseImportRequest request = requests.get(i);
 
             try {
-                // Check for duplicates (courseCode + section + year + semester + professor)
-                boolean exists = courseRepository.existsByCourseCodeAndSectionAndOpeningYearAndSemesterAndProfessor(
+                // Check for existing course (courseCode + section + year + semester + professor)
+                var existingCourse = courseRepository.findByCourseCodeAndSectionAndOpeningYearAndSemesterAndProfessor(
                     request.getCourseCode(),
                     request.getSection(),
                     request.getOpeningYear(),
@@ -68,9 +68,13 @@ public class CourseImportService {
                     request.getProfessor()
                 );
 
-                if (exists) {
-                    skippedCount++;
-                    log.debug("Skipping duplicate course: {} ({})", request.getCourseName(), request.getCourseCode());
+                if (existingCourse.isPresent()) {
+                    // Update existing course
+                    Course course = existingCourse.get();
+                    updateCourse(course, request, departmentCache, courseTypeCache);
+                    courseRepository.save(course);
+                    updatedCount++;
+                    log.debug("Updated existing course: {} ({})", request.getCourseName(), request.getCourseCode());
                     continue;
                 }
 
@@ -145,7 +149,7 @@ public class CourseImportService {
                         entityManager.flush();  // Explicitly flush to database
                         entityManager.clear();  // Clear persistence context
                         courseBatch.clear();
-                        log.info("Imported {} / {} courses (skipped: {})", successCount, totalCount, skippedCount);
+                        log.info("Imported {} / {} courses (updated: {})", successCount, totalCount, updatedCount);
                     } catch (Exception batchError) {
                         // If batch save fails, clear the persistence context and retry one by one
                         entityManager.clear();
@@ -177,14 +181,14 @@ public class CourseImportService {
             }
         }
 
-        String message = String.format("Course import completed. Total: %d, Success: %d, Skipped: %d, Failure: %d",
-            totalCount, successCount, skippedCount, failureCount);
+        String message = String.format("Course import completed. Total: %d, Created: %d, Updated: %d, Failure: %d",
+            totalCount, successCount, updatedCount, failureCount);
         log.info(message);
 
         return ImportResponse.builder()
             .message(message)
             .totalCount(totalCount)
-            .successCount(successCount)
+            .successCount(successCount + updatedCount)  // Both created and updated are "success"
             .failureCount(failureCount)
             .build();
     }
@@ -272,5 +276,57 @@ public class CourseImportService {
             .successCount((int) count)
             .failureCount(0)
             .build();
+    }
+
+    /**
+     * Update existing course with new data from request
+     */
+    private void updateCourse(Course course, CourseImportRequest request,
+                              Map<String, Department> departmentCache,
+                              Map<String, CourseType> courseTypeCache) {
+        // Get course type
+        CourseType courseType = courseTypeCache.computeIfAbsent(
+            request.getCourseTypeCode(),
+            code -> getOrCreateCourseType(code)
+        );
+
+        // Get departments
+        List<Department> departments = new ArrayList<>();
+        if (request.getDepartmentCodes() != null && !request.getDepartmentCodes().isEmpty()) {
+            for (String deptCode : request.getDepartmentCodes()) {
+                Department department = departmentCache.computeIfAbsent(
+                    deptCode,
+                    code -> getOrCreateDepartment(code)
+                );
+                departments.add(department);
+            }
+        }
+
+        // Update course using domain method
+        course.update(
+            request.getCourseName(),
+            request.getCredits(),
+            request.getClassroom(),
+            request.getCampus(),
+            request.getNotes(),
+            request.getTargetGrade(),
+            courseType,
+            departments
+        );
+
+        // Update class times
+        List<ClassTime> newClassTimes = new ArrayList<>();
+        if (request.getClassTime() != null) {
+            for (CourseImportRequest.ClassTimeDto timeDto : request.getClassTime()) {
+                ClassTime classTime = ClassTime.builder()
+                    .course(course)
+                    .day(timeDto.getDay())
+                    .startTime(LocalTime.parse(timeDto.getStartTime()))
+                    .endTime(LocalTime.parse(timeDto.getEndTime()))
+                    .build();
+                newClassTimes.add(classTime);
+            }
+        }
+        course.replaceClassTimes(newClassTimes);
     }
 }

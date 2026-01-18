@@ -18,4 +18,16 @@ public interface CourseRepository extends JpaRepository<Course, Long>, JpaSpecif
         String semester,
         String professor
     );
+
+    /**
+     * Find a course by courseCode, section, openingYear, semester, and professor.
+     * Used for upsert during import.
+     */
+    java.util.Optional<Course> findByCourseCodeAndSectionAndOpeningYearAndSemesterAndProfessor(
+        String courseCode,
+        String section,
+        Integer openingYear,
+        String semester,
+        String professor
+    );
 }

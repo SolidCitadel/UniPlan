@@ -108,7 +108,8 @@ class KHUParser:
 
         rows_section = js_content[start_idx:end_idx]
 
-        pattern = r'"nm"\s*:\s*"([^"]+)"[^}]*"cd"\s*:\s*"([^"]+)"'
+        # Pattern: "nmk" for Korean name in course types (not "nm")
+        pattern = r'"nmk"\s*:\s*"([^"]+)"[^}]*"cd"\s*:\s*"([^"]+)"'
         matches = re.findall(pattern, rows_section)
 
         for name, code in matches:
@@ -238,7 +239,8 @@ class KHUParser:
             "classroom": cls.extract_classroom(timetable),
             "courseTypeCode": raw_course.get('field_gb', ''),
             "campus": raw_course.get('campus_nm', '').strip(),
-            "departmentCode": raw_course.get('class_cd', ''),
+            # Use _queried_dept (injected during crawl) instead of class_cd (unreliable)
+            "departmentCode": raw_course.get('_queried_dept', '') or raw_course.get('class_cd', ''),
             "notes": raw_course.get('bigo', '').strip(),
         }
 

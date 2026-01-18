@@ -6,10 +6,13 @@ Usage:
     # Crawl metadata
     python run.py metadata --university khu --year 2026 --semester 1
 
-    # Crawl courses
+    # Crawl courses (saves raw data)
     python run.py courses --university khu --year 2026 --semester 1
 
-    # Transform and upload
+    # Transform raw courses to catalog-service format
+    python run.py transform --university khu --year 2026 --semester 1
+
+    # Upload to catalog-service
     python run.py upload --university khu --year 2026 --semester 1
 
     # Full pipeline (metadata + courses + transform + upload)
@@ -131,6 +134,9 @@ def cmd_courses(args):
                 data = crawler.fetch_courses(args.year, args.semester, major_code=dept_code)
                 if data and 'rows' in data:
                     courses = data['rows']
+                    # Inject queried department code (API doesn't return it correctly)
+                    for c in courses:
+                        c['_queried_dept'] = dept_code
                     all_courses.extend(courses)
                     success_count += 1
                     print(f"   -> {len(courses)} courses")
@@ -151,26 +157,56 @@ def cmd_courses(args):
                 'year': args.year,
                 'semester': args.semester,
                 'total_courses': len(all_courses),
-                'departments': {k: {'courses': []} for k in departments}  # Simplified
+                'courses': all_courses  # Raw course data for re-transformation
             }, f, ensure_ascii=False, indent=2)
-
-        # Transform courses
-        print(f"\nTransforming {len(all_courses)} courses...")
-        from universities.khu import UNIVERSITY_ID
-        transformed = Parser.parse_courses(all_courses, args.year, args.semester, UNIVERSITY_ID)
-
-        # Save transformed
-        transformed_file = output_dir / f"transformed_{args.university}_{args.year}_{args.semester}.json"
-        with open(transformed_file, 'w', encoding='utf-8') as f:
-            json.dump(transformed, f, ensure_ascii=False, indent=2)
 
         print(f"\n{'=' * 60}")
         print("SUCCESS!")
         print(f"  Departments: {success_count} success, {fail_count} failed")
         print(f"  Raw courses: {len(all_courses)}")
-        print(f"  Unique courses: {len(transformed)}")
-        print(f"  Saved: {transformed_file}")
+        print(f"  Saved: {raw_file}")
         print("=" * 60)
+
+    return 0
+
+
+def cmd_transform(args):
+    """Transform raw courses to catalog-service format."""
+    print("=" * 60)
+    print(f"Transforming: {args.university.upper()} {args.year} semester {args.semester}")
+    print("=" * 60)
+
+    _, Parser, UNIVERSITY_ID = get_university_module(args.university)
+    output_dir = get_output_dir()
+
+    # Load raw courses
+    raw_file = output_dir / f"courses_raw_{args.university}_{args.year}_{args.semester}.json"
+    if not raw_file.exists():
+        print(f"ERROR: Raw courses file not found: {raw_file}")
+        print("Run 'python run.py courses' first.")
+        return 1
+
+    with open(raw_file, 'r', encoding='utf-8') as f:
+        raw_data = json.load(f)
+
+    all_courses = raw_data.get('courses', [])
+    print(f"Loaded {len(all_courses)} raw courses\n")
+
+    # Transform courses
+    print("Transforming courses...")
+    transformed = Parser.parse_courses(all_courses, args.year, args.semester, UNIVERSITY_ID)
+
+    # Save transformed
+    transformed_file = output_dir / f"transformed_{args.university}_{args.year}_{args.semester}.json"
+    with open(transformed_file, 'w', encoding='utf-8') as f:
+        json.dump(transformed, f, ensure_ascii=False, indent=2)
+
+    print(f"\n{'=' * 60}")
+    print("SUCCESS!")
+    print(f"  Raw courses: {len(all_courses)}")
+    print(f"  Unique courses: {len(transformed)}")
+    print(f"  Saved: {transformed_file}")
+    print("=" * 60)
 
     return 0
 
@@ -217,19 +253,25 @@ def cmd_full(args):
     print("=" * 60)
 
     # Step 1: Metadata
-    print("\n[Step 1/3] Crawling metadata...")
+    print("\n[Step 1/4] Crawling metadata...")
     result = cmd_metadata(args)
     if result != 0:
         return result
 
     # Step 2: Courses
-    print("\n[Step 2/3] Crawling courses...")
+    print("\n[Step 2/4] Crawling courses...")
     result = cmd_courses(args)
     if result != 0:
         return result
 
-    # Step 3: Upload
-    print("\n[Step 3/3] Uploading to catalog-service...")
+    # Step 3: Transform
+    print("\n[Step 3/4] Transforming courses...")
+    result = cmd_transform(args)
+    if result != 0:
+        return result
+
+    # Step 4: Upload
+    print("\n[Step 4/4] Uploading to catalog-service...")
     result = cmd_upload(args)
     if result != 0:
         return result
@@ -267,6 +309,9 @@ def main():
     upload_parser.add_argument('--host', default='localhost', help='catalog-service host')
     upload_parser.add_argument('--port', type=int, default=8083, help='catalog-service port')
 
+    # transform command
+    transform_parser = subparsers.add_parser('transform', parents=[common], help='Transform raw courses')
+
     # full command
     full_parser = subparsers.add_parser('full', parents=[common], help='Full pipeline')
     full_parser.add_argument('--limit', type=int, help='Limit number of departments')
@@ -283,6 +328,7 @@ def main():
     commands = {
         'metadata': cmd_metadata,
         'courses': cmd_courses,
+        'transform': cmd_transform,
         'upload': cmd_upload,
         'full': cmd_full,
     }

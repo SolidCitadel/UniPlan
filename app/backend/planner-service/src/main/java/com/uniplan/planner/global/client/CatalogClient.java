@@ -4,35 +4,30 @@ import com.uniplan.planner.global.client.dto.CourseFullResponse;
 import com.uniplan.planner.global.client.dto.CourseSimpleResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Client for calling catalog-service APIs
+ * Facade for catalog-service API calls.
+ * Delegates to CatalogFeignClient (OpenFeign) for actual HTTP communication.
  */
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class CatalogClient {
 
-    private final RestTemplate restTemplate;
-
-    @Value("${services.catalog.url}")
-    private String catalogServiceUrl;
+    private final CatalogFeignClient feignClient;
 
     /**
      * Get simple course information by ID (id, courseName, professor only)
      */
     public CourseSimpleResponse getCourseById(Long courseId) {
-        String url = catalogServiceUrl + "/courses/" + courseId;
-
         try {
-            return restTemplate.getForObject(url, CourseSimpleResponse.class);
+            CourseFullResponse full = feignClient.getCourseById(courseId);
+            return toSimple(full);
         } catch (Exception e) {
             log.error("Failed to fetch course from catalog-service. courseId={}, error={}",
                 courseId, e.getMessage());
@@ -44,10 +39,8 @@ public class CatalogClient {
      * Get full course information by ID (all fields including classTimes)
      */
     public CourseFullResponse getFullCourseById(Long courseId) {
-        String url = catalogServiceUrl + "/courses/" + courseId;
-
         try {
-            return restTemplate.getForObject(url, CourseFullResponse.class);
+            return feignClient.getCourseById(courseId);
         } catch (Exception e) {
             log.error("Failed to fetch course from catalog-service. courseId={}, error={}",
                 courseId, e.getMessage());
@@ -57,26 +50,17 @@ public class CatalogClient {
 
     /**
      * Get multiple simple courses by IDs (Batch)
-     * Calls internal API /internal/courses?ids=...
      */
     public Map<Long, CourseSimpleResponse> getCoursesByIds(List<Long> courseIds) {
         if (courseIds == null || courseIds.isEmpty()) {
             return new HashMap<>();
         }
 
-        // Use internal batch API
-        String url = catalogServiceUrl + "/internal/courses?ids=" + String.join(",", 
-            courseIds.stream().map(String::valueOf).toArray(String[]::new));
-
         try {
-            CourseSimpleResponse[] response = restTemplate.getForObject(url, CourseSimpleResponse[].class);
-            if (response == null) {
-                return new HashMap<>();
-            }
-
+            List<CourseFullResponse> courses = feignClient.getCoursesByIds(courseIds);
             Map<Long, CourseSimpleResponse> result = new HashMap<>();
-            for (CourseSimpleResponse course : response) {
-                result.put(course.getId(), course);
+            for (CourseFullResponse course : courses) {
+                result.put(course.getId(), toSimple(course));
             }
             return result;
 
@@ -88,25 +72,16 @@ public class CatalogClient {
 
     /**
      * Get multiple full courses by IDs (Batch)
-     * Calls internal API /internal/courses?ids=...
      */
     public Map<Long, CourseFullResponse> getFullCoursesByIds(List<Long> courseIds) {
         if (courseIds == null || courseIds.isEmpty()) {
             return new HashMap<>();
         }
 
-        // Use internal batch API
-        String url = catalogServiceUrl + "/internal/courses?ids=" + String.join(",", 
-            courseIds.stream().map(String::valueOf).toArray(String[]::new));
-
         try {
-            CourseFullResponse[] response = restTemplate.getForObject(url, CourseFullResponse[].class);
-            if (response == null) {
-                return new HashMap<>();
-            }
-
+            List<CourseFullResponse> courses = feignClient.getCoursesByIds(courseIds);
             Map<Long, CourseFullResponse> result = new HashMap<>();
-            for (CourseFullResponse course : response) {
+            for (CourseFullResponse course : courses) {
                 result.put(course.getId(), course);
             }
             return result;
@@ -116,4 +91,14 @@ public class CatalogClient {
             return new HashMap<>();
         }
     }
+
+    private CourseSimpleResponse toSimple(CourseFullResponse full) {
+        if (full == null) return null;
+        return CourseSimpleResponse.builder()
+            .id(full.getId())
+            .courseName(full.getCourseName())
+            .professor(full.getProfessor())
+            .build();
+    }
 }
+

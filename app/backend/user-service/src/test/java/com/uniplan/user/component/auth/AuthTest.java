@@ -7,10 +7,12 @@ import com.uniplan.user.domain.university.entity.University;
 import com.uniplan.user.domain.university.repository.UniversityRepository;
 import com.uniplan.user.domain.user.entity.UserRole;
 import com.uniplan.user.domain.user.entity.UserStatus;
+import com.uniplan.user.config.DockerRequiredExtension;
 import com.uniplan.user.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,6 +31,7 @@ import static org.hamcrest.Matchers.*;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
+@ExtendWith(DockerRequiredExtension.class)
 @DisplayName("AuthController 통합 테스트")
 class AuthTest {
 

@@ -59,6 +59,19 @@ class CourseImportServiceTest {
         mockCourseType = CourseType.builder().code("01").nameKr("전공필수").build();
     }
 
+    // Helper to create a dummy Course
+    private com.uniplan.catalog.domain.course.entity.Course createMockCourse() {
+        return com.uniplan.catalog.domain.course.entity.Course.builder()
+            .university(mockUniversity)
+            .courseCode("CS101")
+            .section("001")
+            .openingYear(2026)
+            .semester("1학기")
+            .professor("김교수")
+            .courseName("Old Name")
+            .build();
+    }
+
     @Nested
     @DisplayName("importCourses")
     class ImportCourses {
@@ -71,8 +84,8 @@ class CourseImportServiceTest {
             given(universityRepository.findById(1L)).willReturn(Optional.of(mockUniversity));
             given(departmentRepository.findByCode("CS")).willReturn(Optional.of(mockDepartment));
             given(courseTypeRepository.findByCode("01")).willReturn(Optional.of(mockCourseType));
-            given(courseRepository.existsByCourseCodeAndSectionAndOpeningYearAndSemesterAndProfessor(
-                anyString(), anyString(), any(), anyString(), anyString())).willReturn(false);
+            given(courseRepository.findByCourseCodeAndSectionAndOpeningYearAndSemesterAndProfessor(
+                anyString(), anyString(), any(), anyString(), anyString())).willReturn(Optional.empty());
 
             // when
             ImportResponse response = courseImportService.importCourses(List.of(request));
@@ -84,20 +97,26 @@ class CourseImportServiceTest {
         }
 
         @Test
-        @DisplayName("중복 과목 - 스킵됨")
-        void duplicate_skipped() {
+        @DisplayName("중복 과목 - 업데이트됨")
+        void duplicate_updates() {
             // given
             CourseImportRequest request = createValidRequest();
-            given(courseRepository.existsByCourseCodeAndSectionAndOpeningYearAndSemesterAndProfessor(
-                anyString(), anyString(), any(), anyString(), anyString())).willReturn(true);
+            com.uniplan.catalog.domain.course.entity.Course existingCourse = createMockCourse();
+            
+            // Need courseType and department for update logic
+            given(courseTypeRepository.findByCode("01")).willReturn(Optional.of(mockCourseType));
+            given(departmentRepository.findByCode("CS")).willReturn(Optional.of(mockDepartment));
+            
+            given(courseRepository.findByCourseCodeAndSectionAndOpeningYearAndSemesterAndProfessor(
+                anyString(), anyString(), any(), anyString(), anyString())).willReturn(Optional.of(existingCourse));
 
             // when
             ImportResponse response = courseImportService.importCourses(List.of(request));
 
             // then
-            assertThat(response.getSuccessCount()).isEqualTo(0);
+            assertThat(response.getSuccessCount()).isEqualTo(1); // Updated count is included in success
             assertThat(response.getFailureCount()).isEqualTo(0);
-            verify(courseRepository, never()).saveAll(any());
+            verify(courseRepository).save(existingCourse); // Update calls save, not saveAll
         }
 
         @Test
@@ -117,11 +136,21 @@ class CourseImportServiceTest {
         void universityNotFound_throwsException() {
             // given
             CourseImportRequest request = createValidRequest();
-            given(universityRepository.findById(1L)).willReturn(Optional.empty());
-            given(courseRepository.existsByCourseCodeAndSectionAndOpeningYearAndSemesterAndProfessor(
-                anyString(), anyString(), any(), anyString(), anyString())).willReturn(false);
+            given(courseRepository.findByCourseCodeAndSectionAndOpeningYearAndSemesterAndProfessor(
+                anyString(), anyString(), any(), anyString(), anyString())).willReturn(Optional.empty());
+            
+            // Pre-fetch departments/courseTypes logic happens before University check in service implementation?
+            // Checking implementation:
+            // 1. Check existing -> NO
+            // 2. Department loop -> Need stubs if dept codes exist
             given(departmentRepository.findByCode("CS")).willReturn(Optional.of(mockDepartment));
+            
+            // 3. CourseType check -> Need stub
             given(courseTypeRepository.findByCode("01")).willReturn(Optional.of(mockCourseType));
+
+            // 4. University check -> Fail here
+            given(universityRepository.findById(1L)).willReturn(Optional.empty());
+
 
             // when
             ImportResponse response = courseImportService.importCourses(List.of(request));
@@ -143,8 +172,8 @@ class CourseImportServiceTest {
             given(collegeRepository.findByCode("UNKNOWN")).willReturn(Optional.of(unknownCollege));
             given(departmentRepository.save(any())).willReturn(newDepartment);
             given(courseTypeRepository.findByCode("01")).willReturn(Optional.of(mockCourseType));
-            given(courseRepository.existsByCourseCodeAndSectionAndOpeningYearAndSemesterAndProfessor(
-                anyString(), anyString(), any(), anyString(), anyString())).willReturn(false);
+            given(courseRepository.findByCourseCodeAndSectionAndOpeningYearAndSemesterAndProfessor(
+                anyString(), anyString(), any(), anyString(), anyString())).willReturn(Optional.empty());
 
             // when
             ImportResponse response = courseImportService.importCourses(List.of(request));

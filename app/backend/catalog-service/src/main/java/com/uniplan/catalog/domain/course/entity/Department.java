@@ -28,6 +28,6 @@ public class Department {
     @JoinColumn(name = "college_id", nullable = false)
     private College college;
 
-    @Column(length = 10)
+    @Column(name = "`level`", length = 20)
     private String level;
 }

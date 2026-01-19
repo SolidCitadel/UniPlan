@@ -34,6 +34,8 @@ public class UserResponse {
     @Schema(requiredMode = REQUIRED)
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    @Schema(requiredMode = REQUIRED, description = "사용자 소속 대학 ID")
+    private Long universityId;
 
     /**
      * Entity -> DTO 변환
@@ -50,6 +52,7 @@ public class UserResponse {
                 .status(user.getStatus())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
+                .universityId(user.getUniversity() != null ? user.getUniversity().getId() : null)
                 .build();
     }
 }

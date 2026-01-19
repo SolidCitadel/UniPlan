@@ -66,6 +66,7 @@ class TestAuth:
         data = response.json()
         assert data["email"] == test_user.email
         assert data["name"] == test_user.name
+        assert data["universityId"] == test_user.university_id
 
     # ==================== Edge Cases ====================
 

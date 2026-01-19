@@ -84,7 +84,8 @@ class UserTest {
                 .andExpect(jsonPath("$.name").value("테스트사용자"))
                 .andExpect(jsonPath("$.displayName").value("테스터"))
                 .andExpect(jsonPath("$.role").value("USER"))
-                .andExpect(jsonPath("$.status").value("ACTIVE"));
+                .andExpect(jsonPath("$.status").value("ACTIVE"))
+                .andExpect(jsonPath("$.universityId").value(testUniversity.getId().intValue()));
     }
 
     @Test

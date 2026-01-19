@@ -8,7 +8,6 @@ import java.time.LocalTime;
 @Entity
 @Table(name = "class_times")
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -30,4 +29,12 @@ public class ClassTime {
 
     @Column(name = "end_time", nullable = false)
     private LocalTime endTime;
+
+    /**
+     * 양방향 연관관계 설정용 (Course.addClassTime()에서 호출)
+     */
+    public void setCourse(Course course) {
+        this.course = course;
+    }
 }
+

@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
     @Index(name = "idx_course_id", columnList = "course_id")
 })
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -32,4 +31,11 @@ public class TimetableItem {
     @CreationTimestamp
     @Column(name = "added_at", nullable = false, updatable = false)
     private LocalDateTime addedAt;
+
+    /**
+     * 양방향 연관관계 설정용 (Timetable.addItem()에서 호출)
+     */
+    public void setTimetable(Timetable timetable) {
+        this.timetable = timetable;
+    }
 }

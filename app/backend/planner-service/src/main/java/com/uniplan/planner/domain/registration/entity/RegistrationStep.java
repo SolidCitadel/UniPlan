@@ -15,7 +15,6 @@ import java.util.List;
     @Index(name = "idx_registration_id", columnList = "registration_id")
 })
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -63,4 +62,11 @@ public class RegistrationStep {
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime timestamp;
+
+    /**
+     * 양방향 연관관계 설정용 (Registration.addStep()에서 호출)
+     */
+    public void setRegistration(Registration registration) {
+        this.registration = registration;
+    }
 }

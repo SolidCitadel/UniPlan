@@ -61,7 +61,28 @@ docker compose -f docker-compose.test.yml down
     - 응답 본문: 필수 필드 누락 여부 전수 검사
 3.  **에러 응답 검증**: 실패 케이스(4xx)에서도 에러 메시지 포맷이 올바른지 확인하세요.
 
----
+62: 3.  **에러 응답 검증**: 실패 케이스(4xx)에서도 에러 메시지 포맷이 올바른지 확인하세요.
+63:
+64: ### Pydantic Model Generation (Validation)
+65:
+66: OpenAPI 스펙에서 자동 생성된 Pydantic 모델을 사용하여 Response Body를 검증합니다. 이를 통해 DTO 필드 누락이나 타입 불일치를 자동으로 감지할 수 있습니다.
+67:
+68: **모델 생성**:
+69: ```bash
+70: cd tests/integration
+71: uv run python scripts/generate_models.py
+72: ```
+73:
+74: **테스트 내 사용**:
+75: ```python
+76: from models.generated.user_models import UserResponse
+77:
+78: response = client.get("/users/me")
+79: user = UserResponse(**response.json())  # 검증 자동 수행
+80: assert user.email == "test@example.com"
+81: ```
+82:
+83: ---
 
 ## 3. Frontend Testing
 

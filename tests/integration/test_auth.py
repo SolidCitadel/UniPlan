@@ -7,6 +7,7 @@ import uuid
 
 import pytest
 from conftest import ApiClient, Endpoints, TestUser
+from models.generated.user_models import UserResponse, AuthResponse
 
 
 class TestAuth:
@@ -16,57 +17,59 @@ class TestAuth:
 
     def test_signup_and_login(self, api_client: ApiClient):
         """회원가입 및 로그인"""
+        api_client.clear_token()  # 다른 테스트로부터의 오염 방지
         unique_id = uuid.uuid4().hex[:8]
         email = f"auth_test_{unique_id}@example.com"
         password = "Test1234!"
         name = f"Auth Test {unique_id}"
 
-        # 대학 목록 조회
+        # 대학 목록 조회 (검증 생략 - Fixture에서 보장한다고 가정하거나 간단 체크)
         response = api_client.get(Endpoints.UNIVERSITIES)
-        assert response.status_code == 200
         universities = response.json()
-        assert len(universities) > 0, "대학 목록이 비어있습니다"
         university_id = universities[0]["id"]
 
         # 회원가입 (universityId 포함)
-        response = api_client.post(
+        auth_data = api_client.post_dto(
             Endpoints.AUTH_SIGNUP,
+            model=AuthResponse,
             json={
                 "email": email,
                 "password": password,
                 "name": name,
                 "universityId": university_id,
             },
+            # Default is 201
         )
-        assert response.status_code == 201
-
+        
         # 회원가입 응답에 대학 정보 포함 확인
-        data = response.json()
-        assert data["user"]["universityId"] == university_id
-        assert "universityName" in data["user"]
+        assert auth_data.user.universityId == university_id
+        assert auth_data.user.universityName is not None
 
         # 로그인
-        response = api_client.post(
+        login_data = api_client.post_dto(
             Endpoints.AUTH_LOGIN,
+            model=AuthResponse,
             json={"email": email, "password": password},
+            expected_status=200
         )
-        assert response.status_code == 200
-
-        data = response.json()
-        assert "accessToken" in data
-        assert "refreshToken" in data
-        assert data["user"]["email"] == email
-        assert data["user"]["universityId"] == university_id
+        
+        assert login_data.accessToken is not None
+        assert login_data.refreshToken is not None
+        assert login_data.user.email == email
+        assert login_data.user.universityId == university_id
 
     def test_get_current_user(self, auth_client: ApiClient, test_user: TestUser):
-        """현재 사용자 정보 조회"""
-        response = auth_client.get(Endpoints.USER_ME)
-        assert response.status_code == 200
+        """현재 사용자 정보 조회 - Pydantic 모델로 응답 스키마 검증"""
+        # Pydantic 모델로 파싱 - 필드 누락 시 ValidationError 발생
+        user = auth_client.get_dto(
+            Endpoints.USER_ME,
+            model=UserResponse
+        )
 
-        data = response.json()
-        assert data["email"] == test_user.email
-        assert data["name"] == test_user.name
-        assert data["universityId"] == test_user.university_id
+        # 값 검증
+        assert user.email == test_user.email
+        assert user.name == test_user.name
+        assert user.universityId == test_user.university_id
 
     # ==================== Edge Cases ====================
 

@@ -16,9 +16,10 @@ UniPlan 프로젝트의 기술 문서 인덱스입니다.
 중요한 기술적 의사결정의 배경과 결과를 기록합니다.
 
 - [**001-test-strategy.md**](./adr/001-test-strategy.md): 5단계 테스트 전략 및 TestContainers 도입
-- [**002-msa-ddd-strategy.md**](./adr/002-msa-ddd-strategy.md): MSA 도입 및 도메인 분리 전략 (User/Planner/Catalog)
-- [**003-api-gateway-strategy.md**](./adr/003-api-gateway-strategy.md): 중앙 집중식 인증 및 라우팅 전략
-- [**004-centralized-config.md**](./adr/004-centralized-config.md): 중앙집중식 설정 관리 (Docker Compose 환경변수)
+- [ADR-002: MSA & DDD Strategy](./adr/002-msa-ddd-strategy.md)
+- [ADR-003: API Gateway Strategy](./adr/003-api-gateway-strategy.md)
+- [ADR-004: Centralized Configuration](./adr/004-centralized-config.md)
+- [ADR-005: OpenAPI Code Generation](./adr/005-openapi-code-generation.md): OpenAPI 기반 코드 자동 생성 전략
 
 ## 🛠️ 가이드 (Guides)
 

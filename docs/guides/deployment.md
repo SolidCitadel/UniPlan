@@ -54,3 +54,30 @@ docker-compose -f docker-compose.prod.yml up -d --build
 ```
 
 > 📝 `docker-compose.prod.yml`은 필요 시 생성해야 합니다. 현재는 `docker-compose.yml`만 존재합니다.
+
+## 5. CI/CD (GitHub Actions)
+
+### OpenAPI Type Sync (`openapi-types.yml`)
+
+생성된 OpenAPI 타입이 최신 백엔드 스펙과 일치하는지 검증합니다.
+
+**트리거**: 수동 (`workflow_dispatch`)
+
+**검증 대상**:
+- 프론트엔드 TypeScript: `app/frontend/src/types/generated/`
+- Integration 테스트 Python: `tests/integration/models/generated/`
+
+**로컬에서 타입 재생성**:
+```bash
+# 백엔드 실행 필요
+docker compose up -d --build
+
+# 프론트엔드 타입 생성
+cd app/frontend && npm run types:generate
+
+# Integration 테스트 모델 생성
+cd tests/integration && uv run python scripts/generate_models.py
+```
+
+> **중요**: 백엔드 DTO를 변경한 경우, 반드시 타입/모델을 재생성하고 커밋해야 합니다. CI에서 불일치 감지 시 빌드가 실패합니다.
+

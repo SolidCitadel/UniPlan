@@ -9,11 +9,14 @@ Pytest configuration and fixtures for API tests.
 import os
 import uuid
 from dataclasses import dataclass
-from typing import Generator
+from typing import Generator, TypeVar
 
 import pytest
 import requests
 from dotenv import load_dotenv
+from pydantic import BaseModel
+
+T = TypeVar("T", bound=BaseModel)
 
 load_dotenv()
 
@@ -47,6 +50,7 @@ class ApiClient:
         """Clear the authorization token."""
         self.token = None
         self.session.headers.pop("Authorization", None)
+        self.session.cookies.clear()
 
     def get(self, path: str, **kwargs) -> requests.Response:
         return self.session.get(f"{self.base_url}{path}", **kwargs)
@@ -59,6 +63,37 @@ class ApiClient:
 
     def delete(self, path: str, **kwargs) -> requests.Response:
         return self.session.delete(f"{self.base_url}{path}", **kwargs)
+
+    # ==================== Pydantic Helpers ====================
+
+    def request_model(
+        self,
+        method: str,
+        path: str,
+        model: type[T],
+        expected_status: int = 200,
+        **kwargs
+    ) -> T | list[T]:
+        """Request and parse response with Pydantic model."""
+        fn = getattr(self, method.lower())
+        response = fn(path, **kwargs)
+        
+        assert response.status_code == expected_status, \
+            f"{method.upper()} {path} failed: {response.status_code} - {response.text}"
+        
+        data = response.json()
+        if isinstance(data, list):
+            return [model(**item) for item in data]
+        return model(**data)
+
+    def get_dto(self, path: str, model: type[T], expected_status: int = 200, **kwargs) -> T | list[T]:
+        return self.request_model("GET", path, model, expected_status, **kwargs)
+
+    def post_dto(self, path: str, model: type[T], expected_status: int = 201, **kwargs) -> T | list[T]:
+        return self.request_model("POST", path, model, expected_status, **kwargs)
+
+    def patch_dto(self, path: str, model: type[T], expected_status: int = 200, **kwargs) -> T | list[T]:
+        return self.request_model("PATCH", path, model, expected_status, **kwargs)
 
 
 # API Endpoints

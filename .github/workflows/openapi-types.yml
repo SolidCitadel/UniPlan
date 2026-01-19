@@ -48,6 +48,27 @@ jobs:
         working-directory: app/frontend
         run: npm run types:check
 
+      - name: Setup Python (uv)
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Generate Python models
+        working-directory: tests/integration
+        run: |
+          uv sync
+          uv run python scripts/generate_models.py
+
+      - name: Check Python models sync
+        working-directory: tests/integration
+        run: |
+          if git diff --exit-code models/generated/; then
+            echo "Python models are in sync"
+          else
+            echo "::error::Python models out of sync! Run 'uv run python scripts/generate_models.py' and commit."
+            exit 1
+          fi
+
       - name: Cleanup
         if: always()
         run: docker compose -f docker-compose.test.yml down

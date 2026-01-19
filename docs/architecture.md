@@ -155,10 +155,41 @@ GET /internal/courses?ids=1,2,3,4,5
 
 ---
 
-## Swagger Documentation
+## API Specification & Code Generation
 
-### 구조
+UniPlan은 **Code-First API 개발 방식**을 채택하고 있으며, 백엔드 코드를 **Single Source of Truth**로 하여 클라이언트 및 테스트 코드를 자동 생성합니다.
 
+### Workflow
+
+```mermaid
+graph TD
+    subgraph Backend [Backend (Spring Boot)]
+        Controller[Controller / DTO]
+        Swagger[SpringDoc OpenAPI]
+        Controller --> Swagger
+    end
+
+    subgraph Spec [OpenAPI Specification]
+        JSON[OpenAPI JSON (/v3/api-docs)]
+        Swagger --> JSON
+    end
+
+    subgraph Frontend [Frontend (Next.js)]
+        TS[openapi-typescript]
+        Types[TypeScript Interfaces]
+        JSON --> TS --> Types
+    end
+
+    subgraph Test [Integration Tests (Python)]
+        CG[datamodel-code-generator]
+        Pydantic[Pydantic Models]
+        JSON --> CG --> Pydantic
+    end
+```
+
+### Swagger Documentation
+
+#### 구조
 ```
 backend/
 ├── api-gateway/              ← Swagger (통합) ✅
@@ -178,8 +209,7 @@ backend/
     └── URL: http://localhost:8083/swagger-ui.html
 ```
 
-### 역할 분담
-
+#### 역할 분담
 **API Gateway Swagger (통합 문서)**
 - 목적: 프론트엔드 개발자를 위한 원스톱 문서
 - 특징: 서비스별 그룹화, 통합 JWT 인증, Try it out 기능
@@ -187,7 +217,6 @@ backend/
 **개별 서비스 Swagger (독립 문서)**
 - 목적: 백엔드 개발자를 위한 서비스별 상세 문서
 - 특징: 단일 책임, 빠른 로딩, 독립 배포
-
 
 > Implementation details (Dependencies, Swagger Grouping) are available in [Backend Guide](guides/backend.md#4-api--gateway-integration).
 

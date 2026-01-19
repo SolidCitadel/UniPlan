@@ -4,6 +4,7 @@
 Happy path + Edge cases for registration operations.
 """
 from conftest import ApiClient, Endpoints
+from models.generated.planner_models import RegistrationResponse
 
 
 class TestRegistration:
@@ -13,71 +14,66 @@ class TestRegistration:
 
     def test_get_registrations(self, auth_client: ApiClient):
         """수강신청 목록 조회"""
-        response = auth_client.get(Endpoints.REGISTRATIONS)
-        assert response.status_code == 200
-        assert isinstance(response.json(), list)
+        registrations = auth_client.get_dto(
+            Endpoints.REGISTRATIONS,
+            model=RegistrationResponse
+        )
+        assert isinstance(registrations, list)
 
     def test_start_registration(self, auth_client: ApiClient, test_scenario: dict):
         """수강신청 세션 시작"""
-        response = auth_client.post(
+        reg = auth_client.post_dto(
             Endpoints.REGISTRATIONS,
+            model=RegistrationResponse,
             json={
                 "scenarioId": test_scenario["id"],
                 "name": "테스트 수강신청"
             }
         )
-        assert response.status_code == 201, f"Failed: {response.text}"
-
-        data = response.json()
-        assert data["id"] is not None
-        assert data["status"] in ("IN_PROGRESS", "PENDING", "inProgress", "pending")
+        assert reg.id is not None
+        # Enum string comparison or Member comparison
+        assert str(reg.status) in ("IN_PROGRESS", "PENDING", "inProgress", "pending")
 
     def test_get_registration_by_id(self, auth_client: ApiClient, test_registration: dict):
         """수강신청 상세 조회"""
         reg_id = test_registration["id"]
-
-        response = auth_client.get(f"{Endpoints.REGISTRATIONS}/{reg_id}")
-        assert response.status_code == 200
-
-        data = response.json()
-        assert data["id"] == reg_id
+        reg = auth_client.get_dto(
+            f"{Endpoints.REGISTRATIONS}/{reg_id}",
+            model=RegistrationResponse
+        )
+        assert reg.id == reg_id
 
     def test_record_step(self, auth_client: ApiClient, test_registration_with_courses: dict):
         """과목별 성공/실패 기록"""
         reg_id = test_registration_with_courses["id"]
 
         # 수강신청의 시나리오에서 과목 ID 가져오기
-        response = auth_client.get(f"{Endpoints.REGISTRATIONS}/{reg_id}")
-        assert response.status_code == 200, f"Failed to get registration: {response.text}"
+        reg_data = auth_client.get_dto(
+            f"{Endpoints.REGISTRATIONS}/{reg_id}",
+            model=RegistrationResponse
+        )
+        current_scenario = reg_data.currentScenario
+        timetable = current_scenario.timetable
+        items = timetable.items
 
-        reg_data = response.json()
-        current_scenario = reg_data.get("currentScenario", {})
-        timetable = current_scenario.get("timetable", {})
-        items = timetable.get("items", [])
-
-        # 과목이 있으면 첫 번째 과목을 성공으로 기록
-        if items:
-            course_id = items[0]["courseId"]
-            response = auth_client.post(
-                f"{Endpoints.REGISTRATIONS}/{reg_id}/steps",
-                json={
-                    "succeededCourses": [course_id],
-                    "failedCourses": [],
-                    "canceledCourses": []
-                }
-            )
-            assert response.status_code == 201, f"Failed: {response.text}"
-        else:
-            # 과목이 없어도 빈 step은 기록 가능해야 함
-            response = auth_client.post(
-                f"{Endpoints.REGISTRATIONS}/{reg_id}/steps",
-                json={
-                    "succeededCourses": [],
-                    "failedCourses": [],
-                    "canceledCourses": []
-                }
-            )
-            assert response.status_code == 201, f"Failed: {response.text}"
+        # 과목이 반드시 있어야 함 (Fixture 보장)
+        assert items, "Registration should have items"
+        
+        course_id = items[0].courseId
+        # step 기록은 반환값이 명확하지 않거나 void일 수 있으므로 post 유지하거나 확인 필요. 
+        # 보통 201 Created면 생성된 리소스를 반환할 가능성 높음. 
+        # 하지만 여기서는 model 없이 status check만 하므로 기본 post 사용 (엄격성 유지)
+        # 만약 응답이 없다면 model 파싱 에러 날 수 있음.
+        
+        response = auth_client.post(
+            f"{Endpoints.REGISTRATIONS}/{reg_id}/steps",
+            json={
+                "succeededCourses": [course_id],
+                "failedCourses": [],
+                "canceledCourses": []
+            }
+        )
+        assert response.status_code == 201, f"Failed: {response.text}"
 
     def test_complete_registration(self, auth_client: ApiClient, test_registration: dict):
         """수강신청 완료"""
@@ -87,11 +83,11 @@ class TestRegistration:
         assert response.status_code == 200, f"Failed: {response.text}"
 
         # 상태 확인
-        response = auth_client.get(f"{Endpoints.REGISTRATIONS}/{reg_id}")
-        assert response.status_code == 200
-
-        data = response.json()
-        assert data["status"] in ("COMPLETED", "completed")
+        reg = auth_client.get_dto(
+            f"{Endpoints.REGISTRATIONS}/{reg_id}",
+            model=RegistrationResponse
+        )
+        assert str(reg.status) in ("COMPLETED", "completed")
 
     # ==================== Edge Cases ====================
 

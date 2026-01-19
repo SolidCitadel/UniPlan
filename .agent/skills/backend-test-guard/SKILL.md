@@ -1,14 +1,14 @@
 ---
-name: backend-test-guard
+name: server-test-guard
 description: |
-  백엔드 코드(Controller, Service, DTO, Entity, Repository) 변경 시 반드시 사용.
-  테스트 코드 점검, 수정, 검증까지 완료해야 백엔드 작업이 끝난 것으로 간주.
-  app/backend/ 하위 파일 수정 후 이 skill을 자동 적용.
+  백엔드 코드(Controller, Service, DTO, Entity, Repository) 및 통합 테스트 코드(tests/integration) 변경 시 반드시 사용.
+  테스트 코드 점검, 수정, 검증까지 완료해야 작업이 끝난 것으로 간주.
+  app/backend/ 또는 tests/integration/ 하위 파일 수정 후 이 skill을 자동 적용.
 ---
 
-# 백엔드 변경 시 테스트 검증 워크플로우
+# 백엔드/테스트 변경 시 검증 워크플로우
 
-백엔드 코드가 변경되었습니다. 다음 단계를 **반드시** 수행해야 합니다.
+백엔드 코드 또는 통합 테스트 코드가 변경되었습니다. 다음 단계를 **반드시** 수행해야 합니다.
 
 ## 1. 변경 영향 분석
 
@@ -18,6 +18,7 @@ description: |
   - API 응답 구조 변경
   - 비즈니스 로직 변경
   - Entity 구조 변경
+  - 테스트 시나리오 또는 검증 로직 변경
 
 ## 2. 관련 테스트 파일 식별
 
@@ -55,6 +56,7 @@ description: |
 > **핵심 원칙:**
 > - **Unit/Component**: 비즈니스 로직, 엣지 케이스, 예외 처리 검증
 > - **Integration**: 도메인은 Happy Path, `infra/`는 Cross-Cutting Concerns (보안, 인증 전파)
+> - **엄격성 준수**: `pytest.skip` 사용 금지, 느슨한 상태 코드 검증 금지
 
 각 테스트 파일에서 확인:
 
@@ -91,7 +93,17 @@ assert response.status_code == 409, "중복 리소스는 409 Conflict"
 | 리소스 없음 | **404 Not Found** |
 | 인증 실패 | **401 Unauthorized** |
 
-**3. DTO 필드 완전 검증**
+**3. Test Skip 금지**
+```python
+# ❌ 금지 - 데이터 없음으로 인한 Skip
+if not items:
+    pytest.skip("데이터 없음")
+
+# ✅ 필수 - 데이터 부재는 곧 테스트 실패
+assert items, "테스트를 위한 필수 데이터가 없습니다"
+```
+
+**4. DTO 필드 완전 검증**
 ```python
 # 필수 필드 존재 확인
 assert "id" in data
@@ -106,7 +118,7 @@ assert isinstance(data["items"], list)
 assert data["name"] == expected_name
 ```
 
-**4. 에러 응답도 검증**
+**5. 에러 응답도 검증**
 ```python
 # 에러 구조 확인 (프론트엔드가 메시지를 표시할 수 있도록)
 error = response.json()

@@ -4,6 +4,7 @@
 Happy path + Edge cases for course search operations.
 """
 from conftest import ApiClient, Endpoints
+from models.generated.catalog_models import PageCourseResponse, CourseResponse
 
 
 class TestCourses:
@@ -16,39 +17,48 @@ class TestCourses:
         response = auth_client.get(Endpoints.COURSES)
         assert response.status_code == 200
 
-        data = response.json()
-        content = data.get("content", data) if isinstance(data, dict) else data
-        assert isinstance(content, list)
+        # Pydantic 모델 검증
+        page = PageCourseResponse(**response.json())
+        assert page.content is not None
+        assert isinstance(page.content, list)
 
     def test_get_courses_with_pagination(self, auth_client: ApiClient):
         """페이지네이션 조회"""
         response = auth_client.get(f"{Endpoints.COURSES}?page=0&size=10")
         assert response.status_code == 200
 
-        data = response.json()
-        content = data.get("content", data) if isinstance(data, dict) else data
-        assert len(content) <= 10
+        page = PageCourseResponse(**response.json())
+        assert page.content is not None
+        assert len(page.content) <= 10
+        assert page.size == 10
 
-    def test_search_by_course_name(self, auth_client: ApiClient, test_course: dict):
-        """과목명으로 검색"""
-        course_name = test_course["courseName"][:5]  # 앞 5글자로 검색
+    def test_search_courses(self, auth_client: ApiClient, test_course):
+        """강의 검색"""
+        # Given: 테스트 과목 생성됨 (fixture)
+        
+        # When: 검색 API 호출
+        page = auth_client.get_dto(
+            f"{Endpoints.COURSES}?query={test_course['courseName']}",
+            model=PageCourseResponse
+        )
+        
+        # Then
+        assert page.totalElements > 0
+        assert len(page.content) > 0
+        found = page.content[0]
+        assert found.courseName == test_course["courseName"]
 
-        response = auth_client.get(f"{Endpoints.COURSES}?courseName={course_name}")
-        assert response.status_code == 200
-
-        data = response.json()
-        courses = data.get("content", data) if isinstance(data, dict) else data
-        assert len(courses) > 0, f"No courses found with name containing '{course_name}'"
-
-    def test_get_course_by_id(self, auth_client: ApiClient, test_course: dict):
+    def test_get_course_detail(self, auth_client: ApiClient, test_course):
         """강의 상세 조회"""
         course_id = test_course["id"]
 
-        response = auth_client.get(f"{Endpoints.COURSES}/{course_id}")
-        assert response.status_code == 200
-
-        data = response.json()
-        assert data["id"] == course_id
+        course = auth_client.get_dto(
+            f"{Endpoints.COURSES}/{course_id}",
+            model=CourseResponse
+        )
+        
+        assert course.id == course_id
+        assert course.courseName == test_course["courseName"]
 
     # ==================== Edge Cases ====================
 
@@ -59,8 +69,10 @@ class TestCourses:
         )
         assert response.status_code == 200
 
-        data = response.json()
-        content = data.get("content", data) if isinstance(data, dict) else data
+        page = PageCourseResponse(**response.json())
+        # content가 None일 수도 있고 빈 리스트일 수도 있음 (모델 정의상)
+        # 보통 빈 리스트로 옴
+        content = page.content or []
         assert len(content) == 0
 
     def test_search_special_characters(self, auth_client: ApiClient):
@@ -70,6 +82,8 @@ class TestCourses:
         )
         # 특수문자는 안전하게 처리되어 빈 결과 반환
         assert response.status_code == 200
+        
+        page = PageCourseResponse(**response.json())
 
     def test_search_very_long_query(self, auth_client: ApiClient):
         """매우 긴 검색어"""
@@ -82,14 +96,15 @@ class TestCourses:
         response = auth_client.get(f"{Endpoints.COURSES}?page=99999&size=20")
         assert response.status_code == 200
 
-        data = response.json()
-        content = data.get("content", data) if isinstance(data, dict) else data
+        page = PageCourseResponse(**response.json())
+        content = page.content or []
         assert len(content) == 0
 
     def test_invalid_pagination_negative_page(self, auth_client: ApiClient):
         """음수 페이지 파라미터"""
         response = auth_client.get(f"{Endpoints.COURSES}?page=-1&size=20")
         assert response.status_code == 200, "음수 페이지는 0으로 처리"
+        # 에러 없이 200 OK와 기본 페이지 반환
 
     def test_invalid_pagination_negative_size(self, auth_client: ApiClient):
         """음수 사이즈 파라미터"""
@@ -100,3 +115,4 @@ class TestCourses:
         """존재하지 않는 강의 조회"""
         response = auth_client.get(f"{Endpoints.COURSES}/999999999")
         assert response.status_code == 404
+

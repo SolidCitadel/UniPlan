@@ -69,6 +69,7 @@ docker compose -f docker-compose.test.yml up   # 테스트용 (API: :8080, tmpfs
 
 ## 상세 문서
 
-- `docs/architecture.md` - API Gateway, 엔티티 설계
+- `docs/requirements.md` - 프로젝트 요구사항
 - `docs/features.md` - 기능별 사용자 시나리오
-- `docs/guides.md` - 개발 가이드, 코딩 컨벤션
+- `docs/architecture.md` - API Gateway, 엔티티 설계
+- `docs/guides/` - 개발 가이드 (Backend, Frontend, Testing, Deployment)

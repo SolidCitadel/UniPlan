@@ -1,5 +1,6 @@
 package com.uniplan.catalog.component.course;
 
+import com.uniplan.catalog.config.DockerRequiredExtension;
 import com.uniplan.catalog.domain.course.entity.ClassTime;
 import com.uniplan.catalog.domain.course.entity.College;
 import com.uniplan.catalog.domain.course.entity.Course;
@@ -14,6 +15,7 @@ import com.uniplan.catalog.domain.university.repository.UniversityRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -30,6 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Integration tests for CourseController
  */
+@ExtendWith(DockerRequiredExtension.class)
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional

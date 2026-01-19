@@ -1,13 +1,12 @@
 spring:
-  datasource:
-    driver-class-name: org.h2.Driver
-    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    username: sa
-    password:
+  application:
+    name: planner-service
 
-  h2:
-    console:
-      enabled: false
+  datasource:
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    url: jdbc:tc:mysql:8.0:///testdb?TC_REUSABLE=true
+    username: test
+    password: test
 
   jpa:
     hibernate:
@@ -16,7 +15,8 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.H2Dialect
+        dialect: org.hibernate.dialect.MySQLDialect
+    open-in-view: false
 
 # 외부 서비스 URL (테스트용)
 services:
@@ -26,3 +26,5 @@ services:
 logging:
   level:
     com.uniplan.planner: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.testcontainers: INFO

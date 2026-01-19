@@ -1,6 +1,7 @@
 package com.uniplan.planner.component.wishlist;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.uniplan.planner.config.DockerRequiredExtension;
 import com.uniplan.planner.domain.wishlist.dto.AddToWishlistRequest;
 import com.uniplan.planner.domain.wishlist.dto.UpdateWishlistRequest;
 import com.uniplan.planner.domain.wishlist.entity.WishlistItem;
@@ -10,6 +11,7 @@ import com.uniplan.planner.global.client.dto.CourseFullResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -31,6 +33,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@ExtendWith(DockerRequiredExtension.class)
 @SpringBootTest
 @AutoConfigureMockMvc
 class WishlistControllerTest {

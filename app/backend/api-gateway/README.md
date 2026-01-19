@@ -237,21 +237,5 @@ INFO  AuthenticationHeaderFilter - JWT 검증 성공 - userId: 1, email: test@ex
 ERROR AuthenticationHeaderFilter - JWT 검증 실패: JWT signature does not match locally computed signature
 ```
 
-## 변경 이력
-
-### 2025-10-16
-- ✅ AuthenticationHeaderFilter에서 email, role 정보 추출 및 헤더 전달
-- ✅ OAuth2 라우팅 간소화 (복잡한 헤더 처리 제거)
-- ✅ JWT 검증 로직 개선
-- ✅ 에러 처리 통일
-
-## 향후 계획
-- [ ] Rate Limiting (요청 횟수 제한)
-- [ ] Circuit Breaker (서비스 장애 대응)
-- [ ] 요청/응답 로깅
-- [ ] API 버전 관리 (v2, v3 등)
-
 ## 참고 문서
-- [API Path Mapping](../../docs/backend/api-path-mapping.md)
-- [Swagger 아키텍처](../../docs/backend/swagger-architecture.md)
-
+- [Backend Guide](../../docs/guides/backend.md)

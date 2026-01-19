@@ -94,7 +94,7 @@ UniPlan/
 │   │   └── common-lib/
 │   └── frontend/          # Next.js Web
 ├── tests/
-│   └── e2e/               # pytest E2E 시나리오 테스트
+│   └── integration/       # pytest Integration 테스트
 ├── scripts/
 │   ├── crawler/           # 강의 크롤러 (Python)
 │   └── README.md
@@ -180,9 +180,9 @@ npm run build
 npm run lint
 ```
 
-**E2E 시나리오 테스트:**
+**Integration 테스트:**
 ```bash
-cd tests/e2e
+cd tests/integration
 uv sync
 uv run pytest -v
 ```
@@ -210,11 +210,11 @@ uv run python crawler/run.py full --university khu --year 2026 --semester 1
 
 프로젝트 상세 문서는 `docs/` 폴더를 참고하세요:
 
-- **[architecture.md](docs/architecture.md)**: API Gateway, Swagger, 엔티티 설계
-- **[features.md](docs/features.md)**: 기능별 사용자 시나리오
-- **[guides.md](docs/guides.md)**: 개발 가이드 (DDD, 테스트, 컨벤션)
 - **[requirements.md](docs/requirements.md)**: 프로젝트 요구사항
+- **[features.md](docs/features.md)**: 기능별 사용자 시나리오
+- **[architecture.md](docs/architecture.md)**: API Gateway, Swagger, 엔티티 설계
+- **[guides/](docs/guides/)**: 개발 가이드 (Backend, Frontend, Testing, Deployment)
 
 모듈별 문서:
 - `scripts/crawler/docs/`: 크롤러 필드 매핑
-- `tests/e2e/README.md`: E2E 테스트 가이드
+- `tests/integration/README.md`: Integration 테스트 가이드

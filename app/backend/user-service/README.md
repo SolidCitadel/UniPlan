@@ -275,36 +275,5 @@ http://localhost:8080/swagger-ui.html
 - API Gateway에서 JWT를 검증하고 `X-User-Id`, `X-User-Email`, `X-User-Role` 헤더로 사용자 정보를 전달
 - User Service는 이미 검증된 요청만 받으므로 별도의 인증 처리 불필요
 
-## 향후 확장 계획
-
-### 1. OAuth2 소셜 로그인
-- [ ] Google OAuth2
-- [ ] Naver OAuth2
-- [ ] Kakao OAuth2
-
-### 2. 토큰 관리
-- [ ] Refresh Token을 통한 Access Token 재발급 API
-- [ ] 로그아웃 (토큰 무효화)
-- [ ] 토큰 블랙리스트 관리
-
-### 3. 사용자 관리 기능
-- [ ] 비밀번호 변경
-- [ ] 비밀번호 찾기 (이메일 인증)
-- [ ] 프로필 수정
-- [ ] 회원 탈퇴
-
-## 변경 이력
-
-### 2025-10-16
-- ✅ ID/PW 기반 회원가입/로그인 구현
-- ✅ JWT 토큰 발급 및 검증 (email, role 포함)
-- ✅ 전역 예외 처리 (401, 404, 409, 400, 500)
-- ✅ API Gateway 연동 (JWT 검증 후 헤더로 사용자 정보 전달)
-- ✅ User 엔티티에 password 필드 추가 (OAuth2와 ID/PW 모두 지원)
-- ✅ Spring Security 설정 간소화 (Gateway에서 인증 처리)
-- ✅ Swagger/OpenAPI 문서화
-
 ## 참고 문서
-- [API Path Mapping](../../docs/backend/api-path-mapping.md)
-- [Swagger 아키텍처](../../docs/backend/swagger-architecture.md)
-
+- [Backend Guide](../../docs/guides/backend.md)

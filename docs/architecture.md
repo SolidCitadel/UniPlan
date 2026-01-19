@@ -4,7 +4,24 @@ UniPlan의 시스템 아키텍처, API 설계, 엔티티 구조를 설명합니�
 
 ---
 
-## API Gateway & Routing
+## 프론트엔드 아키텍처 (Frontend Architecture)
+
+### 핵심 아키텍처 (Core Architecture)
+- **Next.js App Router**: 하이브리드 렌더링 (SSR/CSR) 구조를 채택했습니다.
+- **서버 상태 관리 (Server State Management)**: `React Query`를 주 데이터 저장소로 사용하여 백엔드 상태와 동기화합니다.
+- **타입 안정성 (Type Safety)**: OpenAPI 스키마에서 자동 생성된 TypeScript 타입을 사용하여 API 계약을 준수합니다.
+
+### 컴포넌트 계층 (Component Hierarchy)
+- **`app/` (Pages)**: 하이드레이션(Hydration) 경계, 레이아웃 구성, URL 상태 동기화를 담당합니다.
+- **`components/` (Business)**: 도메인 로직이 포함된 비즈니스 컴포넌트 (예: `TimetableGrid`, `ScenarioBuilder`)입니다.
+- **`components/ui/` (Design System)**: shadcn/ui 기반의 재사용 가능한 순수(Dumb) 컴포넌트입니다.
+
+### 상태 전략 (State Strategy)
+- **URL 주도 상태 (URL-Driven State)**: 학기 컨텍스트, 선택된 시나리오 등 주요 애플리케이션 상태는 URL 쿼리 파라미터에 반영하여 공유 가능하게 만듭니다.
+- **Context API**: 전역 설정(테마, 대학 컨텍스트 등)에만 제한적으로 사용합니다.
+
+---
+
 
 ### 경로 변환 규칙
 
@@ -54,6 +71,8 @@ routes:
 @RequestMapping("/users")
 ```
 
+> Implementation details (Routing Config, Controller Mapping) are available in [Backend Guide](guides/backend.md#4-api--gateway-integration).
+
 ### JWT 인증 흐름
 
 ```
@@ -78,6 +97,29 @@ routes:
 
 ---
 
+## 설정 아키텍처 (Configuration Architecture)
+
+Spring 내부에서는 프로파일 분리를 하지 않고(local 제외), Docker Compose에서 환경변수를 중앙 관리합니다.
+
+### Spring Profile 구조
+
+| 파일 | 용도 |
+|------|------|
+| `application.yml` | 플레이스홀더만 포함 (`${DB_URL}`, `${JWT_SECRET}` 등) |
+| `application-local.yml` | 로컬 개별 실행용 (`bootRun`, IDE) |
+
+### Docker Compose 환경 구분
+
+| 파일 | 용도 |
+|------|------|
+| `docker-compose.yml` | 개발 환경 |
+| `docker-compose.test.yml` | Integration 테스트 환경 |
+| `docker-compose.prod.yml` | 운영 환경 (`.env`로 시크릿 주입) |
+
+> 상세 배경은 [ADR-004](adr/004-centralized-config.md) 참조.
+
+---
+
 ## Internal Service Communication
 
 ### 서비스 간 통신 (East-West)
@@ -98,37 +140,9 @@ Planner Service  ─────────────────────
 | `CatalogClient` | 비즈니스 로직용 Facade (Feign 클라이언트 래핑) |
 | `InternalCourseController` | Catalog Service의 내부 전용 API 컨트롤러 |
 
-### Internal API 규칙
 
-- **경로**: `/internal/**` 프리픽스
-- **보안**: Gateway에서 외부 접근 차단 (404 반환)
-- **용도**: 서비스 간 통신 전용
+> Implementation details (Internal Controllers, Feign Clients) are available in [Backend Guide](guides/backend.md#5-internal-communication-msa).
 
-```java
-// catalog-service: InternalCourseController
-@RestController
-@RequestMapping("/internal/courses")
-public class InternalCourseController {
-    @GetMapping
-    public List<CourseResponse> getCoursesByIds(@RequestParam List<Long> ids) {
-        return courseQueryService.getCoursesByIds(ids);
-    }
-}
-```
-
-### OpenFeign 클라이언트
-
-```java
-// planner-service: CatalogFeignClient
-@FeignClient(name = "catalog-service", url = "${services.catalog.url}")
-public interface CatalogFeignClient {
-    @GetMapping("/internal/courses")
-    List<CourseFullResponse> getCoursesByIds(@RequestParam("ids") List<Long> ids);
-    
-    @GetMapping("/courses/{id}")
-    CourseFullResponse getCourseById(@PathVariable("id") Long id);
-}
-```
 
 ### Batch API
 
@@ -174,35 +188,9 @@ backend/
 - 목적: 백엔드 개발자를 위한 서비스별 상세 문서
 - 특징: 단일 책임, 빠른 로딩, 독립 배포
 
-### 의존성
 
-```kotlin
-// API Gateway (WebFlux 기반)
-implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.3.0")
+> Implementation details (Dependencies, Swagger Grouping) are available in [Backend Guide](guides/backend.md#4-api--gateway-integration).
 
-// 일반 서비스 (WebMVC 기반)
-implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
-```
-
-### Gateway에서 서비스 그룹화
-
-```java
-@Bean
-public GroupedOpenApi userServiceApi() {
-    return GroupedOpenApi.builder()
-            .group("1. User Service")
-            .pathsToMatch("/api/v1/auth/**", "/api/v1/users/**")
-            .build();
-}
-
-@Bean
-public GroupedOpenApi plannerServiceApi() {
-    return GroupedOpenApi.builder()
-            .group("2. Planner Service")
-            .pathsToMatch("/api/v1/planner/**", "/api/v1/timetables/**")
-            .build();
-}
-```
 
 ---
 
@@ -210,193 +198,50 @@ public GroupedOpenApi plannerServiceApi() {
 
 ### 아키텍처 개요
 
-```
-Wishlist → Timetable → Scenario → Registration
-   |           |          |            |
-   └── 과목 저장 → 조합 생성 → 대안 구조화 → 실시간 네비게이션
-```
+**Mermaid Entity Relationship Diagram:**
+```mermaid
+classDiagram
+    class WishlistItem {
+        Long userId
+        Long courseId
+        Integer priority
+    }
+    class Timetable {
+        Long userId
+        String name
+        Set~Long~ excludedCourseIds
+    }
+    class Scenario {
+        Set~Long~ failedCourseIds
+        Integer orderIndex
+    }
+    class Registration {
+        RegistrationStatus status
+        Scenario currentScenario
+    }
 
-### 1. WishlistItem (희망과목)
-
-```java
-@Entity
-@Table(name = "wishlist_items")
-class WishlistItem {
-    Long id;
-    Long userId;
-    Long courseId;           // catalog-service의 Course 참조
-    Integer priority;        // 1(최우선) ~ 5(최하위)
-    LocalDateTime addedAt;
-
-    // 제약조건: (userId, courseId) UNIQUE
-}
-```
-
-**용도**: 사용자가 수강하고 싶은 과목을 우선순위와 함께 저장
-
-### 2. Timetable (시간표)
-
-```java
-@Entity
-@Table(name = "timetables")
-class Timetable {
-    Long id;
-    Long userId;
-    String name;
-    Integer openingYear;
-    String semester;
-    List<TimetableItem> items;        // 강의 목록
-    Set<Long> excludedCourseIds;      // 제외된 과목 목록
-    LocalDateTime createdAt;
-    LocalDateTime updatedAt;
-}
-
-@Entity
-@Table(name = "timetable_items")
-class TimetableItem {
-    Long id;
-    Timetable timetable;
-    Long courseId;
-    Integer orderIndex;
-}
+    Timetable "1" *-- "many" TimetableItem : contains
+    Scenario "1" *-- "many" Scenario : children (Tree)
+    Scenario --> Timetable : references
+    Registration --> Scenario : initial/current
+    WishlistItem ..> Timetable : feeds (copy)
 ```
 
-**용도**: 특정 학기의 강의 조합 (예: "2025-1학기 기본 계획")
+### Key Components
 
-**제외 과목 관리**:
-- DB 저장: `excludedCourseIds` (Set<Long>)
-- API 응답: `excludedCourses` (각 항목에 courseId와 과목 상세 포함)
-- 이유: 클라이언트가 바로 활용 가능하도록
+1.  **WishlistItem (희망과목)**: 사용자가 담아둔 우선순위 기반 과목 목록.
+2.  **Timetable (시간표)**: 특정 학기의 기본 수강 계획. 제외할 과목(excludedCourseIds)을 관리하여 조합을 생성합니다.
+3.  **Scenario (의사결정 트리)**: "만약 A과목 실패 시 B안으로"와 같은 조건부 계획. 트리 구조로 계층적 대안을 표현합니다.
+4.  **Registration (수강신청)**: 실제 수강신청 프로세스의 상태를 추적하고, 시나리오 트리를 따라 자동으로 진행(Navigation)합니다.
 
-### 3. Scenario (의사결정 트리)
-
-```java
-@Entity
-@Table(name = "scenarios")
-class Scenario {
-    Long id;
-    Long userId;
-    String name;
-    String description;
-
-    // 트리 구조
-    Scenario parentScenario;          // null이면 루트
-    List<Scenario> childScenarios;
-
-    // 실패 조건
-    Set<Long> failedCourseIds;        // empty면 기본(루트)
-    Integer orderIndex;
-
-    // 실제 시간표 참조
-    Timetable timetable;
-
-    LocalDateTime createdAt;
-    LocalDateTime updatedAt;
-}
-```
-
-**용도**: 수강신청 실패 시 대안 계획을 트리 구조로 표현
-
-**Decision Tree 예시**:
-```
-Plan A (CS101, CS102, CS103)
-  ├─ Plan B: CS101만 실패 → (CS104, CS102, CS103)
-  ├─ Plan C: CS102만 실패 → (CS101, CS106, CS103)
-  └─ Plan D: CS101 + CS102 실패 → (CS104, CS106, CS103)
-```
-
-### 4. Registration (수강신청 시뮬레이션)
-
-```java
-@Entity
-@Table(name = "registrations")
-class Registration {
-    Long id;
-    Long userId;
-
-    Scenario startScenario;    // 시작 시나리오
-    Scenario currentScenario;  // 현재 시나리오 (실패 시 변경)
-
-    RegistrationStatus status; // IN_PROGRESS, COMPLETED, CANCELLED
-
-    LocalDateTime startedAt;
-    LocalDateTime completedAt;
-    LocalDateTime updatedAt;
-
-    List<RegistrationStep> steps;
-}
-
-@Entity
-@Table(name = "registration_steps")
-class RegistrationStep {
-    Long id;
-    Registration registration;
-    Long courseId;
-    StepResult result;         // SUCCESS, FAILED
-    LocalDateTime timestamp;
-}
-```
-
-**용도**: 실제 수강신청 중 성공/실패를 기록하고 의사결정 트리를 따라 자동 네비게이션
-
-### API 계약 (중요)
-
-**Timetable & Scenario 공통 규칙**:
-- 요청: `excludedCourseIds` (Long 배열)
-- 응답: `excludedCourses` (courseId를 포함한 객체 배열)
-
-예시:
-```json
-// 요청
-POST /api/v1/timetables/1/alternatives
-{
-  "name": "Plan B",
-  "excludedCourseIds": [101, 102]
-}
-
-// 응답
-{
-  "id": 2,
-  "excludedCourses": [
-    { "courseId": 101, "courseName": "CS101", ... },
-    { "courseId": 102, "courseName": "CS102", ... }
-  ]
-}
-```
-
-### 완전한 사용자 워크플로우
-
-```
-1. 희망과목 담기
-   POST /api/v1/wishlist { courseId: 101, priority: 1 }
-
-2. 시간표 생성
-   POST /api/v1/timetables { name: "Plan A", ... }
-   POST /api/v1/timetables/1/courses { courseId: 101 }
-   POST /api/v1/timetables/1/alternatives { name: "Plan B", excludedCourseIds: [101] }
-
-3. 시나리오 생성
-   POST /api/v1/scenarios { name: "Plan A", timetableId: 1 }
-   POST /api/v1/scenarios/10/alternatives { name: "Plan B", failedCourseId: 101, timetableId: 2 }
-
-4. 수강신청 시작
-   POST /api/v1/registrations { scenarioId: 10 }
-
-5. 실시간 진행
-   POST /api/v1/registrations/100/steps { succeededCourses: [], failedCourses: [101] }
-   → 자동으로 Plan B로 네비게이션
-
-6. 완료
-   POST /api/v1/registrations/100/complete
-```
+> Detailed code examples are available in [Backend Guide](guides/backend.md#6-domain-implementation-examples).
 
 ### 설계 장점
 
-1. **관심사 분리**: Wishlist(희망) → Timetable(조합) → Scenario(로직) → Registration(실행)
-2. **재사용성**: 같은 Timetable을 여러 Scenario에서 참조 가능
-3. **확장성**: 여러 강의 실패 조합 지원
-4. **데이터 무결성**: Timetable이 제외 과목 검증하여 실수 방지
-5. **자동 네비게이션**: 실패 시 자동으로 대안 시나리오로 이동
+1.  **관심사 분리**: Wishlist(희망) → Timetable(조합) → Scenario(로직) → Registration(실행)
+2.  **트리 기반 대안 관리**: 단순 1차원 목록이 아닌, 상황별 분기 처리가 가능한 시나리오 구조
+3.  **자동 네비게이션**: 수강신청 실패 시 사전에 정의된 트리 경로를 따라 다음 대안으로 자동 전환
+
 
 ---
 

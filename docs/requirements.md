@@ -34,27 +34,7 @@
 4. **커뮤니티 강의평 연동** *(향후 확장)*
    - 에브리타임 등 강의평 정보 연동/링크
 
-## 3. 기술 아키텍처
 
-### 프론트엔드
-
-- **프레임워크**: Next.js 16 (App Router)
-- **상태관리**: React Query
-- **UI**: shadcn/ui + Tailwind CSS
-
-### 백엔드 (MSA)
-
-- **API Gateway** (`api-gateway`)
-  - 단일 진입점, JWT 인증/인가
-  - Spring Cloud Gateway
-
-- **개별 서비스**
-  - `catalog-service`: 강의 목록 및 검색
-  - `user-service`: 사용자 인증 및 계정
-  - `planner-service`: 시간표, 시나리오, 수강신청
-
-- **데이터베이스**: MySQL
-- **서비스 간 통신**: REST API
 
 ## 4. 사용 시나리오 요약
 

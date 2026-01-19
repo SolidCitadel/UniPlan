@@ -66,7 +66,7 @@ public class RegistrationStep {
     /**
      * 양방향 연관관계 설정용 (Registration.addStep()에서 호출)
      */
-    public void setRegistration(Registration registration) {
+    void setRegistration(Registration registration) {
         this.registration = registration;
     }
 }

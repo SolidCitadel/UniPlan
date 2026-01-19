@@ -33,7 +33,7 @@ public class ClassTime {
     /**
      * 양방향 연관관계 설정용 (Course.addClassTime()에서 호출)
      */
-    public void setCourse(Course course) {
+    void setCourse(Course course) {
         this.course = course;
     }
 }

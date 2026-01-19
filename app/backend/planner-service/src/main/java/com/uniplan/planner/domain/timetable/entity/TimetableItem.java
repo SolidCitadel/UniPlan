@@ -35,7 +35,7 @@ public class TimetableItem {
     /**
      * 양방향 연관관계 설정용 (Timetable.addItem()에서 호출)
      */
-    public void setTimetable(Timetable timetable) {
+    void setTimetable(Timetable timetable) {
         this.timetable = timetable;
     }
 }

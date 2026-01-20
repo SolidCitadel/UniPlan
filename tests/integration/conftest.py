@@ -22,7 +22,7 @@ load_dotenv()
 
 
 @dataclass
-class TestUser:
+class UserContext:
     """Test user credentials and tokens."""
     email: str
     password: str
@@ -128,7 +128,7 @@ def api_client(api_base_url: str) -> ApiClient:
 
 
 @pytest.fixture(scope="session")
-def test_user(api_client: ApiClient) -> Generator[TestUser, None, None]:
+def test_user(api_client: ApiClient) -> Generator[UserContext, None, None]:
     """Create a test user for the session and clean up after."""
     unique_id = uuid.uuid4().hex[:8]
 
@@ -143,7 +143,7 @@ def test_user(api_client: ApiClient) -> Generator[TestUser, None, None]:
     except Exception:
         pass  # Use default university_id = 1
 
-    user = TestUser(
+    user = UserContext(
         email=f"test_{unique_id}@example.com",
         password="Test1234!",
         name=f"Test User {unique_id}",
@@ -180,7 +180,7 @@ def test_user(api_client: ApiClient) -> Generator[TestUser, None, None]:
 
 
 @pytest.fixture
-def auth_client(api_client: ApiClient, test_user: TestUser) -> ApiClient:
+def auth_client(api_client: ApiClient, test_user: UserContext) -> ApiClient:
     """Get an authenticated API client."""
     api_client.set_token(test_user.access_token)
     return api_client

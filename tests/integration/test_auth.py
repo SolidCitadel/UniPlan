@@ -6,7 +6,7 @@ Happy path + Edge cases for authentication.
 import uuid
 
 import pytest
-from conftest import ApiClient, Endpoints, TestUser
+from conftest import ApiClient, Endpoints, UserContext
 from models.generated.user_models import UserResponse, AuthResponse
 
 
@@ -58,7 +58,7 @@ class TestAuth:
         assert login_data.user.email == email
         assert login_data.user.universityId == university_id
 
-    def test_get_current_user(self, auth_client: ApiClient, test_user: TestUser):
+    def test_get_current_user(self, auth_client: ApiClient, test_user: UserContext):
         """현재 사용자 정보 조회 - Pydantic 모델로 응답 스키마 검증"""
         # Pydantic 모델로 파싱 - 필드 누락 시 ValidationError 발생
         user = auth_client.get_dto(
@@ -73,7 +73,7 @@ class TestAuth:
 
     # ==================== Edge Cases ====================
 
-    def test_signup_duplicate_email(self, api_client: ApiClient, test_user: TestUser):
+    def test_signup_duplicate_email(self, api_client: ApiClient, test_user: UserContext):
         """이미 가입된 이메일로 회원가입 시도"""
         response = api_client.post(
             Endpoints.AUTH_SIGNUP,
@@ -86,7 +86,7 @@ class TestAuth:
         )
         assert response.status_code == 409, "중복 이메일은 409 Conflict"
 
-    def test_login_wrong_password(self, api_client: ApiClient, test_user: TestUser):
+    def test_login_wrong_password(self, api_client: ApiClient, test_user: UserContext):
         """잘못된 비밀번호로 로그인 시도"""
         response = api_client.post(
             Endpoints.AUTH_LOGIN,

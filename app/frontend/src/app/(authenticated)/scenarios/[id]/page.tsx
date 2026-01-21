@@ -160,7 +160,7 @@ export default function ScenarioDetailPage() {
           <h3 className="font-semibold mb-2">기준 시간표</h3>
           {baseTimetable ? (
             <p className="text-sm text-muted-foreground mb-4">
-              {baseTimetable.name} · {baseTimetable.openingYear}년 {baseTimetable.semester}학기
+              {baseTimetable.name}
             </p>
           ) : (
             <p className="text-sm text-muted-foreground mb-4">시간표 정보 없음</p>
@@ -223,7 +223,7 @@ export default function ScenarioDetailPage() {
                     <div>
                       <p className="font-medium">{t.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {t.openingYear}년 {t.semester}학기 · 과목 {t.items.length}개
+                        과목 {t.items.length}개
                       </p>
                     </div>
                     <Button size="sm" onClick={() => handleCreateAlt(t)}>

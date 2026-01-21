@@ -15,16 +15,24 @@ import { timetableApi } from '@/lib/api';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/error';
 import Link from 'next/link';
+import { useSemester } from '@/providers/semester-provider';
 
 export default function TimetablesPage() {
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
 
-  const { data: timetables, isLoading } = useQuery({
+  const { semester: currentSemester } = useSemester();
+  const { data: allTimetables, isLoading } = useQuery({
     queryKey: ['timetables'],
     queryFn: timetableApi.getAll,
   });
+
+  const timetables = allTimetables?.filter(
+    (tt) =>
+      tt.openingYear === currentSemester.openingYear &&
+      tt.semester === currentSemester.semester
+  );
 
   const createMutation = useMutation({
     mutationFn: timetableApi.create,
@@ -55,8 +63,8 @@ export default function TimetablesPage() {
     if (!newName.trim()) return;
     createMutation.mutate({
       name: newName,
-      openingYear: new Date().getFullYear(),
-      semester: '1',
+      openingYear: currentSemester.openingYear,
+      semester: currentSemester.semester,
     });
   };
 
@@ -88,10 +96,7 @@ export default function TimetablesPage() {
                     {tt.name}
                   </Link>
                   <p className="text-sm text-muted-foreground">
-                    {tt.openingYear}년 {tt.semester}학기
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {tt.items.length}개 과목
+                    {tt.items.length}개 과목 · {tt.items.reduce((sum, item) => sum + (item.credits || 0), 0)}학점
                   </p>
                 </div>
                 <Button

@@ -176,7 +176,9 @@ export default function TimetableDetailPage() {
             ← 목록
           </Button>
           <h1 className="text-xl font-bold">{timetable.name} 편집</h1>
-          <span className="text-muted-foreground">과목 {timetable.items.length}개</span>
+          <span className="text-muted-foreground">
+            과목 {timetable.items.length}개 · {timetable.items.reduce((sum, item) => sum + (item.credits || 0), 0)}학점
+          </span>
         </div>
         <div className="flex items-center gap-2">
           {altMode ? (

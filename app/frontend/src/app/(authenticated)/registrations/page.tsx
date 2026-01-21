@@ -1,10 +1,15 @@
 'use client';
 
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 import { registrationApi } from '@/lib/api';
 import Link from 'next/link';
+import { StartRegistrationDialog } from './start-registration-dialog';
+import { useSemester } from '@/providers/semester-provider';
 
 const statusLabels: Record<string, string> = {
   IN_PROGRESS: '진행 중',
@@ -19,10 +24,18 @@ const statusColors: Record<string, 'default' | 'secondary' | 'destructive'> = {
 };
 
 export default function RegistrationsPage() {
-  const { data: registrations, isLoading } = useQuery({
+  const { semester: currentSemester } = useSemester();
+  const [isStartDialogOpen, setIsStartDialogOpen] = useState(false);
+  const { data: allRegistrations, isLoading } = useQuery({
     queryKey: ['registrations'],
     queryFn: registrationApi.getAll,
   });
+
+  const registrations = allRegistrations?.filter(
+    (reg) =>
+      reg.startScenario.timetable.openingYear === currentSemester.openingYear &&
+      reg.startScenario.timetable.semester === currentSemester.semester
+  );
 
   if (isLoading) {
     return <div className="text-center py-8">로딩 중...</div>;
@@ -30,21 +43,27 @@ export default function RegistrationsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">수강신청</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">수강신청</h1>
+        <Button onClick={() => setIsStartDialogOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          수강신청 시작
+        </Button>
+      </div>
 
       {!registrations?.length ? (
         <div className="text-center py-8 text-muted-foreground">
-          수강신청 세션이 없습니다. 시나리오에서 수강신청을 시작해보세요.
+          수강신청 세션이 없습니다. 새 수강신청을 시작해보세요.
         </div>
       ) : (
         <div className="space-y-4">
           {registrations.map((reg) => (
-            <Card key={reg.id} className="p-4">
+            <Card key={reg.id} className="p-4 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <Link
                     href={`/registrations/${reg.id}`}
-                    className="font-semibold hover:underline"
+                    className="font-semibold hover:underline text-lg block"
                   >
                     {reg.name || `수강신청 #${reg.id}`}
                   </Link>
@@ -74,6 +93,11 @@ export default function RegistrationsPage() {
           ))}
         </div>
       )}
+
+      <StartRegistrationDialog
+        open={isStartDialogOpen}
+        onOpenChange={setIsStartDialogOpen}
+      />
     </div>
   );
 }

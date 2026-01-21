@@ -5,9 +5,9 @@ import { cn } from '@/lib/utils';
 import type { TimetableItem, ClassTime } from '@/types';
 
 const DAYS = ['월', '화', '수', '목', '금'] as const;
-const START_HOUR = 9;
-const END_HOUR = 21;
-const GRID_HEIGHT = 640;
+const PIXELS_PER_HOUR = 60;
+const DEFAULT_START = 9;
+const DEFAULT_END = 18;
 
 interface PlacedBlock {
   item: TimetableItem;
@@ -29,11 +29,12 @@ interface WeeklyGridProps {
   succeededCourseIds?: Set<number>;
   failedCourseIds?: Set<number>;
   pendingCourseIds?: Set<number>;
+  newCourseIds?: Set<number>;
 }
 
 function toMinutes(hhmm: string): number {
   const parts = hhmm.split(':');
-  if (parts.length !== 2) return 0;
+  if (parts.length < 2) return 0;
   const h = parseInt(parts[0], 10) || 0;
   const m = parseInt(parts[1], 10) || 0;
   return h * 60 + m;
@@ -78,27 +79,57 @@ export function WeeklyGrid({
   succeededCourseIds = new Set(),
   failedCourseIds = new Set(),
   pendingCourseIds = new Set(),
+  newCourseIds = new Set(),
 }: WeeklyGridProps) {
   const conflicts = useMemo(
     () => externalConflicts ?? buildConflicts(items),
     [items, externalConflicts]
   );
 
+  // Calculate Course Range
+  const { startHour, endHour, gridHeight } = useMemo(() => {
+    let minMin = DEFAULT_START * 60;
+    let maxMin = DEFAULT_END * 60;
+
+    const allItems = [...items];
+    if (previewItem) allItems.push(previewItem);
+
+    allItems.forEach((item) => {
+      item.classTimes.forEach((ct) => {
+        const start = toMinutes(ct.startTime);
+        const end = toMinutes(ct.endTime);
+        if (start < minMin) minMin = start;
+        if (end > maxMin) maxMin = end;
+      });
+    });
+
+    const sHour = Math.floor(minMin / 60);
+    const eHour = Math.ceil(maxMin / 60);
+
+    // User requested "exact fit" (e.g. start exactly at 9 if class starts at 9)
+    const finalStart = Math.max(0, sHour);
+    const finalEnd = Math.min(24, eHour);
+
+    const height = (finalEnd - finalStart) * PIXELS_PER_HOUR;
+
+    return { startHour: finalStart, endHour: finalEnd, gridHeight: height };
+  }, [items, previewItem]);
+
   const placedBlocks = useMemo(() => {
-    const baseMinutes = START_HOUR * 60;
-    const totalMinutes = (END_HOUR - START_HOUR) * 60;
+    const baseMinutes = startHour * 60;
+    const totalMinutes = (endHour - startHour) * 60;
     const placed: PlacedBlock[] = [];
 
     const processItem = (item: TimetableItem, isPreview = false) => {
       for (const slot of item.classTimes) {
         const start = toMinutes(slot.startTime);
         const end = toMinutes(slot.endTime);
-        const top = ((start - baseMinutes) / totalMinutes) * GRID_HEIGHT;
-        const height = ((end - start) / totalMinutes) * GRID_HEIGHT;
+        const top = ((start - baseMinutes) / totalMinutes) * gridHeight;
+        const height = ((end - start) / totalMinutes) * gridHeight;
         placed.push({
           item,
           day: slot.day,
-          top: Math.max(0, Math.min(top, GRID_HEIGHT)),
+          top: Math.max(0, top), // Don't allow negative top
           height,
           isPreview,
         });
@@ -106,48 +137,66 @@ export function WeeklyGrid({
     };
 
     items.forEach((item) => processItem(item));
-    if (previewItem) {
+
+    // Only show preview if it's NOT already in the items list
+    if (previewItem && !items.some((i) => i.courseId === previewItem.courseId)) {
       processItem(previewItem, true);
     }
 
     return placed;
-  }, [items, previewItem]);
+  }, [items, previewItem, startHour, endHour, gridHeight]);
 
   const getBlockColor = (item: TimetableItem, isPreview: boolean) => {
-    if (isPreview) return 'bg-blue-100 border-blue-300';
-    if (succeededCourseIds.has(item.courseId)) return 'bg-green-100 border-green-400';
-    if (failedCourseIds.has(item.courseId)) return 'bg-red-100 border-red-400 opacity-60';
-    if (pendingCourseIds.has(item.courseId)) return 'bg-gray-100 border-gray-300 opacity-60';
+    // Preview: Highlight (Blue)
+    if (isPreview) return 'bg-timetable-highlight border-timetable-highlight-fg text-timetable-highlight-fg border-dashed';
 
+    // Status overrides
+    if (succeededCourseIds.has(item.courseId)) return 'bg-green-50 border-green-500 text-green-700';
+    if (failedCourseIds.has(item.courseId)) return 'bg-red-50 border-red-500 opacity-60 text-red-700';
+    if (pendingCourseIds.has(item.courseId)) return 'bg-gray-50 border-gray-500 opacity-60 text-gray-700';
+
+    // Newly Added: Highlight (Blue)
+    if (newCourseIds.has(item.courseId)) return 'bg-timetable-highlight border-timetable-highlight-fg text-timetable-highlight-fg';
+
+    // Conflict: Destructive
     const isConflict = Array.from(conflicts).some((c) => c.includes(item.courseName ?? ''));
-    if (isConflict) return 'bg-red-50 border-red-300';
+    if (isConflict) return 'bg-destructive/10 border-destructive text-destructive';
 
-    return 'bg-blue-50 border-blue-200';
+    // Standard: Base (Gray)
+    // Using semantic tokens defined in globals.css
+    // Note: border-l-4 style relies on the border color here.
+    return 'bg-timetable-base border-timetable-base-fg text-foreground';
   };
 
   return (
     <div className="border rounded-lg bg-white p-4">
       <h3 className="font-semibold mb-3">주간 그리드</h3>
-      <div className="flex" style={{ height: GRID_HEIGHT + 24 }}>
+      <div className="flex" style={{ height: gridHeight + 40 }}>
         {/* Time Rail */}
-        <div className="w-12 relative">
-          {Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => {
-            const hour = START_HOUR + i;
-            const top = (i / (END_HOUR - START_HOUR)) * GRID_HEIGHT;
-            return (
-              <div
-                key={hour}
-                className="absolute text-xs text-muted-foreground"
-                style={{ top: top - 8, left: 0 }}
-              >
-                {hour.toString().padStart(2, '0')}:00
-              </div>
-            );
-          })}
+        <div className="w-12 flex flex-col">
+          {/* Spacer to match Day Header height */}
+          <div className="text-center text-sm font-medium py-1 border-b border-transparent invisible">
+            00
+          </div>
+          <div className="relative flex-1">
+            {Array.from({ length: endHour - startHour + 1 }, (_, i) => {
+              const hour = startHour + i;
+              const top = (i / (endHour - startHour)) * gridHeight;
+              return (
+                <div
+                  key={hour}
+                  className="absolute text-xs text-muted-foreground w-full text-right pr-2"
+                  style={{ top: top - 8 }}
+                >
+                  {hour.toString().padStart(2, '0')}:00
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Days Grid */}
-        <div className="flex-1 flex">
+        <div className="flex-1 flex border-t border-l border-r">
           {DAYS.map((day) => (
             <div key={day} className="flex-1 relative border-r border-b last:border-r-0">
               {/* Day Header */}
@@ -156,12 +205,12 @@ export function WeeklyGrid({
               </div>
 
               {/* Hour Lines */}
-              <div className="relative" style={{ height: GRID_HEIGHT }}>
-                {Array.from({ length: END_HOUR - START_HOUR }, (_, i) => (
+              <div className="relative" style={{ height: gridHeight }}>
+                {Array.from({ length: endHour - startHour }, (_, i) => (
                   <div
                     key={i}
                     className="absolute w-full border-b border-gray-100"
-                    style={{ top: ((i + 1) / (END_HOUR - START_HOUR)) * GRID_HEIGHT }}
+                    style={{ top: ((i + 1) / (endHour - startHour)) * gridHeight }}
                   />
                 ))}
 
@@ -174,7 +223,7 @@ export function WeeklyGrid({
                       <div
                         key={`${block.item.courseId}-${idx}`}
                         className={cn(
-                          'absolute left-1 right-1 rounded border p-1 overflow-hidden cursor-pointer transition-all',
+                          'absolute inset-x-0 border-l-4 p-1 overflow-hidden cursor-pointer transition-all hover:brightness-95',
                           getBlockColor(block.item, block.isPreview ?? false),
                           isSelected && 'ring-2 ring-blue-500',
                           block.isPreview && 'opacity-50'

@@ -89,6 +89,16 @@ POST   /api/v1/timetables/{id}/alternatives { name: "Plan B", excludedCourseIds:
 - **요청**: `excludedCourseIds` (Long 배열)
 - **응답**: `excludedCourses` (courseId 포함 객체 배열)
 
+### UI/UX 상세 동작
+
+- **대안 시간표 시각화 (Diff Highlighting)**:
+  - **기반 과목**: 원본 시간표에서 가져온 유지된 과목은 **회색**(`timetable-base`)으로 표시하여 배경처럼 인식되게 함.
+  - **신규 과목**: 대안 시간표 생성 이후 새로 추가된 과목은 **파란색**(`timetable-highlight`)으로 표시하여 변경 사항을 강조함.
+  - **판별 로직**: 과목 `addedAt` > 시간표 `createdAt` + Buffer(5s) 조건으로 신규 추가 여부를 자동 판별.
+- **상호작용**:
+  - 과목 블록 클릭 시 상세 정보 혹은 삭제/선택 UI 노출.
+  - 드래그 앤 드롭 미지원 (클릭 기반 추가/삭제).
+
 ---
 
 ## 4. 시나리오 계획 (Scenario Planning)

@@ -43,7 +43,12 @@
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
+  --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+  --color-timetable-base: var(--timetable-base);
+  --color-timetable-base-fg: var(--timetable-base-fg);
+  --color-timetable-highlight: var(--timetable-highlight);
+  --color-timetable-highlight-fg: var(--timetable-highlight-fg);
 }
 
 :root {
@@ -79,6 +84,13 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Timetable Semantic Colors: Light Mode */
+  --timetable-base: oklch(0.97 0 0);
+  --timetable-base-fg: oklch(0.3 0 0);
+  /* High Contrast Dark Gray */
+  --timetable-highlight: oklch(0.95 0.05 260);
+  --timetable-highlight-fg: oklch(0.4 0.15 260);
 }
 
 .dark {
@@ -113,12 +125,20 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  /* Timetable Semantic Colors */
+  --timetable-base: oklch(0.269 0 0);
+  --timetable-base-fg: oklch(0.8 0 0);
+  /* High Contrast Light Gray for Dark Mode */
+  --timetable-highlight: oklch(0.646 0.222 41.116);
+  --timetable-highlight-fg: oklch(0.488 0.243 264.376);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }

@@ -49,6 +49,7 @@ export default function TimetableDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['timetable', timetableId] });
       queryClient.invalidateQueries({ queryKey: ['timetables'] });
+      setPreviewCourse(null); // Clear preview when added
       toast.success('과목이 추가되었습니다');
     },
     onError: (error) => toast.error(getErrorMessage(error, '과목 추가 실패')),
@@ -59,6 +60,11 @@ export default function TimetableDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['timetable', timetableId] });
       queryClient.invalidateQueries({ queryKey: ['timetables'] });
+      // preview might be relevant if we allow previewing "excluded" items, 
+      // but generally good to clear state on mutation success to avoid ghosts.
+      // However, if removing from grid, user isn't hovering the list item usually.
+      // But safety first.
+      setPreviewCourse(null);
       toast.success('과목이 제거되었습니다');
     },
     onError: (error) => toast.error(getErrorMessage(error, '과목 제거 실패')),
@@ -97,7 +103,11 @@ export default function TimetableDetailPage() {
     if (!timetable) return { available: [], conflicting: [] };
 
     const currentCourseIds = new Set(timetable.items.map((i) => i.courseId));
-    const notInTimetable = wishlistItems.filter((w) => !currentCourseIds.has(w.courseId));
+    const excludedCourseIds = new Set(timetable.excludedCourses?.map((c) => c.courseId) ?? []);
+
+    const notInTimetable = wishlistItems.filter((w) =>
+      !currentCourseIds.has(w.courseId) && !excludedCourseIds.has(w.courseId)
+    );
 
     const avail: WishlistItem[] = [];
     const conflict: WishlistItem[] = [];
@@ -116,6 +126,23 @@ export default function TimetableDetailPage() {
 
     return { available: avail, conflicting: conflict };
   }, [timetable, wishlistItems]);
+
+  const newlyAddedIds = useMemo(() => {
+    if (!timetable) return new Set<number>();
+
+    const createdTimestamp = new Date(timetable.createdAt).getTime();
+    // Add a buffer of 5 seconds to account for execution delay during creation
+    const buffer = 5000;
+
+    const newIds = new Set<number>();
+    timetable.items.forEach((item) => {
+      const addedTimestamp = new Date(item.addedAt).getTime();
+      if (addedTimestamp > createdTimestamp + buffer) {
+        newIds.add(item.courseId);
+      }
+    });
+    return newIds;
+  }, [timetable]);
 
   const toggleSelect = (courseId: number) => {
     setExcluded((prev) => {
@@ -193,24 +220,17 @@ export default function TimetableDetailPage() {
                 available.map((w) => (
                   <div
                     key={w.id}
-                    className="p-2 border rounded hover:bg-gray-50 cursor-pointer"
+                    className="p-2 border rounded border-l-4 border-l-timetable-highlight hover:bg-timetable-highlight/10 cursor-pointer transition-colors flex items-center justify-between"
                     onMouseEnter={() => setPreviewCourse(toTimetableItem(w))}
                     onMouseLeave={() => setPreviewCourse(null)}
+                    onClick={() => addCourseMutation.mutate(w.courseId)}
                   >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-sm">{w.courseName}</p>
-                        <p className="text-xs text-muted-foreground">{w.professor}</p>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => addCourseMutation.mutate(w.courseId)}
-                        disabled={addCourseMutation.isPending}
-                      >
-                        +
-                      </Button>
+                    <div>
+                      <p className="font-medium text-sm">{w.courseName}</p>
+                      <p className="text-xs text-muted-foreground">{w.professor}</p>
                     </div>
+                    {/* Visual cue for addition */}
+                    <span className="text-timetable-highlight font-bold text-lg mr-2">+</span>
                   </div>
                 ))
               )
@@ -234,7 +254,7 @@ export default function TimetableDetailPage() {
                 <p className="text-sm text-muted-foreground">제외된 과목이 없습니다.</p>
               ) : (
                 timetable.excludedCourses.map((c) => (
-                  <div key={c.courseId} className="p-2 border rounded">
+                  <div key={c.courseId} className="p-2 border border-dashed rounded bg-gray-50 opacity-70">
                     <p className="font-medium text-sm">{c.courseName}</p>
                     <p className="text-xs text-muted-foreground">{c.professor}</p>
                   </div>
@@ -253,6 +273,7 @@ export default function TimetableDetailPage() {
             selectedCourseIds={excluded}
             onSelectCourse={toggleSelect}
             onRemoveCourse={(courseId) => removeCourseMutation.mutate(courseId)}
+            newCourseIds={newlyAddedIds}
           />
         </div>
       </div>

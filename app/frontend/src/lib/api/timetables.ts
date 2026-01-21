@@ -41,7 +41,8 @@ export const timetableApi = {
 
   addCourse: async (timetableId: number, courseId: number): Promise<Timetable> => {
     const response = await apiClient.post<Timetable>(
-      `${API_ENDPOINTS.TIMETABLES}/${timetableId}/courses/${courseId}`
+      `${API_ENDPOINTS.TIMETABLES}/${timetableId}/courses`,
+      { courseId }
     );
     return response.data;
   },

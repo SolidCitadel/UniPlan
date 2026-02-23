@@ -110,7 +110,7 @@ export default function ScenarioDetailPage() {
       return;
     }
     setSelectedTimetable(timetable);
-    setAltName(`${timetable.name} 대안`);
+    setAltName(`${timetable.name} 활용`);
     setAltDesc('');
     setShowCreateDialog(true);
   };
@@ -223,7 +223,7 @@ export default function ScenarioDetailPage() {
                     <div>
                       <p className="font-medium">{t.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        과목 {t.items.length}개
+                        과목 {t.items.length}개 · {t.items.reduce((sum, item) => sum + (item.credits || 0), 0)}학점
                       </p>
                     </div>
                     <Button size="sm" onClick={() => handleCreateAlt(t)}>

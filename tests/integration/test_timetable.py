@@ -30,6 +30,18 @@ class TestTimetable:
         )
         assert isinstance(timetables, list)
 
+    def test_update_timetable_name(self, auth_client: ApiClient, test_timetable: dict):
+        """시간표 이름 수정 (PATCH)"""
+        timetable_id = test_timetable["id"]
+        
+        updated = auth_client.patch_dto(
+            f"{Endpoints.TIMETABLES}/{timetable_id}",
+            model=TimetableResponse,
+            json={"name": "수정된 이름"}
+        )
+        assert updated.name == "수정된 이름"
+        assert updated.id == timetable_id
+
     def test_get_timetable_by_id(self, auth_client: ApiClient, test_timetable: dict):
         """시간표 상세 조회"""
         timetable_id = test_timetable["id"]

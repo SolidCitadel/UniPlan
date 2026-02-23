@@ -43,7 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(DockerRequiredExtension.class)
 @SpringBootTest
 @AutoConfigureMockMvc
-class TimetableControllerTest {
+class TimetableTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -218,7 +218,7 @@ class TimetableControllerTest {
                 .build();
 
         // When & Then
-        mockMvc.perform(put("/timetables/" + timetable.getId())
+        mockMvc.perform(patch("/timetables/" + timetable.getId())
                         .header("X-User-Id", TEST_USER_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))

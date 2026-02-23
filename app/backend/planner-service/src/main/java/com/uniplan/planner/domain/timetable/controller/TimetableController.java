@@ -54,8 +54,8 @@ public class TimetableController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "시간표 이름 수정", description = "시간표의 이름을 수정합니다")
-    @PutMapping("/{timetableId}")
+    @Operation(summary = "시간표 이름 수정 (PATCH)", description = "시간표의 이름을 부분 수정합니다 (PATCH)")
+    @PatchMapping("/{timetableId}")
     public ResponseEntity<TimetableResponse> updateTimetable(
             @Parameter(hidden = true) @RequestHeader("X-User-Id") Long userId,
             @PathVariable Long timetableId,

@@ -86,6 +86,7 @@ assert response.status_code == 409, "중복 리소스는 409 Conflict"
 |------|-----------|
 | POST (리소스 생성) | **201 Created** |
 | POST (상태 변경) | **200 OK** |
+| PATCH (부분 수정) | **200 OK** |
 | GET | **200 OK** |
 | DELETE | **204 No Content** |
 | 중복 리소스 | **409 Conflict** |

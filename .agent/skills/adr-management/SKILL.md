@@ -98,8 +98,11 @@ UniPlan/
 │   ├── README.md              # ADR 인덱스 포함
 │   ├── architecture.md        # ADR 내용 반영
 │   └── adr/
-│       ├── 001-test-strategy.md
+│       ├── 001-monorepo-structure.md
 │       ├── 002-msa-ddd-strategy.md
-│       ├── 003-api-gateway-strategy.md
-│       └── 004-centralized-config.md
+│       ├── 003-docker-compose-infra.md
+│       ├── 004-api-gateway-strategy.md
+│       ├── 005-centralized-config.md
+│       ├── 006-test-strategy.md
+│       └── 007-openapi-code-generation.md
 ```

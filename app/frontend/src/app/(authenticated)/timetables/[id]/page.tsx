@@ -21,6 +21,8 @@ import { getErrorMessage } from '@/lib/error';
 
 type EditorTab = 'available' | 'conflicts' | 'excluded';
 
+import { Pencil, Check, X } from 'lucide-react';
+
 export default function TimetableDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -34,10 +36,45 @@ export default function TimetableDetailPage() {
   const [altName, setAltName] = useState('');
   const [previewCourse, setPreviewCourse] = useState<TimetableItem | null>(null);
 
+  // Name editing state
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editName, setEditName] = useState('');
+
   const { data: timetable, isLoading } = useQuery({
     queryKey: ['timetable', timetableId],
     queryFn: () => timetableApi.getById(timetableId),
   });
+
+  // Initialize edit name when data loads
+  useMemo(() => {
+    if (timetable) {
+      setEditName(timetable.name);
+    }
+  }, [timetable]);
+
+  const updateNameMutation = useMutation({
+    mutationFn: (newName: string) => timetableApi.update(timetableId, { name: newName }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['timetable', timetableId] });
+      queryClient.invalidateQueries({ queryKey: ['timetables'] });
+      toast.success('시간표 이름이 수정되었습니다');
+      setIsEditingName(false);
+    },
+    onError: (error) => toast.error(getErrorMessage(error, '이름 수정 실패')),
+  });
+
+  const handleSaveName = () => {
+    if (editName.trim() && editName !== timetable?.name) {
+      updateNameMutation.mutate(editName);
+    } else {
+      setIsEditingName(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingName(false);
+    setEditName(timetable?.name || '');
+  };
 
   const { data: wishlistItems = [] } = useQuery({
     queryKey: ['wishlist'],
@@ -49,7 +86,7 @@ export default function TimetableDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['timetable', timetableId] });
       queryClient.invalidateQueries({ queryKey: ['timetables'] });
-      setPreviewCourse(null); // Clear preview when added
+      setPreviewCourse(null);
       toast.success('과목이 추가되었습니다');
     },
     onError: (error) => toast.error(getErrorMessage(error, '과목 추가 실패')),
@@ -60,10 +97,6 @@ export default function TimetableDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['timetable', timetableId] });
       queryClient.invalidateQueries({ queryKey: ['timetables'] });
-      // preview might be relevant if we allow previewing "excluded" items, 
-      // but generally good to clear state on mutation success to avoid ghosts.
-      // However, if removing from grid, user isn't hovering the list item usually.
-      // But safety first.
       setPreviewCourse(null);
       toast.success('과목이 제거되었습니다');
     },
@@ -131,7 +164,6 @@ export default function TimetableDetailPage() {
     if (!timetable) return new Set<number>();
 
     const createdTimestamp = new Date(timetable.createdAt).getTime();
-    // Add a buffer of 5 seconds to account for execution delay during creation
     const buffer = 5000;
 
     const newIds = new Set<number>();
@@ -158,7 +190,7 @@ export default function TimetableDetailPage() {
 
   const handleCreateAlt = () => {
     if (timetable) {
-      setAltName(`${timetable.name} 대안`);
+      setAltName(`${timetable.name} 활용`);
       setShowAltDialog(true);
     }
   };
@@ -175,7 +207,43 @@ export default function TimetableDetailPage() {
           <Button variant="ghost" onClick={() => router.push('/timetables')}>
             ← 목록
           </Button>
-          <h1 className="text-xl font-bold">{timetable.name} 편집</h1>
+
+          {isEditingName ? (
+            <div className="flex items-center gap-2">
+              <Input
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="h-8 w-60"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSaveName();
+                  if (e.key === 'Escape') handleCancelEdit();
+                }}
+              />
+              <Button size="icon" variant="ghost" className="h-8 w-8 text-green-600" onClick={handleSaveName}>
+                <Check className="h-4 w-4" />
+              </Button>
+              <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600" onClick={handleCancelEdit}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 group">
+              <h1 className="text-xl font-bold">{timetable.name}</h1>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => {
+                  setEditName(timetable.name);
+                  setIsEditingName(true);
+                }}
+              >
+                <Pencil className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
+
           <span className="text-muted-foreground">
             과목 {timetable.items.length}개 · {timetable.items.reduce((sum, item) => sum + (item.credits || 0), 0)}학점
           </span>

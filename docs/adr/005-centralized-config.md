@@ -1,4 +1,4 @@
-# ADR-004: 중앙집중식 설정 관리 (Centralized Configuration)
+# ADR-005: 중앙집중식 설정 관리 (Centralized Configuration)
 
 **상태**: 승인됨  
 **작성일**: 2026-01-20
@@ -61,5 +61,6 @@ Spring Boot 실행
 - IDE에서 실행할 때 `-Dspring.profiles.active=local` 필요
 
 ## 관련 문서 (References)
+- 관련 ADR: [ADR-003 Docker Compose 인프라](./003-docker-compose-infra.md)
 - 반영된 문서: [architecture.md](../architecture.md#설정-아키텍처-configuration-architecture)
 - 외부 참고: [12-Factor App: Config](https://12factor.net/config)

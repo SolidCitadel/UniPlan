@@ -1,6 +1,6 @@
 # Testing Guide
 
-UniPlan의 5단계 테스트 전략 및 작성 가이드입니다. 상세한 배경은 [ADR-001](../adr/001-test-strategy.md)을 참고하세요.
+UniPlan의 5단계 테스트 전략 및 작성 가이드입니다. 상세한 배경은 [ADR-006](../adr/006-test-strategy.md)을 참고하세요.
 
 ## Test Levels
 

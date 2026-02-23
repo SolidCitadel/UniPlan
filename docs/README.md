@@ -15,11 +15,13 @@ UniPlan 프로젝트의 기술 문서 인덱스입니다.
 
 중요한 기술적 의사결정의 배경과 결과를 기록합니다.
 
-- [**001-test-strategy.md**](./adr/001-test-strategy.md): 5단계 테스트 전략 및 TestContainers 도입
-- [ADR-002: MSA & DDD Strategy](./adr/002-msa-ddd-strategy.md)
-- [ADR-003: API Gateway Strategy](./adr/003-api-gateway-strategy.md)
-- [ADR-004: Centralized Configuration](./adr/004-centralized-config.md)
-- [ADR-005: OpenAPI Code Generation](./adr/005-openapi-code-generation.md): OpenAPI 기반 코드 자동 생성 전략
+- [ADR-001: Monorepo Structure](./adr/001-monorepo-structure.md): 모노레포 구조 선택 (멀티레포 대비 근거)
+- [ADR-002: MSA & DDD Strategy](./adr/002-msa-ddd-strategy.md): MSA 및 도메인 주도 설계
+- [ADR-003: Docker Compose Infrastructure](./adr/003-docker-compose-infra.md): Docker Compose 기반 인프라 운영 (K8s/Terraform 미도입 근거)
+- [ADR-004: API Gateway Strategy](./adr/004-api-gateway-strategy.md): 중앙집중식 API Gateway 및 인증
+- [ADR-005: Centralized Configuration](./adr/005-centralized-config.md): Docker Compose 환경변수 기반 설정 관리
+- [ADR-006: Test Strategy](./adr/006-test-strategy.md): 5단계 테스트 전략 및 TestContainers 도입
+- [ADR-007: OpenAPI Code Generation](./adr/007-openapi-code-generation.md): Code-First OpenAPI 기반 클라이언트 코드 자동 생성
 
 ## 🛠️ 가이드 (Guides)
 

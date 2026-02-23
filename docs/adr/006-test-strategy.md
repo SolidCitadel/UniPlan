@@ -1,4 +1,4 @@
-# ADR-001: 5단계 테스트 전략 (Test Strategy)
+# ADR-006: 5단계 테스트 전략 (Test Strategy)
 
 **상태**: 승인됨  
 **작성일**: 2026-01-18
@@ -62,4 +62,5 @@
 - TestContainers 도입 시 테스트 실행 시간 증가
 
 ## 관련 문서 (References)
+- 관련 ADR: [ADR-002 MSA & DDD](./002-msa-ddd-strategy.md), [ADR-003 Docker Compose 인프라](./003-docker-compose-infra.md)
 - 반영된 문서: [guides/testing.md](../guides/testing.md)

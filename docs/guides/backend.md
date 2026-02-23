@@ -72,7 +72,7 @@ planner-service/
 
 ## 3. Configuration
 
-설정 아키텍처(Spring Profile, Docker Compose 환경 구분, 주요 환경변수)는 [Architecture 문서](../architecture.md#설정-아키텍처-configuration-architecture) 및 [ADR-004](../adr/004-centralized-config.md)를 참조하세요.
+설정 아키텍처(Spring Profile, Docker Compose 환경 구분, 주요 환경변수)는 [Architecture 문서](../architecture.md#설정-아키텍처-configuration-architecture) 및 [ADR-005](../adr/005-centralized-config.md)를 참조하세요.
 
 ## 4. API & Gateway Integration
 

@@ -116,7 +116,7 @@ Spring 내부에서는 프로파일 분리를 하지 않고(local 제외), Docke
 | `docker-compose.test.yml` | Integration 테스트 환경 |
 | `docker-compose.prod.yml` | 운영 환경 (`.env`로 시크릿 주입) |
 
-> 상세 배경은 [ADR-004](adr/004-centralized-config.md) 참조.
+> 상세 배경은 [ADR-005](adr/005-centralized-config.md) 참조.
 
 ---
 

@@ -7,6 +7,8 @@ DB_URL: jdbc:mysql://localhost:3306/uniplan_planner?createDatabaseIfNotExist=tru
 DB_USER: user
 DB_PASSWORD: password
 CATALOG_SERVICE_URL: http://localhost:8083
+REDIS_HOST: localhost
+REDIS_PORT: 6379
 
 # Local overrides
 spring:

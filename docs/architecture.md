@@ -137,12 +137,24 @@ Planner Service  ─────────────────────
 | 컴포넌트 | 설명 |
 |----------|------|
 | `CatalogFeignClient` | OpenFeign 선언적 HTTP 클라이언트 인터페이스 |
-| `CatalogClient` | 비즈니스 로직용 Facade (Feign 클라이언트 래핑) |
+| `CatalogClient` | 비즈니스 로직용 Facade (Feign 클라이언트 래핑, Redis 캐싱 포함) |
 | `InternalCourseController` | Catalog Service의 내부 전용 API 컨트롤러 |
 
 
 > Implementation details (Internal Controllers, Feign Clients) are available in [Backend Guide](guides/backend.md#5-internal-communication-msa).
 
+### Redis 캐싱
+
+과목 데이터는 학기 중 거의 불변이므로, `CatalogClient`에서 Redis를 통해 캐싱합니다.
+
+| 항목 | 설정 |
+|------|------|
+| 캐시 키 | `course:{courseId}` |
+| TTL | 1시간 |
+| 직렬화 | Jackson JSON (`GenericJackson2JsonRedisSerializer`) |
+| 장애 대응 | Redis 장애 시 Feign 직접 호출로 폴백 |
+
+배치 조회 시 개별 키로 캐시를 확인한 뒤, 미스된 항목만 Feign으로 요청합니다.
 
 ### Batch API
 

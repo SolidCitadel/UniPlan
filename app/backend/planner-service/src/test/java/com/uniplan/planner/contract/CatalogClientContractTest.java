@@ -3,11 +3,16 @@ package com.uniplan.planner.contract;
 import com.uniplan.planner.global.client.CatalogClient;
 import com.uniplan.planner.global.client.dto.CourseFullResponse;
 import com.uniplan.planner.global.client.dto.CourseSimpleResponse;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.test.context.TestPropertySource;
 
 import java.util.List;
@@ -15,23 +20,44 @@ import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Contract Test for CatalogClient
- * 
+ *
  * Verifies that Planner-Service correctly calls Catalog-Service APIs
- * and properly handles responses.
+ * and properly handles responses. Redis is mocked to isolate Feign behavior.
  */
 @SpringBootTest
 @AutoConfigureWireMock(port = 0)
 @TestPropertySource(properties = {
-        "services.catalog.url=http://localhost:${wiremock.server.port}"
+        "services.catalog.url=http://localhost:${wiremock.server.port}",
+        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration"
 })
 @DisplayName("CatalogClient 계약 테스트")
 class CatalogClientContractTest {
 
     @Autowired
     private CatalogClient catalogClient;
+
+    @MockBean
+    private RedisConnectionFactory redisConnectionFactory;
+
+    @SuppressWarnings("unchecked")
+    @MockBean
+    private RedisTemplate<String, Object> redisTemplate;
+
+    @SuppressWarnings("unchecked")
+    @BeforeEach
+    void setUp() {
+        ValueOperations<String, Object> valueOps = mock(ValueOperations.class);
+        when(redisTemplate.opsForValue()).thenReturn(valueOps);
+        when(valueOps.get(anyString())).thenReturn(null); // always cache miss
+        when(valueOps.multiGet(any())).thenReturn(null); // always cache miss for batch
+    }
 
     @Test
     @DisplayName("getFullCourseById - 성공 응답")

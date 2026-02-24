@@ -22,6 +22,7 @@ UniPlan 프로젝트의 기술 문서 인덱스입니다.
 - [ADR-005: Centralized Configuration](./adr/005-centralized-config.md): Docker Compose 환경변수 기반 설정 관리
 - [ADR-006: Test Strategy](./adr/006-test-strategy.md): 5단계 테스트 전략 및 TestContainers 도입
 - [ADR-007: OpenAPI Code Generation](./adr/007-openapi-code-generation.md): Code-First OpenAPI 기반 클라이언트 코드 자동 생성
+- [ADR-008: Redis Caching](./adr/008-redis-caching.md): CatalogClient 과목 데이터 Redis 캐싱 도입
 
 ## 🛠️ 가이드 (Guides)
 

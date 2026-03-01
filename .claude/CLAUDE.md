@@ -15,6 +15,7 @@ app/frontend/         # Next.js (TypeScript)
   └── React Query + shadcn/ui + Tailwind
 
 tests/integration/      # pytest Integration 테스트
+tests/e2e/            # Playwright E2E 테스트
 scripts/              # 크롤러/유틸리티 (Python, uv)
 ```
 
@@ -85,6 +86,11 @@ docker compose -f docker-compose.test.yml up -d --build
 sleep 20
 cd tests/integration && uv sync && uv run pytest -v
 docker compose -f docker-compose.test.yml down
+
+# E2E 테스트 (백엔드 컨테이너 기동 후)
+cd tests/e2e && npm run test:smoke             # smoke만 빠르게
+cd tests/e2e && npm test                       # 전체
+cd tests/e2e && npm run test:ui                # 대화형 디버깅
 
 # Docker (백엔드)
 docker compose up --build                      # 개발용 (API: :8080)

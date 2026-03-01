@@ -10,7 +10,7 @@ UniPlan의 5단계 테스트 전략 및 작성 가이드입니다. 상세한 배
 | **Component** | 단일 서비스 | TestContainers | Mock | `component/` |
 | **Contract** | API 계약 | - | WireMock | `contract/` |
 | **Integration** | 전체 시스템 | 실제 (Docker) | 실제 | `tests/integration/` |
-| **E2E** | 사용자 여정 | 실제 | 실제 | (Future) |
+| **E2E** | 사용자 여정 | 실제 | 실제 | `tests/e2e/` (Playwright) |
 
 ---
 
@@ -98,3 +98,15 @@ docker compose -f docker-compose.test.yml down
 - **Lint**: `npm run lint` (ESLint)
 - **Build**: `npm run build` (타입 체크 포함)
 - **Note**: 프론트엔드 로직 검증은 주로 Integration Test의 시나리오를 통해 간접 검증하거나, 복잡한 유틸리티 함수에 대해 Jest 단위 테스트를 작성합니다.
+
+---
+
+## 4. E2E Testing (Playwright)
+
+브라우저 레벨의 사용자 여정 전체를 검증합니다. 상세 내용은 [E2E Testing Guide](e2e-testing.md)를 참고하세요.
+
+```bash
+cd tests/e2e
+npm run test:smoke   # 빠른 smoke 실행
+npm run test:ui      # 대화형 디버깅
+```

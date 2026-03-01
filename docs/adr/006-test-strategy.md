@@ -29,7 +29,7 @@
 | **Component** | 단일 서비스 전체 | TestContainers MySQL | Mock | `component/` |
 | **Contract** | 서비스 간 API 계약 | 필요 시 TestContainers | WireMock | `contract/` |
 | **Integration** | docker-compose 전체 시스템 | 실제 | 실제 | `tests/integration/` |
-| **E2E** | 사용자 여정 (UI 포함) | 실제 | 실제 | (향후 Flutter) |
+| **E2E** | 사용자 여정 (UI 포함) | 실제 | 실제 | `tests/e2e/` (Playwright) |
 
 ### 세부 결정사항
 

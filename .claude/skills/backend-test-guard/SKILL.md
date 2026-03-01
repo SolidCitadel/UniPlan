@@ -134,7 +134,10 @@ cd app/backend
 ./gradlew test
 ```
 
-### Integration 테스트 (주요 API 변경 시)
+### Integration 테스트 (백엔드 변경 시 필수)
+
+백엔드(`app/backend/`)를 건드렸으면 어떤 변경이든 **무조건** 실행한다.
+API 계약뿐 아니라 인프라(Docker Compose), 비즈니스 로직, 설정 변경 등 어디까지 영향이 갔을지 모르기 때문이다.
 
 ```bash
 # 1. 개발 컨테이너가 떠있다면 중지
@@ -155,11 +158,6 @@ uv run pytest -v
 docker compose -f docker-compose.test.yml down
 ```
 
-**Integration 테스트 실행 조건:**
-- API 엔드포인트 추가/삭제/변경
-- 요청/응답 구조 변경
-- 인증 흐름 변경
-
 ### 실패 시 대응
 
 1. 실패 원인 분석
@@ -171,5 +169,5 @@ docker compose -f docker-compose.test.yml down
 - [ ] 모든 관련 Unit/Component 테스트 파일 점검 완료
 - [ ] 필요한 테스트 수정 완료
 - [ ] `./gradlew test` 전체 통과
-- [ ] (주요 변경 시) Integration 테스트 통과
+- [ ] Integration 테스트 통과 (백엔드 변경 시 항상 필수)
 - [ ] **이 조건 충족 전까지 백엔드 작업 미완료로 간주**

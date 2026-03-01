@@ -31,6 +31,15 @@ UniPlan의 5단계 테스트 전략 및 작성 가이드입니다. 상세한 배
 ### Contract Test
 - **목적**: 마이크로서비스 간(Feign) 통신 규격 검증
 - **도구**: Spring Cloud Contract 또는 WireMock
+- **규칙**: `@SpringBootTest` 사용 시 Redis 등 외부 인프라는 반드시 Mock 처리
+  ```java
+  // Redis 자동구성 제외 + RedisTemplate Mock
+  @TestPropertySource(properties = {
+      "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration,..."
+  })
+  @MockBean RedisTemplate<String, Object> redisTemplate;
+  @MockBean RedisConnectionFactory redisConnectionFactory;
+  ```
 
 ---
 

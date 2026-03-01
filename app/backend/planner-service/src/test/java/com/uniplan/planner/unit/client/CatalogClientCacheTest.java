@@ -150,12 +150,7 @@ class CatalogClientCacheTest {
     @Test
     @DisplayName("배치 조회 - multiGet으로 부분 캐시 히트")
     void batchPartialHit_fetchesOnlyMisses() {
-        // given: 101 is cached, 102 is not
-        when(valueOps.multiGet(List.of("course:101", "course:102")))
-                .thenReturn(List.of(COURSE_101, /* null placeholder */ new Object() {
-                    // multiGet returns null for misses, but we can't put null in List.of
-                }));
-        // Use a mutable list to include null
+        // given: 101 is cached, 102 is not (ArrayList to allow null element)
         java.util.ArrayList<Object> multiGetResult = new java.util.ArrayList<>();
         multiGetResult.add(COURSE_101);
         multiGetResult.add(null);

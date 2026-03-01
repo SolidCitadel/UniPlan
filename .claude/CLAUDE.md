@@ -70,6 +70,12 @@ Phase 1~3 완료 후에만 커밋 수행.
 ### 보안
 - `.env`, 비밀번호, JWT 시크릿 커밋 금지
 
+### 환경변수 원칙 (ADR-005)
+- **기본값 금지**: `${VAR:default}` 또는 `?? 'default'` 패턴 사용 금지
+- **즉시 실패**: 누락된 환경변수는 명확한 에러와 함께 즉시 실패해야 함
+- **예외**: `application-local.yml`에서는 값을 직접 하드코딩 허용
+- **온보딩**: 각 모듈 디렉터리의 `.env.example`을 `.env`로 복사하는 것이 필수 절차
+
 ## 주요 명령어
 
 ```bash
@@ -83,7 +89,8 @@ cd app/frontend && npm install && npm run dev
 
 # Integration 테스트 (테스트용 컨테이너 필수)
 docker compose -f docker-compose.test.yml up -d --build
-sleep 20
+sleep 30
+cp tests/integration/.env.example tests/integration/.env   # 최초 1회
 cd tests/integration && uv sync && uv run pytest -v
 docker compose -f docker-compose.test.yml down
 

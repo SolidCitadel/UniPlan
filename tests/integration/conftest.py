@@ -109,16 +109,27 @@ class Endpoints:
     REGISTRATIONS = "/api/v1/registrations"
 
 
+def _require_env(key: str) -> str:
+    """환경변수가 없으면 즉시 실패. tests/integration/.env.example 참고."""
+    val = os.environ.get(key)
+    if not val:
+        raise RuntimeError(
+            f"Required env var '{key}' is not set. "
+            "Copy tests/integration/.env.example to tests/integration/.env"
+        )
+    return val
+
+
 @pytest.fixture(scope="session")
 def api_base_url() -> str:
     """Get API base URL from environment."""
-    return os.getenv("API_BASE_URL", "http://localhost:8080")
+    return _require_env("API_BASE_URL")
 
 
 @pytest.fixture(scope="session")
 def catalog_service_url() -> str:
     """Get catalog-service URL for direct import API calls."""
-    return os.getenv("CATALOG_SERVICE_URL", "http://localhost:8083")
+    return _require_env("CATALOG_SERVICE_URL")
 
 
 @pytest.fixture(scope="session")

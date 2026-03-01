@@ -6,11 +6,9 @@ import { E2E_USER_EMAIL, E2E_USER_PASSWORD, API_BASE_URL } from './constants';
 const authFile = path.join(__dirname, '../.auth/user.json');
 
 setup('authenticate', async ({ page }) => {
-  // .auth 디렉토리가 없으면 생성
+  // .auth 디렉토리 생성 (이미 존재하면 무시)
   const authDir = path.dirname(authFile);
-  if (!fs.existsSync(authDir)) {
-    fs.mkdirSync(authDir, { recursive: true });
-  }
+  await fs.promises.mkdir(authDir, { recursive: true });
 
   // 테스트 계정이 없을 경우 자동 생성 시도
   await ensureTestUserExists(API_BASE_URL, E2E_USER_EMAIL, E2E_USER_PASSWORD);

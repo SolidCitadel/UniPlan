@@ -22,13 +22,13 @@ test('@smoke 인증 후 강의 검색 화면이 렌더링된다', async ({ page 
 
 // 이 테스트는 playwright.config.ts의 storageState(인증 세션)가 적용된 상태에서 실행됩니다.
 test('@smoke 강의 검색 API가 응답한다', async ({ page }) => {
-  await page.goto('/courses');
-
-  // 검색 요청이 발생할 때 응답 상태 확인
+  // waitForResponse를 goto 이전에 선언해야 레이스 컨디션 방지
   const responsePromise = page.waitForResponse(
     (res) => res.url().includes('/api/v1/courses') && res.status() === 200,
     { timeout: 10_000 }
   );
+  await page.goto('/courses');
+
   const response = await responsePromise;
   expect(response.ok()).toBe(true);
 });

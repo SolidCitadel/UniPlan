@@ -60,6 +60,20 @@ Spring Boot 실행
 - Docker 없이 개별 서비스 실행 시 `application-local.yml` 필요
 - IDE에서 실행할 때 `-Dspring.profiles.active=local` 필요
 
+## 환경변수 기본값 원칙
+
+12-Factor App Config 원칙에 따라 **환경변수는 기본값을 두지 않는다.**
+
+| 위치 | 규칙 |
+|------|------|
+| `application.yml` (비로컬) | `${VAR}` — 기본값 없음. 누락 시 Spring 기동 실패 |
+| `application-local.yml` (로컬 전용) | 값을 직접 하드코딩. `${VAR:default}` 플레이스홀더 사용 금지 |
+| 프론트엔드 / 테스트 코드 | 기본값 없음. 미설정 시 명확한 에러 메시지와 함께 즉시 실패 |
+
+**이유**: 기본값이 있으면 환경변수가 누락되어도 앱이 "일단 동작"하는 상태가 되어, 예상하지 못한 환경에서 디버깅하기 어려운 버그가 발생한다.
+
+신규 기여자 온보딩 시 `.env.example` 복사가 필수 절차임을 각 디렉터리의 README 또는 이 원칙으로 명시한다.
+
 ## 관련 문서 (References)
 - 관련 ADR: [ADR-003 Docker Compose 인프라](./003-docker-compose-infra.md)
 - 반영된 문서: [architecture.md](../architecture.md#설정-아키텍처-configuration-architecture)

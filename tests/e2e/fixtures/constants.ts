@@ -1,4 +1,17 @@
-/** E2E 테스트 공통 상수. 기본값은 .env.example 참고. */
-export const E2E_USER_EMAIL = process.env.E2E_USER_EMAIL ?? 'e2e-test@example.com';
-export const E2E_USER_PASSWORD = process.env.E2E_USER_PASSWORD ?? 'Test1234!';
-export const API_BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:8080';
+/**
+ * E2E 테스트 공통 상수
+ * 환경변수가 없으면 즉시 실패합니다. tests/e2e/.env.example을 복사하여 .env를 생성하세요.
+ */
+function requireEnv(key: string): string {
+  const val = process.env[key];
+  if (!val) {
+    throw new Error(
+      `Required env var '${key}' is not set. Copy tests/e2e/.env.example to tests/e2e/.env`
+    );
+  }
+  return val;
+}
+
+export const E2E_USER_EMAIL = requireEnv('E2E_USER_EMAIL');
+export const E2E_USER_PASSWORD = requireEnv('E2E_USER_PASSWORD');
+export const API_BASE_URL = requireEnv('API_BASE_URL');

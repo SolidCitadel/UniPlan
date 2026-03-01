@@ -10,7 +10,23 @@ UniPlan 프론트엔드 (Next.js) 개발 가이드입니다.
 - **UI Toolkit**: shadcn/ui + Tailwind CSS
 - **HTTP Client**: axios
 
-## 2. Coding Conventions
+## 2. 로컬 환경 설정
+
+```bash
+# 1. 환경변수 설정 (필수 - 없으면 서버 시작 즉시 실패)
+cp .env.local.example .env.local
+
+# 2. 의존성 설치 및 실행
+npm install && npm run dev
+```
+
+| 변수 | 설명 | 예시 |
+|------|------|------|
+| `NEXT_PUBLIC_API_URL` | API Gateway 주소 | `http://localhost:8080` |
+
+## 3. Coding Conventions
+
+
 
 ### 명명 규칙
 - **Component**: PascalCase (`TimetableList`, `WeeklyGrid`)
@@ -39,7 +55,7 @@ const createMutation = useMutation({
 });
 ```
 
-## 3. OpenAPI Type Generation
+## 4. OpenAPI Type Generation
 
 백엔드의 Swagger/OpenAPI 스펙을 기반으로 TypeScript 타입을 자동 생성합니다.
 
@@ -54,7 +70,7 @@ import type { Timetable } from '@/types';
 // 백엔드 DTO 변경 시 컴파일 에러 발생으로 안전성 보장
 ```
 
-## 4. Directory Structure
+## 5. Directory Structure
 
 ```
 app/frontend/

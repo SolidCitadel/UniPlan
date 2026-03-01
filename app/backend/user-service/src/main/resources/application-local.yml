@@ -6,8 +6,8 @@ SERVER_PORT: 8081
 DB_URL: jdbc:mysql://localhost:3306/uniplan_user?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
 DB_USER: user
 DB_PASSWORD: password
-GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:dummy-local-client-id}
-GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:dummy-local-client-secret}
+GOOGLE_CLIENT_ID: dummy-local-client-id
+GOOGLE_CLIENT_SECRET: dummy-local-client-secret
 JWT_SECRET: uniplan-jwt-secret-key-minimum-256-bits-for-local-development
 OAUTH2_REDIRECT_URL: http://localhost:3000/auth/callback
 

@@ -84,8 +84,8 @@ def main():
     )
     parser.add_argument(
         "--base-url",
-        default=os.getenv("API_BASE_URL", "http://localhost:8080"),
-        help="API Gateway base URL (default: env API_BASE_URL or http://localhost:8080)",
+        default=os.environ.get("API_BASE_URL"),
+        help="API Gateway base URL (overrides default localhost:8080 in SERVICES)",
     )
     args = parser.parse_args()
 
@@ -94,7 +94,7 @@ def main():
 
     # 서비스 URL 업데이트 (base-url 옵션 적용)
     services = SERVICES.copy()
-    if args.base_url != "http://localhost:8080":
+    if args.base_url:
         services = {
             name: url.replace("http://localhost:8080", args.base_url)
             for name, url in SERVICES.items()

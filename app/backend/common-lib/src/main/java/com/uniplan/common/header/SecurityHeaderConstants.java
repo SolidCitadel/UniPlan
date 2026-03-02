@@ -23,7 +23,14 @@ public class SecurityHeaderConstants {
      * API Gateway에서 JWT의 role claim을 추출하여 전달
      */
     public static final String X_USER_ROLE = "X-User-Role";
-    
+
+    /**
+     * 요청 추적 ID 헤더
+     * API Gateway의 CorrelationIdFilter가 생성하여 모든 서비스로 전파
+     * MDC의 requestId 키와 연동되어 JSON 로그에 자동 포함
+     */
+    public static final String X_REQUEST_ID = "X-Request-Id";
+
     private SecurityHeaderConstants() {
         // 인스턴스화 방지
     }

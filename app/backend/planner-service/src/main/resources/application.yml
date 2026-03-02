@@ -38,6 +38,16 @@ services:
   catalog:
     url: ${CATALOG_SERVICE_URL}
 
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
 # Swagger/OpenAPI 설정
 springdoc:
   api-docs:

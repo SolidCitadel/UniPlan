@@ -24,6 +24,7 @@ UniPlan 프로젝트의 기술 문서 인덱스입니다.
 - [ADR-007: OpenAPI Code Generation](./adr/007-openapi-code-generation.md): Code-First OpenAPI 기반 클라이언트 코드 자동 생성
 - [ADR-008: Redis Caching](./adr/008-redis-caching.md): CatalogClient 과목 데이터 Redis 캐싱 도입
 - [ADR-009: Playwright E2E](./adr/009-playwright-e2e.md): Playwright 기반 브라우저 E2E 테스트 도입
+- [ADR-010: Observability Stack](./adr/010-observability-stack.md): Grafana 통합 스택 기반 Observability 4단계 로드맵
 
 ## 🛠️ 가이드 (Guides)
 

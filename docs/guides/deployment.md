@@ -32,8 +32,18 @@ docker compose up -d --build
 # 3. 프론트엔드 개발 서버 실행
 cd app/frontend && npm install && npm run dev
 
-# 4. 로그 확인
+# 4. 로그 확인 (JSON 형식)
 docker compose logs -f api-gateway
+
+# 4-1. jq로 구조화 로그 보기 (가독성 향상)
+docker compose logs -f planner-service | jq '.'
+
+# 4-2. 특정 requestId로 요청 추적
+docker compose logs user-service planner-service catalog-service | jq 'select(.requestId == "a1b2c3d4-...")'
+
+# 5. 서비스 상태 확인 (Actuator health)
+curl http://localhost:8080/actuator/health   # api-gateway
+curl http://localhost:8081/actuator/health   # user-service (로컬 직접 실행 시)
 ```
 
 > **환경변수 필수**: `app/frontend/.env.local`이 없으면 `npm run dev` 시 즉시 오류가 발생합니다.

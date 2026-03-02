@@ -25,7 +25,10 @@ repositories {
 }
 
 dependencies {
+	implementation("org.springframework.boot:spring-boot-starter-actuator")
+	implementation("net.logstash.logback:logstash-logback-encoder:8.0")
 	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation(project(":common-lib"))
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.0")

@@ -81,6 +81,7 @@ routes:
    Authorization: Bearer {token}
 
 2. Gateway
+   - CorrelationIdFilter: X-Request-Id 생성 (없으면 UUID 부여)
    - JWT 검증
    - X-User-Id, X-User-Email, X-User-Role 헤더 추가
    - 경로 변환: /api/v1/users/me → /users/me
@@ -88,12 +89,64 @@ routes:
 3. User Service
    GET /users/me
    X-User-Id: 123
+   X-Request-Id: a1b2c3d4-...   ← RequestIdFilter가 MDC에 설정
 
 4. 응답
    200 OK { id: 123, email: "...", ... }
 ```
 
 **인증 예외 경로**: `/api/v1/auth/**` (로그인/회원가입)
+
+---
+
+## Observability
+
+### Correlation ID 전파
+
+모든 요청에 고유 `X-Request-Id`를 부여하여 여러 서비스에 걸친 로그를 추적합니다.
+
+```
+클라이언트 요청
+    → Gateway CorrelationIdFilter
+        X-Request-Id 생성 (UUID) 또는 클라이언트 제공값 그대로 사용
+    → Downstream 서비스 RequestIdFilter
+        MDC에 requestId 설정 → 모든 로그에 자동 포함
+```
+
+**로그 예시 (JSON)**:
+```json
+{
+  "@timestamp": "2026-03-02T12:00:00.000Z",
+  "level": "INFO",
+  "service": "planner-service",
+  "requestId": "a1b2c3d4-e5f6-...",
+  "message": "시나리오 조회 시작 - scenarioId: 42"
+}
+```
+
+### Health Check 엔드포인트
+
+각 서비스에 Spring Boot Actuator가 적용되어 있습니다.
+
+| 서비스 | Health 엔드포인트 |
+|--------|-----------------|
+| api-gateway | `GET :8080/actuator/health` |
+| user-service | `GET :8081/actuator/health` |
+| planner-service | `GET :8082/actuator/health` |
+| catalog-service | `GET :8083/actuator/health` |
+
+`docker-compose.yml`의 서비스 기동 순서 의존성은 actuator health 엔드포인트 기반으로 제어됩니다.
+
+### 4단계 Observability 로드맵
+
+| Phase | 내용 | 상태 |
+|-------|------|------|
+| Phase 1 | Spring Actuator + Structured Logging (JSON) + Correlation ID | ✅ 완료 |
+| Phase 2 | Prometheus + Grafana (메트릭) | 예정 |
+| Phase 3 | OpenTelemetry + Grafana Tempo (분산 트레이싱) | 예정 |
+| Phase 4 | Grafana Loki + Promtail (로그 집계) | 예정 |
+
+> 상세 배경 및 결정 근거: [ADR-010](adr/010-observability-stack.md)
 
 ---
 

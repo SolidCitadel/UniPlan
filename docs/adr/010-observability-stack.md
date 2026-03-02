@@ -43,16 +43,18 @@ MSA 환경에서는 단일 요청이 Gateway → Planner → Catalog 등 여러 
 
 ### 4단계 로드맵
 
-**Phase 1 (현재): Observability 기반**
+**Phase 1 (완료): Observability 기반**
 - Spring Boot Actuator 전 서비스 적용 (`/actuator/health`, `/actuator/metrics` 등)
 - Structured Logging: `logstash-logback-encoder`로 JSON 포맷 출력, MDC 기반 `requestId` 전파
 - Correlation ID: Gateway의 `CorrelationIdFilter`가 `X-Request-Id`를 생성/전파, 각 서비스의 `RequestIdFilter`가 MDC에 설정
 - Docker Compose health check: actuator health 엔드포인트 기반으로 개선
 
-**Phase 2: 메트릭 시각화**
-- Prometheus (메트릭 수집) + Grafana (시각화)
+**Phase 2 (완료): 메트릭 시각화**
 - `micrometer-registry-prometheus` 의존성으로 `/actuator/prometheus` 엔드포인트 노출
-- JVM, HTTP 요청 수/응답시간/에러율 등 기본 메트릭 대시보드
+- `management.metrics.tags.application`으로 서비스별 레이블 자동 부여
+- `docker-compose.observability.yml` 오버레이로 Prometheus + Grafana 선택적 기동
+- `docker/prometheus/prometheus.yml`: 4개 서비스 scrape 설정
+- `docker/grafana/provisioning/`: Prometheus 데이터소스 자동 등록
 
 **Phase 3: 분산 트레이싱**
 - OpenTelemetry SDK (`micrometer-tracing-bridge-otel`) 도입

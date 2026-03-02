@@ -1,0 +1,10 @@
+apiVersion: 1
+
+providers:
+  - name: 'UniPlan'
+    folder: 'UniPlan'
+    type: file
+    disableDeletion: true
+    editable: false
+    options:
+      path: /etc/grafana/provisioning/dashboards

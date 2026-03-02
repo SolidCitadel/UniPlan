@@ -45,6 +45,9 @@ public class CorrelationIdFilter implements GlobalFilter, Ordered {
                 .header(REQUEST_ID_HEADER, finalRequestId)
                 .build();
 
+        // 응답 헤더는 커밋 전(chain.filter 호출 전)에 설정해야 함
+        exchange.getResponse().getHeaders().add(REQUEST_ID_HEADER, finalRequestId);
+
         return chain.filter(exchange.mutate().request(mutatedRequest).build());
     }
 

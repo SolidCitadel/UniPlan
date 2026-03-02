@@ -56,10 +56,13 @@ MSA 환경에서는 단일 요청이 Gateway → Planner → Catalog 등 여러 
 - `docker/prometheus/prometheus.yml`: 4개 서비스 scrape 설정
 - `docker/grafana/provisioning/`: Prometheus 데이터소스 자동 등록
 
-**Phase 3: 분산 트레이싱**
-- OpenTelemetry SDK (`micrometer-tracing-bridge-otel`) 도입
-- Grafana Tempo로 트레이스 수집
-- MDC의 `traceId`/`spanId`가 자동으로 로그에 포함 → Loki 로그에서 traceId 클릭 시 Tempo 트레이스 연계
+**Phase 3 (완료): 분산 트레이싱**
+- `micrometer-tracing-bridge-otel` + `opentelemetry-exporter-otlp` 의존성으로 OTel 브릿지 활성화
+- `management.tracing.sampling.probability: 1.0` + `management.otlp.tracing.endpoint`로 Tempo 연동
+- Grafana Tempo(`grafana/tempo:2.7.2`) 컨테이너: OTLP HTTP(4318) 수신, API(3200) 노출
+- `docker/grafana/provisioning/datasources/tempo.yml`: Grafana에 Tempo 데이터소스 자동 등록
+- MDC의 `traceId`/`spanId`가 JSON 로그에 자동 포함 (Micrometer Tracing → Reactor Context 전파)
+- Phase 1 제약 해소: Gateway WebFlux 로그에 traceId/spanId가 Reactor Context 기반으로 포함됨
 
 **Phase 4: 로그 집계**
 - Grafana Loki + Promtail 도입
@@ -101,7 +104,7 @@ Phase 3 OTel 도입 후:
 - Docker Compose에 Prometheus, Grafana, Loki, Tempo 추가로 메모리 사용량 증가 (Phase 2~4)
 - Phase 1 JSON 로그는 개발 시 로컬에서 가독성이 떨어짐 (jq 등으로 보완 가능)
 - OTel 적용 시 Spring Boot 기동 시간 소폭 증가
-- **[Phase 1 제약] Gateway(WebFlux) 자체 로그에는 requestId가 MDC로 포함되지 않음**: Gateway는 Reactor 기반이라 스레드 공유 특성상 `MDC.put()`이 정상 동작하지 않음. 헤더 전파(`X-Request-Id`)는 정상 동작하므로 다운스트림 MVC 서비스 로그에는 requestId가 포함됨. Phase 3 OTel Reactor Context 전파 적용 시 해결됨.
+- **[Phase 1 제약 → Phase 3에서 해소] Gateway(WebFlux) 로그 traceId/spanId 포함**: Phase 1에서는 Reactor 스레드 특성으로 MDC.put()이 Gateway 로그에 반영되지 않았으나, Phase 3 OTel Micrometer Tracing 적용으로 Reactor Context 전파가 활성화되어 traceId/spanId가 Gateway 로그에도 포함됨.
 
 ## 관련 문서 (References)
 

@@ -16,6 +16,15 @@ spring:
   jpa:
     show-sql: true
 
+# Tracing (Tempo 없이 실행 시 연결 경고가 발생하나 앱 동작에는 영향 없음)
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: http://localhost:4318/v1/traces
+
 # Debug logging
 logging:
   level:

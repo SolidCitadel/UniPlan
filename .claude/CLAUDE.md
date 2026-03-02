@@ -108,7 +108,7 @@ cd tests/e2e && npm run test:ui                # 대화형 디버깅
 # Docker (백엔드)
 docker compose up --build                      # 개발용 (API: :8080)
 docker compose -f docker-compose.test.yml up   # 테스트용 (API: :8080, tmpfs DB)
-docker compose -f docker-compose.yml -f docker-compose.observability.yml up --build  # Observability 포함 (Prometheus: :9090, Grafana: :3001)
+docker compose -f docker-compose.yml -f docker-compose.observability.yml up --build  # Observability 포함 (Prometheus: :9090, Grafana: :3001, Tempo 내부)
 ```
 
 ## 상세 문서

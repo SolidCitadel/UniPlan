@@ -75,6 +75,12 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY}
+  otlp:
+    tracing:
+      endpoint: ${OTLP_TRACING_ENDPOINT}
 
 # Swagger/OpenAPI
 springdoc:

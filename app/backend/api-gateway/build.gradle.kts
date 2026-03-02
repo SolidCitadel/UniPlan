@@ -10,7 +10,7 @@ plugins {
 
 group = "com.uniplan"
 version = "0.0.1-SNAPSHOT"
-description = "User-Service for UniPlan"
+description = "API Gateway for UniPlan"
 
 java {
     toolchain {
@@ -36,6 +36,8 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("io.micrometer:micrometer-registry-prometheus")
+    implementation("io.micrometer:micrometer-tracing-bridge-otel")
+    implementation("io.opentelemetry:opentelemetry-exporter-otlp")
     implementation("org.springframework.cloud:spring-cloud-starter-gateway-server-webflux")
 
     // Swagger for API Gateway (통합 문서)

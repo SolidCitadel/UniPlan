@@ -32,6 +32,8 @@ tools: Read, Glob, Grep, Bash
    - 기존 패턴과의 불일치
 ## 실행 단계
 
+**중요: git 명령어는 항상 `git <command>` 형태로만 실행. `cd /path && git ...` 패턴 절대 사용 금지. 현재 작업 디렉토리가 이미 프로젝트 루트로 설정되어 있음.**
+
 1. `git diff --cached --name-only`로 Staging된 변경사항 확인
 2. **Staging된 변경사항이 있는 경우:**
    - 해당 파일들을 읽고 분석 진행

@@ -12,7 +12,14 @@
       "Bash(taskkill /PID 36336 /F)",
       "Bash(powershell \"Stop-Process -Id 36336 -Force\")",
       "Bash(python upload_to_service.py:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(docker compose:*)",
+      "Bash(uv:*)",
+      "Bash(sleep:*)",
+      "Bash(cd app/backend && ./gradlew:*)",
+      "Bash(cd app/frontend && npm run build:*)",
+      "Bash(cd app/frontend && npm install:*)",
+      "Bash(cd tests/integration && uv:*)"
     ],
     "deny": [],
     "ask": []

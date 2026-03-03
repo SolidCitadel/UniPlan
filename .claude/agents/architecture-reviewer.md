@@ -31,25 +31,14 @@ tools: Read, Glob, Grep, Bash
 
 5. **프로젝트 일관성**
    - 기존 패턴과의 불일치
+   - 변경 파일이 백엔드(`app/backend/`)면 `docs/guides/backend.md` 참조
+   - 변경 파일이 프론트엔드(`app/frontend/`)면 `docs/guides/frontend.md` 참조
 
 ## 실행 단계
 
-**중요: git 명령어는 항상 `git <command>` 형태로만 실행. `cd /path && git ...` 패턴 절대 사용 금지. 현재 작업 디렉토리가 이미 프로젝트 루트로 설정되어 있음.**
-
-1. `git diff --cached --name-only`로 Staging된 변경사항 확인
-2. **Staging된 변경사항이 있는 경우:**
-   - 해당 파일들을 읽고 분석 진행
-
-3. **Staging된 변경사항이 없는 경우:**
-   - `git status`로 Untracked/Modified 파일 확인
-   - **변경사항이 있다면 사용자에게 질문:**
-     > "Staging된 변경사항이 없습니다. Untracked/Modified 파일이 감지되었습니다. 어떻게 할까요?"
-     > 1. `git add .` 실행 후 분석 (권장)
-     > 2. 무시하고 최근 커밋(`HEAD`) 분석
-     > 3. 취소
-   - **변경사항도 없다면:**
-     - 바로 최근 커밋(`HEAD`) 분석
-
+1. `git diff --cached --name-only`로 staged 변경사항 확인
+2. **staged 변경사항이 없으면** "검토할 변경사항이 없습니다" 출력 후 종료
+3. staged 파일들을 읽고 분석
 4. CLAUDE.md, docs/ 참고하여 프로젝트 컨벤션 확인
 5. 비판적 평가 결과 출력
 

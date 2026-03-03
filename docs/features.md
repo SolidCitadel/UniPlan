@@ -1,6 +1,6 @@
 # Features
 
-UniPlan의 주요 기능별 사용자 시나리오와 API 명세입니다.
+UniPlan의 주요 기능별 사용자 시나리오입니다.
 
 ---
 
@@ -10,18 +10,16 @@ UniPlan의 주요 기능별 사용자 시나리오와 API 명세입니다.
 
 과목명, 교수명, 학과, 캠퍼스 등의 조건으로 강의를 검색합니다.
 
-### API
-
-```
-GET /api/v1/courses?courseName=컴퓨터&professor=김철수&page=0&size=20
-GET /api/v1/courses/{id}
-```
-
 ### 주요 기능
 
 - 검색 필터: 과목명, 교수명, 학과코드, 캠퍼스
 - 페이징: page/size 파라미터
 - 강의 상세: 시간, 강의실, 학점
+
+### 제약사항
+
+- 검색 결과는 사용자의 소속 대학 + 현재 선택한 학기로 자동 필터링됨
+- 학기 선택은 프론트엔드에서 관리 (localStorage 저장)
 
 ---
 
@@ -30,15 +28,6 @@ GET /api/v1/courses/{id}
 ### 사용자 시나리오
 
 관심 과목을 우선순위(1~5)와 함께 저장합니다.
-
-### API
-
-```
-POST   /api/v1/wishlist { courseId: 101, priority: 1 }
-GET    /api/v1/wishlist
-PATCH  /api/v1/wishlist/{id} { priority: 3 }
-DELETE /api/v1/wishlist/{id}
-```
 
 ### 주요 기능
 
@@ -58,21 +47,6 @@ DELETE /api/v1/wishlist/{id}
 
 여러 시간표를 만들어 강의 조합을 계획합니다. 특정 과목을 제외한 대안 시간표도 생성 가능합니다.
 
-### API
-
-```
-POST   /api/v1/timetables { name: "Plan A", openingYear: 2025, semester: "1" }
-GET    /api/v1/timetables
-GET    /api/v1/timetables/{id}
-PATCH  /api/v1/timetables/{id}
-DELETE /api/v1/timetables/{id}
-
-POST   /api/v1/timetables/{id}/courses/{courseId}
-DELETE /api/v1/timetables/{id}/courses/{courseId}
-
-POST   /api/v1/timetables/{id}/alternatives { name: "Plan B", excludedCourseIds: [101] }
-```
-
 ### 주요 기능
 
 - 시간표 생성: 이름, 연도, 학기 입력
@@ -83,11 +57,6 @@ POST   /api/v1/timetables/{id}/alternatives { name: "Plan B", excludedCourseIds:
 ### 제약사항
 
 - 제외된 과목은 해당 시간표에 다시 추가 불가
-
-### API 계약
-
-- **요청**: `excludedCourseIds` (Long 배열)
-- **응답**: `excludedCourses` (courseId 포함 객체 배열)
 
 ### UI/UX 상세 동작
 
@@ -107,17 +76,6 @@ POST   /api/v1/timetables/{id}/alternatives { name: "Plan B", excludedCourseIds:
 
 과목 실패 시 어떤 대안 시간표로 이동할지 의사결정 트리로 계획합니다.
 
-### API
-
-```
-POST   /api/v1/scenarios { name: "Plan A", timetableId: 1 }
-POST   /api/v1/scenarios/{parentId}/alternatives { name: "Plan B", failedCourseIds: [101], timetableId: 2 }
-GET    /api/v1/scenarios
-GET    /api/v1/scenarios/{id}
-POST   /api/v1/scenarios/{id}/navigate { failedCourseIds: [101] }
-DELETE /api/v1/scenarios/{id}
-```
-
 ### 주요 기능
 
 - 루트 시나리오: 시작 시간표 지정
@@ -132,18 +90,6 @@ DELETE /api/v1/scenarios/{id}
 ### 사용자 시나리오
 
 계획한 시나리오를 기반으로 수강신청을 시뮬레이션합니다. 과목 실패 시 자동으로 대안 시나리오로 전환됩니다.
-
-### API
-
-```
-POST   /api/v1/registrations { scenarioId: 10, name: "2025-1 수강신청" }
-GET    /api/v1/registrations
-GET    /api/v1/registrations/{id}
-POST   /api/v1/registrations/{id}/steps { succeededCourses: [101], failedCourses: [102], canceledCourses: [] }
-POST   /api/v1/registrations/{id}/complete
-POST   /api/v1/registrations/{id}/cancel
-DELETE /api/v1/registrations/{id}
-```
 
 ### 주요 기능
 

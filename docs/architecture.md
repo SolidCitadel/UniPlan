@@ -220,6 +220,21 @@ GET /internal/courses?ids=1,2,3,4,5
 
 ---
 
+## API 설계 원칙
+
+### 요청/응답 비대칭 (Request/Response Asymmetry)
+
+- **요청 (Request)**: ID만 전달 (간결하게)
+- **응답 (Response)**: 연관 객체를 포함한 풍부한 정보 반환
+
+```
+# 예시: 제외 과목
+요청: { "excludedCourseIds": [1, 2, 3] }
+응답: { "excludedCourses": [{ "courseId": 1, "name": "...", ... }] }
+```
+
+---
+
 ## API Specification & Code Generation
 
 UniPlan은 **Code-First API 개발 방식**을 채택하고 있으며, 백엔드 코드를 **Single Source of Truth**로 하여 클라이언트 및 테스트 코드를 자동 생성합니다.

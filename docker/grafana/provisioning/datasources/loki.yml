@@ -1,0 +1,17 @@
+apiVersion: 1
+
+datasources:
+  - name: Loki
+    type: loki
+    uid: loki
+    access: proxy
+    url: http://loki:3100
+    isDefault: false
+    editable: false
+    jsonData: {}
+    # derivedFields(Loki→Tempo 링크)는 현재 미구현 상태.
+    # 이유: Promtail pipeline의 output stage가 log line을 순수 메시지 텍스트로 변환하므로
+    # JSON 기반 matcherRegex가 매칭되지 않음. traceId는 structured_metadata에 저장됨.
+    # Loki 3.x derivedFields는 structured_metadata를 직접 참조하는 공식 방법 미지원.
+    # 역방향(Tempo→Loki)은 tempo.yml의 tracesToLogs 설정으로 정상 동작.
+    # 해결 방안 후보: Grafana Correlations 기능 활용 (별도 구현 필요)

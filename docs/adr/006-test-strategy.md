@@ -28,7 +28,8 @@
 | **Unit** | 단일 클래스 | Mock | Mock | `unit/` |
 | **Component** | 단일 서비스 전체 | TestContainers MySQL | Mock | `component/` |
 | **Contract** | 서비스 간 API 계약 | 필요 시 TestContainers | WireMock | `contract/` |
-| **Integration** | docker-compose 전체 시스템 | 실제 | 실제 | `tests/integration/` |
+| **Integration** | docker-compose 전체 시스템 (앱 로직) | 실제 (tmpfs) | 실제 | `tests/integration/` |
+| **Infra** | Observability 도구 동작 검증 | - | 실제 (observability profile) | `tests/infra/` |
 | **E2E** | 사용자 여정 (UI 포함) | 실제 | 실제 | `tests/e2e/` (Playwright) |
 
 ### 세부 결정사항
@@ -37,7 +38,12 @@
 2. **H2 사용 금지**: MySQL과 동작 차이가 있으므로 TestContainers MySQL 사용
 3. **Integration 테스트 범위**:
    - **도메인 테스트**: Happy Path 중심 (엣지 케이스는 Unit/Component에서)
-   - **인프라/보안 테스트**: Cross-Cutting Concerns (Gateway 보안, 인증 전파 등)
+   - **인프라/보안 테스트**: Cross-Cutting Concerns (Gateway 보안, Correlation ID 전파 등)
+
+4. **Infra 테스트 범위**:
+   - Observability 도구 동작 검증 (Loki 로그 수집, Prometheus scrape, Tempo 트레이스)
+   - docker-compose.test.yml의 observability 프로파일 기동 필요
+   - 실행: `docker compose -f docker-compose.test.yml --profile observability up -d && cd tests/infra && uv run pytest -v`
 
 ## 근거 (Rationale)
 

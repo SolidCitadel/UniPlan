@@ -14,14 +14,14 @@ app/backend/          # Spring Boot MSA (Java 21)
 app/frontend/         # Next.js (TypeScript) · React Query + shadcn/ui + Tailwind
 
 tests/
-  ├── integration/    # pytest Integration 테스트
+  ├── integration/    # pytest Integration 테스트 (애플리케이션 로직 검증)
+  ├── infra/          # pytest Infra 테스트 (Observability 도구 동작 검증)
   └── e2e/            # Playwright E2E 테스트
 scripts/              # 크롤러/유틸리티 (Python, uv)
 
-docker/                                   # Dockerfile 및 Observability 설정 (Grafana, Prometheus, Tempo)
-docker-compose.yml                        # 개발용
-docker-compose.test.yml                   # 테스트용 (tmpfs DB)
-docker-compose.observability.yml          # Observability 확장 (Prometheus, Grafana, Tempo)
+docker/                  # Dockerfile 및 Observability 설정 (Grafana, Prometheus, Tempo, Loki, Promtail)
+docker-compose.yml       # 개발용 (--profile observability: 모니터링 스택 포함)
+docker-compose.test.yml  # 테스트용 (tmpfs DB, --profile observability: Infra 테스트용)
 ```
 
 ## 핵심 규칙
@@ -91,9 +91,10 @@ cd app/backend && ./gradlew :planner-service:bootRun
 cd app/frontend && npm install && npm run dev
 
 # Docker (백엔드)
-docker compose up --build                      # 개발용 (API: :8080)
-docker compose -f docker-compose.test.yml up   # 테스트용 (API: :8080, tmpfs DB)
-docker compose -f docker-compose.yml -f docker-compose.observability.yml up --build  # Observability 포함 (Prometheus: :9090, Grafana: :3001, Tempo 내부)
+docker compose up --build                                    # 개발용 (API: :8080)
+docker compose --profile observability up --build            # 개발 + Observability (Grafana: :3001, Prometheus: :9090, Loki: :3100, Tempo: :3200)
+docker compose -f docker-compose.test.yml up                 # 테스트용 (API: :8080, tmpfs DB)
+docker compose -f docker-compose.test.yml --profile observability up  # 테스트 + Observability (Infra 테스트용)
 ```
 
 ## 상세 문서

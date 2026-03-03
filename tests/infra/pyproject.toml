@@ -1,0 +1,41 @@
+[project]
+name = "uniplan-infra-tests"
+version = "0.1.0"
+description = "Infrastructure smoke tests for UniPlan - Verifies observability stack operation"
+requires-python = ">=3.11"
+dependencies = [
+    "pytest>=8.0.0",
+    "pytest-env>=1.1.0",
+    "requests>=2.31.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest-html>=4.1.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["."]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+# 아래 기본값은 ADR-005 \"기본값 금지\" 원칙의 예외 대상이 아님.
+# ADR-005는 런타임 애플리케이션 환경변수(비밀·인스턴스별 설정)의 코드 내 기본값을 금지함.
+# 여기 값들은 --profile observability 기동 시 docker-compose.test.yml이 바인딩하는
+# 고정 포트 상수로, 개발자가 선택할 수 없는 값임. docker-compose.yml이 포트를 정의하듯
+# pyproject.toml은 그 포트를 사용하는 테스트 도구의 실행 환경을 정의함.
+env = [
+    "API_BASE_URL=http://localhost:8080",
+    "LOKI_URL=http://localhost:3100",
+    "PROMETHEUS_URL=http://localhost:9090",
+    "TEMPO_URL=http://localhost:3200",
+    "GRAFANA_URL=http://localhost:3001",
+    "GRAFANA_ADMIN_PASSWORD=admin",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]

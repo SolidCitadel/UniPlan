@@ -1,11 +1,10 @@
 """
-Observability Infrastructure Integration Tests.
+Observability Integration Tests.
 
-Verifies:
+Verifies application-level observability behavior:
 - Actuator health endpoint responds correctly
-- Prometheus metrics endpoint responds correctly
-- Actuator endpoints are blocked via Gateway
-- X-Request-Id correlation header is propagated in responses
+- Actuator endpoints are blocked via /api/v1 prefix
+- X-Request-Id correlation header is propagated through the gateway
 """
 import re
 

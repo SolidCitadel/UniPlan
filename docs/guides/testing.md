@@ -1,6 +1,6 @@
 # Testing Guide
 
-UniPlan의 5단계 테스트 전략 및 작성 가이드입니다. 상세한 배경은 [ADR-006](../adr/006-test-strategy.md)을 참고하세요.
+UniPlan의 6단계 테스트 전략 및 작성 가이드입니다. 상세한 배경은 [ADR-006](../adr/006-test-strategy.md)을 참고하세요.
 
 ## Test Levels
 
@@ -9,7 +9,8 @@ UniPlan의 5단계 테스트 전략 및 작성 가이드입니다. 상세한 배
 | **Unit** | 단일 클래스 | Mock | Mock | `unit/` |
 | **Component** | 단일 서비스 | TestContainers | Mock | `component/` |
 | **Contract** | API 계약 | - | WireMock | `contract/` |
-| **Integration** | 전체 시스템 | 실제 (Docker) | 실제 | `tests/integration/` |
+| **Integration** | 전체 시스템 (앱 로직) | 실제 (tmpfs) | 실제 | `tests/integration/` |
+| **Infra** | Observability 도구 동작 | - | 실제 (observability profile) | `tests/infra/` |
 | **E2E** | 사용자 여정 | 실제 | 실제 | `tests/e2e/` (Playwright) |
 
 ---
@@ -96,7 +97,77 @@ assert user.email == "test@example.com"
 
 ---
 
-## 3. Frontend Testing
+## 3. Infra Testing
+
+Python(`pytest`)을 사용하여 Observability 스택(Loki, Prometheus, Tempo, Grafana)의 동작을 검증합니다. 앱 로직이 아닌 인프라 파이프라인(로그 수집, 메트릭 scrape, 트레이스 전달, Grafana 프로비저닝)이 대상입니다.
+
+### 실행 방법
+
+```bash
+# 1. Observability 프로파일 포함 테스트 환경 기동
+docker compose -f docker-compose.test.yml --profile observability up -d --build
+
+# 2. 테스트 실행 (환경변수는 pyproject.toml에 고정 포트 상수로 내장)
+cd tests/infra
+uv sync
+uv run pytest -v
+
+# 특정 파일만 실행
+uv run pytest test_grafana.py -v
+uv run pytest test_loki.py -v
+
+# 3. 정리
+docker compose -f docker-compose.test.yml --profile observability down
+```
+
+> **참고**: 별도 `.env` 파일이 필요 없습니다. `tests/infra/pyproject.toml`의 `[tool.pytest.ini_options] env`에 `--profile observability` 기동 시의 고정 포트 상수(LOKI_URL, TEMPO_URL, PROMETHEUS_URL, GRAFANA_URL 등)가 내장되어 있습니다.
+
+### 테스트 파일 구조
+
+```
+tests/infra/
+├── pyproject.toml        # 의존성 및 pytest 환경변수 (포트 상수)
+├── conftest.py           # 공통 fixture (URL, 인증, generate_traffic)
+├── test_loki.py          # Loki 로그 집계 검증 (Level 1~3)
+├── test_prometheus.py    # Prometheus 메트릭 scrape 검증 (Level 1~3)
+├── test_tempo.py         # Tempo 분산 트레이싱 검증 (Level 1~3)
+└── test_grafana.py       # Grafana 프로비저닝 검증 (Level 1~3)
+```
+
+### 검증 계층 (각 파일 공통)
+
+- **Level 1 - 서비스 헬스**: `/ready` 또는 `/api/health` 엔드포인트 200 응답 확인
+- **Level 2 - 기본 동작**: 레이블/메트릭/스팬/데이터소스 존재 확인
+- **Level 3 - 데이터 파이프라인**: 실제 데이터가 수집·저장·연계되는지 종단 검증
+
+### 서비스 레이블 명명 규칙
+
+Promtail은 Docker Compose 서비스 이름(`com.docker.compose.service` 레이블)을 Loki `service` 레이블로 매핑합니다. `docker-compose.test.yml`의 서비스 이름이 `api-gateway-test`이므로 Loki 쿼리에서도 해당 값을 사용해야 합니다.
+
+```python
+# 올바른 쿼리 (테스트 환경)
+'{service="api-gateway-test"}'
+
+# 잘못된 쿼리 (개발 환경 서비스명)
+'{service="api-gateway"}'
+```
+
+### Grafana 프로비저닝 검증 (`test_grafana.py`)
+
+Grafana 데이터소스 자동 프로비저닝(`docker/grafana/provisioning/datasources/`)이 올바르게 적용됐는지 API로 검증합니다:
+
+- Loki, Tempo, Prometheus 3개 데이터소스가 모두 프로비저닝됐는지 확인 (UID 기반)
+- 각 데이터소스의 내부 서비스 URL(`http://loki:3100` 등)이 올바른지 확인
+- Tempo의 `tracesToLogs.datasourceUid`가 실제 Loki UID와 일치하는지 확인 (Tempo→Loki 연계)
+- Tempo의 `tracesToMetrics.datasourceUid`가 실제 Prometheus UID와 일치하는지 확인 (Tempo→Prometheus 연계)
+
+### Integration 테스트 실행 시 OTel 경고
+
+`--profile observability` 없이 Integration 테스트를 실행하면 Tempo 컨테이너가 없어 OTel exporter가 연결 실패 warning을 반복 출력합니다. 이는 정상 현상이며 앱 동작에 영향을 주지 않습니다(exponential backoff 후 재시도). Integration 테스트 69개는 해당 경고와 무관하게 정상 통과합니다. 자세한 배경은 [ADR-010](../adr/010-observability-stack.md)을 참고하세요.
+
+---
+
+## 4. Frontend Testing
 
 - **Lint**: `npm run lint` (ESLint)
 - **Build**: `npm run build` (타입 체크 포함)
@@ -104,7 +175,7 @@ assert user.email == "test@example.com"
 
 ---
 
-## 4. E2E Testing (Playwright)
+## 5. E2E Testing (Playwright)
 
 브라우저 레벨의 사용자 여정 전체를 검증합니다.
 

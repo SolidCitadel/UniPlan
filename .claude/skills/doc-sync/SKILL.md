@@ -15,14 +15,16 @@ description: |
 | 변경 유형 | 업데이트 대상 문서 |
 |----------|-------------------|
 | API 엔드포인트 추가/삭제 | `docs/architecture.md` (라우팅 테이블) |
-| API 경로 변경 | `docs/architecture.md`, CLAUDE.md |
+| API 경로 변경 | `docs/architecture.md`, `CLAUDE.md` |
 | DTO 구조 변경 | `docs/architecture.md` (API 계약) |
 | Entity 구조 변경 | `docs/architecture.md` (Entity Design) |
 | 인증 흐름 변경 | `docs/architecture.md` (JWT 인증 흐름) |
-| 테스트 전략 변경 | `docs/guides.md` |
-| 코딩 컨벤션 변경 | `docs/guides.md` |
-| 주요 명령어 변경 | CLAUDE.md |
-| Docker 설정 변경 | CLAUDE.md, docker-compose.yml 주석 |
+| 테스트 전략 변경 | `docs/guides/testing.md` |
+| 코딩 컨벤션 변경 | `docs/guides/backend.md`, `docs/guides/frontend.md` |
+| 새 기능/UI 추가 | `docs/features.md`, `docs/requirements.md` |
+| 주요 명령어 변경 | `CLAUDE.md` |
+| Docker 설정 변경 | `CLAUDE.md`, docker-compose 주석 |
+| `.claude/` 수정 | 아래 `.claude/ 수정 원칙` 참고 |
 
 ## 2. 문서별 체크리스트
 
@@ -30,25 +32,24 @@ description: |
 
 - [ ] 프로젝트 구조 정확한지
 - [ ] API 경로 규칙 정확한지
-- [ ] API 계약 (excludedCourseIds/excludedCourses) 정확한지
-- [ ] 주요 명령어 정확한지
+- [ ] 주요 명령어 정확한지 (백엔드 빌드/실행, 프론트엔드 dev, Docker)
 
 ### docs/architecture.md
 
 - [ ] 서비스별 라우팅 테이블 정확한지
 - [ ] Swagger URL 정확한지
 - [ ] Entity 구조 (필드, 관계) 정확한지
-- [ ] API 계약 예시 정확한지
-
-### docs/guides.md
-
-- [ ] 테스트 전략/명령어 정확한지
-- [ ] 품질 게이트 명령어 정확한지
-- [ ] 코딩 컨벤션 정확한지
+- [ ] API 설계 원칙 예시 정확한지
 
 ### docs/features.md
 
 - [ ] 사용자 시나리오가 현재 구현과 일치하는지
+- [ ] API 명세 정확한지
+- [ ] 제약사항 정확한지
+
+### docs/requirements.md
+
+- [ ] 구현 완료/미구현 상태 정확한지
 
 ## 3. Swagger 애노테이션 확인
 
@@ -68,7 +69,25 @@ API 변경 시 Controller의 Swagger 애노테이션 업데이트:
 - [ ] `@ApiResponse` 응답 코드별 설명 정확한지
 - [ ] `@Schema` DTO 필드 설명 정확한지
 
-## 4. 문서 수정
+## 4. `.claude/` 수정 원칙
+
+`.claude/` 폴더를 수정할 때 아래 기준으로 배치한다.
+
+| 배치 위치 | 기준 |
+|----------|------|
+| `CLAUDE.md` | 서브에이전트 포함 **모든 상황**에서 항상 필요한 배경지식과 컨벤션. 최소한으로 유지 |
+| `skills/` | **특정 상황**에서만 필요한 지식과 워크플로우 |
+| `agents/` | 맥락을 완전히 초기화하고 **새로운 페르소나**로 평가해야 하는 경우 |
+| `docs/` | 작업 중 실시간 참조가 아닌 **사후 참조** 문서 |
+
+### 판단 기준 예시
+
+- "API 경로 규칙" → 어떤 코드를 짜든 항상 알아야 함 → **CLAUDE.md**
+- "테스트 실행 방법" → 테스트 단계에서만 필요 → **skills/test-guard**
+- "아키텍처 리뷰 기준" → 리뷰 시에만 필요하고, 완전히 독립적 시각 필요 → **agents/**
+- "멀티 대학 지원 도메인 지식" → 구현 시 코드 보면 파악 가능, 상시 필요 없음 → **docs/**
+
+## 5. 문서 수정
 
 변경된 코드에 맞게 문서 업데이트.
 
@@ -77,10 +96,6 @@ API 변경 시 Controller의 Swagger 애노테이션 업데이트:
 - 코드와 문서의 예시가 일치해야 함
 - API 경로, 요청/응답 구조가 실제와 동일해야 함
 - 명령어는 실제 동작하는 것으로 기재
-
-## 5. 검증
-
-수정된 문서 내용이 실제 코드와 일치하는지 확인.
 
 ## 완료 조건
 
@@ -95,12 +110,14 @@ API 변경 시 Controller의 Swagger 애노테이션 업데이트:
 ```
 UniPlan/
 ├── .claude/
-│   └── CLAUDE.md          # 프로젝트 가이드 (핵심 규칙)
+│   ├── CLAUDE.md              # 프로젝트 가이드 (공통 배경지식, 최소화)
+│   ├── skills/                # 상황별 워크플로우
+│   └── agents/                # 독립 페르소나 에이전트
 ├── docs/
-│   ├── architecture.md    # 아키텍처, API, Entity
-│   ├── guides.md          # 개발 가이드, 테스트, 컨벤션
-│   ├── features.md        # 기능별 사용자 시나리오
-│   └── requirements.md    # 요구사항
+│   ├── architecture.md        # 아키텍처, API, Entity
+│   ├── guides/                # 개발 가이드, 테스트, 컨벤션
+│   ├── features.md            # 기능별 사용자 시나리오
+│   └── requirements.md        # 요구사항
 └── app/backend/**/
-    └── *Controller.java   # Swagger 애노테이션
+    └── *Controller.java       # Swagger 애노테이션
 ```

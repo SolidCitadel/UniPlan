@@ -106,10 +106,83 @@ assert user.email == "test@example.com"
 
 ## 4. E2E Testing (Playwright)
 
-브라우저 레벨의 사용자 여정 전체를 검증합니다. 상세 내용은 [E2E Testing Guide](e2e-testing.md)를 참고하세요.
+브라우저 레벨의 사용자 여정 전체를 검증합니다.
+
+### 위치 및 구조
+
+```
+tests/e2e/
+├── package.json              # playwright 의존성
+├── playwright.config.ts      # 핵심 설정 (webServer, projects)
+├── .env.example              # 환경 변수 템플릿
+│
+├── fixtures/
+│   ├── auth.setup.ts         # 인증 세션 1회 생성 → storageState 저장
+│   └── base.fixture.ts       # Page Object 주입용 커스텀 fixture
+│
+├── pages/                    # Page Object Model (POM)
+│   ├── login.page.ts
+│   ├── signup.page.ts
+│   └── timetable.page.ts
+│
+└── specs/
+    ├── smoke.spec.ts          # @smoke 태그 - CI에서 빠르게 돌릴 subset
+    ├── auth.spec.ts           # 로그인/회원가입 시나리오
+    └── timetable.spec.ts      # 시간표 CRUD 핵심 흐름
+```
+
+### 실행
 
 ```bash
 cd tests/e2e
 npm run test:smoke   # 빠른 smoke 실행
+npm test             # 전체
 npm run test:ui      # 대화형 디버깅
+npm run test:headed  # 브라우저 표시하며 실행
+npm run codegen      # 브라우저 조작 → 코드 자동 생성
 ```
+
+### 핵심 설계
+
+**인증 전략 - storageState 패턴**
+
+매 테스트마다 로그인하지 않고 1회 로그인 후 `.auth/user.json`에 저장. 나머지 테스트는 재사용하여 인증 비용 최소화.
+
+**로케이터 우선순위**
+
+```typescript
+page.getByRole('button', { name: '로그인' })  // 1순위: 시맨틱
+page.getByLabel('이메일')                      // 2순위: 레이블
+page.getByPlaceholder('시간표 이름')           // 3순위: Placeholder
+page.getByTestId('timetable-card')             // 4순위: data-testid
+page.locator('.class-name')                    // 최후 수단 (지양)
+```
+
+**Page Object Model (POM)**
+
+반복되는 UI 인터랙션을 Page Object로 캡슐화. 새 페이지는 `pages/*.page.ts`에 추가하고 `fixtures/base.fixture.ts`에 등록.
+
+### 새 테스트 작성
+
+```typescript
+import { test, expect } from '../fixtures/base.fixture';
+
+test('@smoke 새 기능이 동작한다', async ({ page }) => {
+  await page.goto('/new-feature');
+  await expect(page.getByRole('heading', { name: '새 기능' })).toBeVisible();
+});
+```
+
+- smoke subset 포함 시 제목에 `@smoke` 추가
+- 테스트 계정 의존 없이 `Date.now()`로 고유 데이터 생성
+
+### 환경 변수
+
+| 변수 | 기본값 | 설명 |
+|------|--------|------|
+| `E2E_USER_EMAIL` | `e2e-test@example.com` | 테스트용 계정 이메일 |
+| `E2E_USER_PASSWORD` | `Test1234!` | 테스트용 계정 비밀번호 |
+| `BASE_URL` | `http://localhost:3000` | Next.js URL |
+| `API_BASE_URL` | `http://localhost:8080` | 백엔드 API URL |
+
+`auth.setup.ts`가 테스트 계정을 자동 생성하므로 별도 계정 생성 불필요.

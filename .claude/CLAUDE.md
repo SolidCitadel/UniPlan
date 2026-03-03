@@ -11,12 +11,17 @@ app/backend/          # Spring Boot MSA (Java 21)
   ├── catalog-service/# :8083 - 강의 검색
   └── planner-service/# :8082 - 시간표, 시나리오, 수강신청
 
-app/frontend/         # Next.js (TypeScript)
-  └── React Query + shadcn/ui + Tailwind
+app/frontend/         # Next.js (TypeScript) · React Query + shadcn/ui + Tailwind
 
-tests/integration/      # pytest Integration 테스트
-tests/e2e/            # Playwright E2E 테스트
+tests/
+  ├── integration/    # pytest Integration 테스트
+  └── e2e/            # Playwright E2E 테스트
 scripts/              # 크롤러/유틸리티 (Python, uv)
+
+docker/                                   # Dockerfile 및 Observability 설정 (Grafana, Prometheus, Tempo)
+docker-compose.yml                        # 개발용
+docker-compose.test.yml                   # 테스트용 (tmpfs DB)
+docker-compose.observability.yml          # Observability 확장 (Prometheus, Grafana, Tempo)
 ```
 
 ## 핵심 규칙
@@ -25,19 +30,11 @@ scripts/              # 크롤러/유틸리티 (Python, uv)
 - 외부: `/api/v1/*` → Gateway가 `/api/v1` 제거 후 내부 서비스로 전달
 - 예: 클라이언트 `/api/v1/timetables/1` → planner-service `/timetables/1`
 
-### API 계약 (중요)
-- **요청**: `excludedCourseIds` (Long 배열)
-- **응답**: `excludedCourses` (courseId 포함 객체 배열)
-
 ### JWT 인증
 - 헤더: `Authorization: Bearer {token}`
 - Gateway가 검증 후 `X-User-Id`, `X-User-Email` 헤더 추가
 - 인증 불필요: `/api/v1/auth/**`, `/api/v1/universities/**`
 
-### 멀티 대학 지원
-- 회원가입 시 대학 선택 필수 (`universityId`)
-- 강의 검색 시 대학 + 학기로 필터링
-- 프론트엔드 학기 선택은 localStorage에 저장
 
 ## 구현 워크플로우
 
@@ -52,26 +49,26 @@ scripts/              # 크롤러/유틸리티 (Python, uv)
 1. 요구사항 분석 및 영향 범위 파악
 2. 백엔드 먼저 (Controller/DTO → Service → Entity/Repository)
 3. 프론트엔드 (API 타입 → 컴포넌트)
-4. 변경 전 기존 테스트 통과 확인 (`./gradlew test`)
+4. DTO/에러 응답 변경 시 `frontend-sync`
 
-### Phase 2: 변경 영향 파악 & 보완
-변경된 파일을 기반으로 해당하는 Skills를 **순서대로** 적용:
+### Phase 2: 테스트
+- `test-guard` 실행
 
-| 조건 | Skill | 필수 여부 |
-|------|-------|-----------|
-| `app/backend/` 변경 | `backend-test-guard` | 필수 |
-| DTO/에러 응답 변경 | `frontend-sync` | 필수 |
-| 모든 코드 변경 | `doc-sync` | 필수 |
-| 아키텍처/기술 결정 | `adr-management` | 해당 시 |
+### Phase 3: 검증
+1. 변경 파일 `git add` (이후 검증은 staged 기준으로 동작)
+2. `/arch-review`로 아키텍처 리뷰 (설계 품질)
+3. `/qa-review`로 커버리지 갭 확인 → 갭 발견 시 테스트 추가 후 통과 확인
 
-### Phase 3: 최종 검증
-1. `./gradlew test` 전체 통과
-2. `npm run build` 성공 (프론트엔드 변경 시)
-3. `/arch-review`로 아키텍처 리뷰 (설계 품질)
-4. `/qa-review`로 커버리지 갭 확인 (코드 변경 시) → 갭 발견 시 메인 에이전트가 테스트 추가 후 추가한 테스트 통과 확인
+### Phase 4: 문서화
+- 모든 코드 변경 시: `doc-sync`
+- 아키텍처/기술 결정 시: `adr-management`
 
-### Phase 4: 커밋
-Phase 1~3 완료 후에만 커밋 수행.
+### Phase 5: 커밋
+Phase 1~4 완료 후에만 커밋 수행.
+
+### 명령어 실행 원칙
+- 작업 디렉터리는 항상 프로젝트 루트. `git` 명령은 `cd`나 `-C` 없이 직접 실행
+- 하위 디렉터리 명령은 `cd subdir && command` 형태 사용 (예: `cd app/backend && ./gradlew`)
 
 ### 보안
 - `.env`, 비밀번호, JWT 시크릿 커밋 금지
@@ -87,23 +84,11 @@ Phase 1~3 완료 후에만 커밋 수행.
 ```bash
 # 백엔드
 cd app/backend && ./gradlew clean build
-./gradlew :api-gateway:bootRun
-./gradlew :planner-service:bootRun
+cd app/backend && ./gradlew :api-gateway:bootRun
+cd app/backend && ./gradlew :planner-service:bootRun
 
 # 프론트엔드
 cd app/frontend && npm install && npm run dev
-
-# Integration 테스트 (테스트용 컨테이너 필수)
-docker compose -f docker-compose.test.yml up -d --build
-sleep 30
-cp tests/integration/.env.example tests/integration/.env   # 최초 1회
-cd tests/integration && uv sync && uv run pytest -v
-docker compose -f docker-compose.test.yml down
-
-# E2E 테스트 (백엔드 컨테이너 기동 후)
-cd tests/e2e && npm run test:smoke             # smoke만 빠르게
-cd tests/e2e && npm test                       # 전체
-cd tests/e2e && npm run test:ui                # 대화형 디버깅
 
 # Docker (백엔드)
 docker compose up --build                      # 개발용 (API: :8080)

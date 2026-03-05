@@ -22,11 +22,21 @@ description: |
 | 테스트 전략 변경 | `docs/guides/testing.md` |
 | 코딩 컨벤션 변경 | `docs/guides/backend.md`, `docs/guides/frontend.md` |
 | 새 기능/UI 추가 | `docs/features.md`, `docs/requirements.md` |
-| 주요 명령어 변경 | `CLAUDE.md` |
-| Docker 설정 변경 | `CLAUDE.md`, docker-compose 주석 |
+| 주요 명령어 변경 | `CLAUDE.md`, `README.md` |
+| Docker 설정 변경 | `CLAUDE.md`, `README.md`, docker-compose 주석 |
+| 새 서비스/모듈 추가 | `README.md` (디렉터리 구조, 기술 스택) |
+| 새 테스트 레이어 추가 | `README.md` (테스트 섹션) |
 | `.claude/` 수정 | 아래 `.claude/ 수정 원칙` 참고 |
 
 ## 2. 문서별 체크리스트
+
+### README.md
+
+- [ ] 기술 스택 (버전, 도구) 정확한지
+- [ ] 디렉터리 구조가 실제 구조와 일치하는지
+- [ ] 빠른 시작 명령어 정확한지 (포트, 경로 포함)
+- [ ] 테스트 섹션에 모든 테스트 레이어(단위/Integration/Infra/E2E) 포함되어 있는지
+- [ ] 문서 링크 유효한지
 
 ### CLAUDE.md
 
@@ -109,6 +119,7 @@ API 변경 시 Controller의 Swagger 애노테이션 업데이트:
 
 ```
 UniPlan/
+├── README.md                  # 프로젝트 소개, 빠른 시작, 디렉터리 구조
 ├── .claude/
 │   ├── CLAUDE.md              # 프로젝트 가이드 (공통 배경지식, 최소화)
 │   ├── skills/                # 상황별 워크플로우
@@ -117,7 +128,8 @@ UniPlan/
 │   ├── architecture.md        # 아키텍처, API, Entity
 │   ├── guides/                # 개발 가이드, 테스트, 컨벤션
 │   ├── features.md            # 기능별 사용자 시나리오
-│   └── requirements.md        # 요구사항
+│   ├── requirements.md        # 요구사항
+│   └── adr/                   # Architecture Decision Records
 └── app/backend/**/
     └── *Controller.java       # Swagger 애노테이션
 ```

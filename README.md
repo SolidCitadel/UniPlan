@@ -51,6 +51,7 @@ UniPlan은 대학 수강신청의 불확실성을 해결하기 위한 웹 애플
 
 ### 기타
 - **크롤러/테스트**: Python 3.x (uv)
+- **Observability**: Grafana, Prometheus, Loki, Tempo, Promtail
 
 ## 아키텍처
 
@@ -94,19 +95,26 @@ UniPlan/
 │   │   └── common-lib/
 │   └── frontend/          # Next.js Web
 ├── tests/
-│   └── integration/       # pytest Integration 테스트
+│   ├── integration/       # pytest Integration 테스트 (애플리케이션 로직)
+│   ├── infra/             # pytest Infra 테스트 (Observability 도구 동작)
+│   └── e2e/               # Playwright E2E 테스트
 ├── scripts/
 │   ├── crawler/           # 강의 크롤러 (Python)
 │   └── README.md
 ├── docs/                  # 문서
 │   ├── architecture.md    # 아키텍처 설계
 │   ├── features.md        # 기능 명세
-│   ├── guides.md          # 개발 가이드
 │   ├── requirements.md    # 프로젝트 요구사항
+│   ├── guides/            # 개발 가이드 (Backend, Frontend, Testing, Deployment)
 │   └── adr/               # Architecture Decision Records
-├── docker/                # Docker 설정 파일
+├── docker/                # Dockerfile 및 Observability 설정
 │   ├── backend.Dockerfile
-│   └── mysql/
+│   ├── mysql/
+│   ├── grafana/
+│   ├── prometheus/
+│   ├── loki/
+│   ├── tempo/
+│   └── promtail/
 ├── docker-compose.yml     # 개발용 Docker Compose
 └── docker-compose.test.yml # 테스트용 Docker Compose
 ```
@@ -121,7 +129,23 @@ UniPlan/
 - Python 3.11+ (API 테스트 및 크롤러)
 - uv (Python 패키지 매니저)
 
-### 1. 백엔드 실행
+### 1. Docker Compose (권장)
+
+```bash
+# 개발용 (API: :8080, Frontend: :3000)
+docker compose up --build
+
+# Observability 스택 포함 (Grafana: :3001, Prometheus: :9090)
+docker compose --profile observability up --build
+```
+
+- **API Gateway**: http://localhost:8080
+- **Frontend**: http://localhost:3000
+- **Grafana**: http://localhost:3001 (observability 프로파일)
+
+### 2. 로컬 실행
+
+**백엔드:**
 
 ```bash
 cd app/backend
@@ -138,36 +162,20 @@ cd app/backend
 
 **Swagger UI**: http://localhost:8080/swagger-ui.html
 
-### 2. 프론트엔드 실행
+**프론트엔드:**
 
 ```bash
 cd app/frontend
 
-# 의존성 설치
 npm install
-
-# 개발 서버 실행
-npm run dev
+npm run dev  # http://localhost:3000
 ```
-
-**접속**: http://localhost:3000
-
-### 3. Docker Compose (올인원)
-
-```bash
-# 루트 디렉터리에서
-docker compose up --build
-```
-
-- **API Gateway**: http://localhost:8180
-- **Frontend (Nginx)**: http://localhost:3000
-- **MySQL**: localhost:3316
 
 ## 개발 가이드
 
 ### 테스트
 
-**백엔드:**
+**백엔드 단위/통합 테스트:**
 ```bash
 cd app/backend
 ./gradlew test
@@ -180,11 +188,26 @@ npm run build
 npm run lint
 ```
 
-**Integration 테스트:**
+**Integration 테스트** (애플리케이션 로직, docker-compose.test.yml 필요):
 ```bash
+docker compose -f docker-compose.test.yml up -d --build
 cd tests/integration
-uv sync
-uv run pytest -v
+uv sync && uv run pytest -v
+```
+
+**Infra 테스트** (Observability 동작 검증, observability 프로파일 필요):
+```bash
+docker compose -f docker-compose.test.yml --profile observability up -d --build
+cd tests/infra
+uv sync && uv run pytest -v
+```
+
+**E2E 테스트** (Playwright, 서버 실행 필요):
+```bash
+cd tests/e2e
+npm install
+npm run test:smoke   # smoke 테스트
+npm run test         # 전체 테스트
 ```
 
 ### 강의 크롤러
@@ -208,13 +231,10 @@ uv run python crawler/run.py full --university khu --year 2026 --semester 1
 
 ## 문서
 
-프로젝트 상세 문서는 `docs/` 폴더를 참고하세요:
+프로젝트 상세 문서는 [`docs/`](docs/) 폴더를 참고하세요:
 
 - **[requirements.md](docs/requirements.md)**: 프로젝트 요구사항
 - **[features.md](docs/features.md)**: 기능별 사용자 시나리오
 - **[architecture.md](docs/architecture.md)**: API Gateway, Swagger, 엔티티 설계
 - **[guides/](docs/guides/)**: 개발 가이드 (Backend, Frontend, Testing, Deployment)
-
-모듈별 문서:
-- `scripts/crawler/docs/`: 크롤러 필드 매핑
-- `tests/integration/README.md`: Integration 테스트 가이드
+- **[adr/](docs/adr/)**: Architecture Decision Records (주요 기술 결정 이력)

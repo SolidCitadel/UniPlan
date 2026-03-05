@@ -3,7 +3,7 @@ name: test-guard
 description: |
   백엔드 또는 프론트엔드 코드 변경 시 반드시 사용.
   테스트 실행 및 검증까지 완료해야 작업이 끝난 것으로 간주.
-  app/backend/, tests/integration/, app/frontend/ 하위 파일 수정 후 자동 적용.
+  app/backend/, tests/integration/, app/frontend/, tests/e2e/ 하위 파일 수정 후 자동 적용.
 ---
 
 # 테스트 검증 워크플로우
@@ -154,12 +154,33 @@ cd app/frontend && npm run build
 다음 중 하나라도 해당하면 실행:
 - `app/frontend/` 의 페이지(`page.tsx`) 또는 주요 컴포넌트 변경
 - 새 라우트 추가 또는 기존 사용자 흐름(버튼, 페이지 이동) 변경
+- `tests/e2e/` 하위 파일 변경 (spec, page object, fixture, helper 등)
 
 해당 없으면 생략 (백엔드 전용 변경, 스타일 수정 등).
+
+### 도메인별 E2E spec 매핑
+
+| 변경 영역 | 실행 spec |
+|---------|---------|
+| `app/frontend/(authenticated)/courses/` | `specs/course.spec.ts` |
+| `app/frontend/(authenticated)/wishlist/` | `specs/wishlist.spec.ts` |
+| `app/frontend/(authenticated)/timetables/` | `specs/timetable.spec.ts` |
+| `app/frontend/(authenticated)/scenarios/` | `specs/scenario.spec.ts` |
+| `app/frontend/(authenticated)/registrations/` | `specs/registration.spec.ts` |
+| 여러 도메인 / 전체 변경 | `npm run test:smoke` (9개) |
+
+### 실행 전제조건
+
+- Docker Compose 백엔드 기동 완료
+- 카탈로그 강의 데이터 존재 필수 (`course.spec.ts`, `wishlist.spec.ts`가 `getFirstCourseWithClassTimes()`에 의존)
+- `tests/e2e/.env` 설정 완료 (최초 1회: `cp tests/e2e/.env.example tests/e2e/.env`)
 
 ```bash
 # smoke만 (핵심 흐름, 권장)
 cd tests/e2e && npm run test:smoke
+
+# 도메인별 단독 실행
+cd tests/e2e && npx playwright test specs/course.spec.ts
 
 # 전체 (새 사용자 흐름 추가 시)
 cd tests/e2e && npm test

@@ -26,11 +26,11 @@ export class LoginPage {
   }
 
   async expectVisible() {
-    await expect(this.page.getByRole('heading', { name: 'UniPlan' })).toBeVisible();
+    await expect(this.page.getByText('UniPlan', { exact: true })).toBeVisible();
     await expect(this.submitButton).toBeVisible();
   }
 
   async expectErrorToast() {
-    await expect(this.page.getByText('로그인 실패')).toBeVisible({ timeout: 5_000 });
+    await expect(this.page.getByText('이메일 또는 비밀번호가 올바르지 않습니다')).toBeVisible({ timeout: 5_000 });
   }
 }

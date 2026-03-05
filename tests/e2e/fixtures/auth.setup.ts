@@ -1,9 +1,9 @@
 import { test as setup, expect } from '@playwright/test';
 import * as path from 'path';
 import * as fs from 'fs';
-import { E2E_USER_EMAIL, E2E_USER_PASSWORD, API_BASE_URL } from './constants';
+import { E2E_USER_EMAIL, E2E_USER_PASSWORD, API_BASE_URL, AUTH_FILE } from './constants';
 
-const authFile = path.join(__dirname, '../.auth/user.json');
+const authFile = path.join(__dirname, '..', AUTH_FILE);
 
 setup('authenticate', async ({ page }) => {
   // .auth 디렉토리 생성 (이미 존재하면 무시)
@@ -15,7 +15,7 @@ setup('authenticate', async ({ page }) => {
 
   // 로그인 페이지 이동
   await page.goto('/login');
-  await expect(page.getByRole('heading', { name: 'UniPlan' })).toBeVisible();
+  await expect(page.getByText('UniPlan', { exact: true })).toBeVisible();
 
   // 로그인 폼 입력
   await page.getByLabel('이메일').fill(E2E_USER_EMAIL);

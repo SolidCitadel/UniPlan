@@ -15,3 +15,7 @@ function requireEnv(key: string): string {
 export const E2E_USER_EMAIL = requireEnv('E2E_USER_EMAIL');
 export const E2E_USER_PASSWORD = requireEnv('E2E_USER_PASSWORD');
 export const API_BASE_URL = requireEnv('API_BASE_URL');
+export const BASE_URL = requireEnv('BASE_URL');
+
+/** auth.setup.ts가 저장하는 storageState 파일 경로 */
+export const AUTH_FILE = '.auth/user.json';

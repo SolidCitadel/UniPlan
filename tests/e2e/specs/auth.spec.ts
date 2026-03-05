@@ -37,7 +37,7 @@ test.describe('로그인', () => {
     await loginPage.goto();
     await loginPage.signupLink.click();
     await page.waitForURL('**/signup');
-    await expect(page.getByRole('heading', { name: '회원가입' })).toBeVisible();
+    await expect(page.getByText('회원가입', { exact: true }).first()).toBeVisible();
   });
 });
 
@@ -64,6 +64,6 @@ test.describe('회원가입', () => {
     await signupPage.goto();
     await signupPage.loginLink.click();
     await page.waitForURL('**/login');
-    await expect(page.getByRole('heading', { name: 'UniPlan' })).toBeVisible();
+    await expect(page.getByText('UniPlan', { exact: true })).toBeVisible();
   });
 });

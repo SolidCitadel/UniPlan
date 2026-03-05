@@ -18,6 +18,7 @@ const BASE_URL = requireEnv('BASE_URL');
 const API_BASE_URL = requireEnv('API_BASE_URL');
 
 export default defineConfig({
+  globalSetup: './fixtures/global.setup.ts',
   testDir: './specs',
   fullyParallel: false,
   forbidOnly: !!process.env.CI,

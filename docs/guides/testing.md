@@ -177,7 +177,7 @@ Grafana 데이터소스 자동 프로비저닝(`docker/grafana/provisioning/data
 
 ## 5. E2E Testing (Playwright)
 
-브라우저 레벨의 사용자 여정 전체를 검증합니다.
+브라우저 레벨의 사용자 여정 전체를 검증합니다. 현재 **32개** 테스트 (smoke **9개**).
 
 ### 위치 및 구조
 
@@ -189,28 +189,45 @@ tests/e2e/
 │
 ├── fixtures/
 │   ├── auth.setup.ts         # 인증 세션 1회 생성 → storageState 저장
-│   └── base.fixture.ts       # Page Object 주입용 커스텀 fixture
+│   └── base.fixture.ts       # Page Object + ApiHelper 주입용 커스텀 fixture
+│
+├── helpers/
+│   └── api.helper.ts         # API 직접 호출로 테스트 데이터 생성/삭제
 │
 ├── pages/                    # Page Object Model (POM)
 │   ├── login.page.ts
 │   ├── signup.page.ts
-│   └── timetable.page.ts
+│   ├── course.page.ts        # /courses — 강의 검색·위시리스트 추가
+│   ├── wishlist.page.ts      # /wishlist — 우선순위 변경·삭제
+│   ├── timetable.page.ts     # /timetables + /timetables/[id]
+│   ├── scenario.page.ts      # /scenarios + /scenarios/[id]
+│   └── registration.page.ts  # /registrations + /registrations/[id]
 │
 └── specs/
-    ├── smoke.spec.ts          # @smoke 태그 - CI에서 빠르게 돌릴 subset
+    ├── smoke.spec.ts          # @smoke 태그 — CI에서 빠르게 돌릴 subset
     ├── auth.spec.ts           # 로그인/회원가입 시나리오
-    └── timetable.spec.ts      # 시간표 CRUD 핵심 흐름
+    ├── course.spec.ts         # 강의 검색 필터·위시리스트 추가
+    ├── wishlist.spec.ts       # 위시리스트 조회·우선순위·삭제
+    ├── timetable.spec.ts      # 시간표 CRUD + 상세(강의 추가·대안 생성)
+    ├── scenario.spec.ts       # 시나리오 CRUD
+    └── registration.spec.ts   # 수강신청 시작·완료·취소
 ```
 
 ### 실행
 
 ```bash
 cd tests/e2e
-npm run test:smoke   # 빠른 smoke 실행
-npm test             # 전체
+npm run test:smoke   # smoke 9개 — 핵심 흐름 빠른 검증
+npm test             # 전체 32개
 npm run test:ui      # 대화형 디버깅
 npm run test:headed  # 브라우저 표시하며 실행
 npm run codegen      # 브라우저 조작 → 코드 자동 생성
+
+# 도메인별 단독 실행
+npx playwright test specs/course.spec.ts
+npx playwright test specs/wishlist.spec.ts
+npx playwright test specs/scenario.spec.ts
+npx playwright test specs/registration.spec.ts
 ```
 
 ### 핵심 설계
@@ -218,6 +235,24 @@ npm run codegen      # 브라우저 조작 → 코드 자동 생성
 **인증 전략 - storageState 패턴**
 
 매 테스트마다 로그인하지 않고 1회 로그인 후 `.auth/user.json`에 저장. 나머지 테스트는 재사용하여 인증 비용 최소화.
+
+**ApiHelper — UI 없이 테스트 데이터 생성/삭제**
+
+`beforeEach`/`afterEach`에서 UI 조작 없이 API 직접 호출로 데이터를 준비하고 정리한다.
+`localStorage`의 `accessToken`을 `page.evaluate()`로 지연 추출하므로 별도 인증 로직 불필요.
+
+```typescript
+test('위시리스트 항목이 표시된다', async ({ wishlistPage, api }) => {
+  const course = await api.getFirstCourseWithClassTimes();
+  await api.addToWishlist(course.id, 1);       // beforeEach 또는 테스트 내에서 준비
+  await wishlistPage.goto();
+  await wishlistPage.expectCourseVisible(course.courseName);
+});
+
+// afterEach cleanup
+await api.clearWishlist();
+await api.deleteTimetable(timetableId);
+```
 
 **로케이터 우선순위**
 
@@ -233,19 +268,36 @@ page.locator('.class-name')                    // 최후 수단 (지양)
 
 반복되는 UI 인터랙션을 Page Object로 캡슐화. 새 페이지는 `pages/*.page.ts`에 추가하고 `fixtures/base.fixture.ts`에 등록.
 
+**window.confirm 처리 패턴**
+
+`confirm()` 다이얼로그가 있는 버튼 클릭 시 `page.once('dialog', ...)`를 버튼 클릭 **직전**에 등록한다.
+Page Object 내부에 숨기지 않고 spec에서 직접 처리해야 accept/dismiss를 선택적으로 제어할 수 있다.
+
+```typescript
+// ✅ spec에서 직접 처리
+page.once('dialog', (dialog) => dialog.accept());
+await registrationPage.clickCancel();   // 내부에서 confirm() 호출
+await registrationPage.expectCancelToast();
+```
+
 ### 새 테스트 작성
 
 ```typescript
 import { test, expect } from '../fixtures/base.fixture';
 
-test('@smoke 새 기능이 동작한다', async ({ page }) => {
-  await page.goto('/new-feature');
-  await expect(page.getByRole('heading', { name: '새 기능' })).toBeVisible();
+test('@smoke 새 기능이 동작한다', async ({ page, api }) => {
+  // API로 데이터 준비 (UI 없이)
+  const timetable = await api.createTimetable('E2E 테스트');
+  // 테스트 로직
+  await page.goto(`/timetables/${timetable.id}`);
+  await expect(page.getByRole('heading', { name: 'E2E 테스트', level: 1 })).toBeVisible();
+  // afterEach에서 정리
 });
 ```
 
 - smoke subset 포함 시 제목에 `@smoke` 추가
-- 테스트 계정 의존 없이 `Date.now()`로 고유 데이터 생성
+- 데이터 생성은 `api.*` 메서드로, 정리는 `afterEach`에서 수행
+- `Date.now()`로 고유 이름 생성하여 테스트 간 충돌 방지
 
 ### 환경 변수
 

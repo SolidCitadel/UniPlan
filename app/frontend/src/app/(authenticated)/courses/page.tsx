@@ -39,7 +39,7 @@ export default function CoursesPage() {
       size: 20,
       universityId: user?.universityId,
       openingYear: semester.openingYear,
-      semester: semester.semester,
+      semester: semester.semester === '1' ? '1학기' : '2학기',
     }),
     enabled: !!user?.universityId,
   });

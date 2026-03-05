@@ -43,7 +43,7 @@ export class SignupPage {
   }
 
   async expectVisible() {
-    await expect(this.page.getByRole('heading', { name: '회원가입' })).toBeVisible();
+    await expect(this.page.getByText('회원가입', { exact: true }).first()).toBeVisible();
     await expect(this.submitButton).toBeVisible();
   }
 }

@@ -1,0 +1,59 @@
+# dev 전용 additions. docker compose up 시 자동 적용됨.
+# test 환경: docker compose -f docker-compose.yml -f docker-compose.test.yml up
+services:
+  redis:
+    container_name: uniplan-redis
+    ports:
+      - "6379:6379"
+
+  mysql:
+    container_name: uniplan-mysql
+    ports:
+      - "3316:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  catalog-service:
+    ports:
+      - "8083:8083"
+
+  user-service:
+    environment:
+      JWT_SECRET: local-dev-jwt-secret-32bytes-long-123456
+
+  api-gateway:
+    container_name: uniplan-api-gateway
+    environment:
+      JWT_SECRET: local-dev-jwt-secret-32bytes-long-123456
+
+  prometheus:
+    container_name: uniplan-prometheus
+
+  tempo:
+    container_name: uniplan-tempo
+    volumes:
+      - tempo-data:/var/tempo
+
+  loki:
+    container_name: uniplan-loki
+    volumes:
+      - loki-data:/loki
+
+  promtail:
+    container_name: uniplan-promtail
+    volumes:
+      - promtail-positions:/run/promtail
+
+  grafana:
+    container_name: uniplan-grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+    volumes:
+      - grafana-data:/var/lib/grafana
+
+volumes:
+  mysql-data:
+  tempo-data:
+  loki-data:
+  grafana-data:
+  promtail-positions:

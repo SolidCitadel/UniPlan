@@ -78,14 +78,14 @@ cd app/backend && ./gradlew clean build
 cd app/frontend && npm install && npm run dev
 
 # Integration 테스트 (테스트용 컨테이너 필수)
-docker compose -f docker-compose.test.yml up -d --build
+docker compose -f docker-compose.yml -f docker-compose.test.yml up -d --build
 sleep 20
 cd tests/integration && uv sync && uv run pytest -v
-docker compose -f docker-compose.test.yml down
+docker compose -f docker-compose.yml -f docker-compose.test.yml down
 
 # Docker (백엔드)
-docker compose up --build                      # 개발용 (API: :8080)
-docker compose -f docker-compose.test.yml up   # 테스트용 (API: :8080, tmpfs DB)
+docker compose up --build                                                       # 개발용 (API: :8080)
+docker compose -f docker-compose.yml -f docker-compose.test.yml up             # 테스트용 (API: :8080, tmpfs DB)
 ```
 
 ## 상세 문서

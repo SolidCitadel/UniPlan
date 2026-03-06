@@ -2,7 +2,7 @@
 Infra 테스트 공통 픽스처.
 
 Observability 스택 기동 후 실행:
-  docker compose -f docker-compose.test.yml --profile observability up -d --build
+  docker compose -f docker-compose.yml -f docker-compose.test.yml --profile observability up -d --build
   cd tests/infra && uv sync && uv run pytest -v
 
 테스트 원칙:

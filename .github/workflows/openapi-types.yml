@@ -23,7 +23,7 @@ jobs:
 
       - name: Start backend
         run: |
-          docker compose -f docker-compose.test.yml up -d --build
+          docker compose -f docker-compose.yml -f docker-compose.test.yml up -d --build
           sleep 30
 
       - name: Install dependencies
@@ -71,4 +71,4 @@ jobs:
 
       - name: Cleanup
         if: always()
-        run: docker compose -f docker-compose.test.yml down
+        run: docker compose -f docker-compose.yml -f docker-compose.test.yml down

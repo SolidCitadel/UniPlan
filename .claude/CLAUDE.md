@@ -19,9 +19,10 @@ tests/
   └── e2e/            # Playwright E2E 테스트
 scripts/              # 크롤러/유틸리티 (Python, uv)
 
-docker/                  # Dockerfile 및 Observability 설정 (Grafana, Prometheus, Tempo, Loki, Promtail)
-docker-compose.yml       # 개발용 (--profile observability: 모니터링 스택 포함)
-docker-compose.test.yml  # 테스트용 (tmpfs DB, --profile observability: Infra 테스트용)
+docker/                     # Dockerfile 및 Observability 설정 (Grafana, Prometheus, Tempo, Loki, Promtail)
+docker-compose.yml          # base: 모든 환경 공통 설정
+docker-compose.override.yml # dev 전용: named volumes, 포트 노출 (docker compose up 시 자동 적용)
+docker-compose.test.yml     # test 전용 override: tmpfs, JWT secret (base와 함께 사용)
 ```
 
 ## 핵심 규칙
@@ -93,8 +94,8 @@ cd app/frontend && npm install && npm run dev
 # Docker (백엔드)
 docker compose up --build                                    # 개발용 (API: :8080)
 docker compose --profile observability up --build            # 개발 + Observability (Grafana: :3001, Prometheus: :9090, Loki: :3100, Tempo: :3200)
-docker compose -f docker-compose.test.yml up                 # 테스트용 (API: :8080, tmpfs DB)
-docker compose -f docker-compose.test.yml --profile observability up  # 테스트 + Observability (Infra 테스트용)
+docker compose -f docker-compose.yml -f docker-compose.test.yml up                              # 테스트용 (API: :8080, tmpfs DB)
+docker compose -f docker-compose.yml -f docker-compose.test.yml --profile observability up      # 테스트 + Observability (Infra 테스트용)
 ```
 
 ## 상세 문서

@@ -54,7 +54,7 @@ Python(`pytest`)을 사용하여 실제 실행 중인 컨테이너 환경을 블
 cp tests/integration/.env.example tests/integration/.env
 
 # 1. 테스트 환경 구동 (tmpfs DB 사용으로 빠름)
-docker compose -f docker-compose.test.yml up -d --build
+docker compose -f docker-compose.yml -f docker-compose.test.yml up -d --build
 sleep 30
 
 # 2. 테스트 실행
@@ -63,7 +63,7 @@ uv sync
 uv run pytest -v
 
 # 3. 정리
-docker compose -f docker-compose.test.yml down
+docker compose -f docker-compose.yml -f docker-compose.test.yml down
 ```
 
 > **환경변수 필수**: `tests/integration/.env`가 없으면 테스트가 즉시 실패합니다. `.env.example`에 모든 필수 변수가 정의되어 있습니다.
@@ -105,7 +105,7 @@ Python(`pytest`)을 사용하여 Observability 스택(Loki, Prometheus, Tempo, G
 
 ```bash
 # 1. Observability 프로파일 포함 테스트 환경 기동
-docker compose -f docker-compose.test.yml --profile observability up -d --build
+docker compose -f docker-compose.yml -f docker-compose.test.yml --profile observability up -d --build
 
 # 2. 테스트 실행 (환경변수는 pyproject.toml에 고정 포트 상수로 내장)
 cd tests/infra
@@ -117,7 +117,7 @@ uv run pytest test_grafana.py -v
 uv run pytest test_loki.py -v
 
 # 3. 정리
-docker compose -f docker-compose.test.yml --profile observability down
+docker compose -f docker-compose.yml -f docker-compose.test.yml --profile observability down
 ```
 
 > **참고**: 별도 `.env` 파일이 필요 없습니다. `tests/infra/pyproject.toml`의 `[tool.pytest.ini_options] env`에 `--profile observability` 기동 시의 고정 포트 상수(LOKI_URL, TEMPO_URL, PROMETHEUS_URL, GRAFANA_URL 등)가 내장되어 있습니다.
@@ -142,13 +142,10 @@ tests/infra/
 
 ### 서비스 레이블 명명 규칙
 
-Promtail은 Docker Compose 서비스 이름(`com.docker.compose.service` 레이블)을 Loki `service` 레이블로 매핑합니다. `docker-compose.test.yml`의 서비스 이름이 `api-gateway-test`이므로 Loki 쿼리에서도 해당 값을 사용해야 합니다.
+Promtail은 Docker Compose 서비스 이름(`com.docker.compose.service` 레이블)을 Loki `service` 레이블로 매핑합니다. base+override 구조에서 dev/test 환경의 서비스 이름이 동일하므로 동일한 쿼리를 사용합니다.
 
 ```python
-# 올바른 쿼리 (테스트 환경)
-'{service="api-gateway-test"}'
-
-# 잘못된 쿼리 (개발 환경 서비스명)
+# dev/test 환경 모두 동일한 쿼리
 '{service="api-gateway"}'
 ```
 

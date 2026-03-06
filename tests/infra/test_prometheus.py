@@ -7,7 +7,7 @@ Prometheus 메트릭 수집 인프라 테스트.
   Level 3 - 실제 메트릭: Spring Boot 메트릭이 실제로 수집됐는지
 
 실행:
-  docker compose -f docker-compose.test.yml --profile observability up -d --build
+  docker compose -f docker-compose.yml -f docker-compose.test.yml --profile observability up -d --build
   cd tests/infra && uv run pytest test_prometheus.py -v
 """
 import requests

@@ -142,7 +142,7 @@ cd app/backend
 docker compose down
 
 # 2. 테스트용 컨테이너 실행 (tmpfs로 매번 깨끗한 DB)
-docker compose -f docker-compose.test.yml up -d --build
+docker compose -f docker-compose.yml -f docker-compose.test.yml up -d --build
 
 # 3. 서비스 준비 대기 (약 30초)
 sleep 30
@@ -153,7 +153,7 @@ uv sync
 uv run pytest -v
 
 # 5. 테스트 완료 후 정리
-docker compose -f docker-compose.test.yml down
+docker compose -f docker-compose.yml -f docker-compose.test.yml down
 ```
 
 **Integration 테스트 실행 조건:**

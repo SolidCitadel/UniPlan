@@ -7,7 +7,7 @@ Grafana 프로비저닝 인프라 테스트.
   Level 3 - 크로스 데이터소스 UID 일관성: Tempo tracesToLogs/tracesToMetrics 참조 검증
 
 실행:
-  docker compose -f docker-compose.test.yml --profile observability up -d --build
+  docker compose -f docker-compose.yml -f docker-compose.test.yml --profile observability up -d --build
   cd tests/infra && uv run pytest test_grafana.py -v
 """
 import requests

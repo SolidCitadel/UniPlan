@@ -7,7 +7,7 @@ Loki 로그 집계 인프라 테스트.
   Level 3 - 데이터 파이프라인: 실제 로그 수집 및 structured_metadata 저장 확인
 
 실행:
-  docker compose -f docker-compose.test.yml --profile observability up -d --build
+  docker compose -f docker-compose.yml -f docker-compose.test.yml --profile observability up -d --build
   cd tests/infra && uv run pytest test_loki.py -v
 """
 import requests
@@ -80,12 +80,12 @@ class TestLoki:
         assert "INFO" in level_values, \
             f"'INFO' should be in level label values. Got: {level_values}"
 
-    def test_loki_api_gateway_service_value_exists(self, loki_url: str):
-        """service 레이블 값에 'api-gateway-test'가 포함되는지 검증.
+    def test_loki_all_services_collected(self, loki_url: str):
+        """4개 서비스 모두 Loki service 레이블 값에 존재하는지 검증.
 
         Promtail은 Docker 컨테이너의 com.docker.compose.service 레이블(서비스 이름)을
         Loki 'service' 레이블로 매핑한다.
-        docker-compose.test.yml에서 서비스 이름이 'api-gateway-test'이므로 해당 값을 검증.
+        test_prometheus.py / test_tempo.py와 일관되게 4개 서비스 모두 검증.
         """
         response = requests.get(
             f"{loki_url}/loki/api/v1/label/service/values",
@@ -96,30 +96,38 @@ class TestLoki:
             f"Loki label values API should return 200 (Got {response.status_code})"
 
         data = response.json()
-        services = data.get("data", [])
-        assert "api-gateway-test" in services, \
-            f"'api-gateway-test' should be in Loki service label values. Got: {services}"
+        services = set(data.get("data", []))
+        expected = {"api-gateway", "user-service", "planner-service", "catalog-service"}
+        missing = expected - services
+        assert not missing, \
+            f"Services missing from Loki: {missing}. Collected services: {services}"
 
     # ──────────────────────────────────────────────────────────────────────────
     # Level 3: 데이터 파이프라인
     # ──────────────────────────────────────────────────────────────────────────
 
     def test_loki_logs_queryable_by_service(self, loki_url: str):
-        """api-gateway-test 서비스 로그가 LogQL로 조회 가능한지 검증."""
-        response = requests.get(
-            f"{loki_url}/loki/api/v1/query_range",
-            params={"query": '{service="api-gateway-test"}', "limit": 10},
-            timeout=10,
-        )
+        """4개 서비스 로그가 각각 LogQL로 조회 가능한지 검증.
 
-        assert response.status_code == 200, \
-            f"Loki query_range should return 200 (Got {response.status_code}): {response.text}"
+        test_prometheus.py / test_tempo.py와 일관되게 4개 서비스 모두 검증.
+        """
+        services = ["api-gateway", "user-service", "planner-service", "catalog-service"]
+        for service in services:
+            response = requests.get(
+                f"{loki_url}/loki/api/v1/query_range",
+                params={"query": f'{{service="{service}"}}', "limit": 5},
+                timeout=10,
+            )
 
-        data = response.json()
-        assert data.get("status") == "success"
-        results = data.get("data", {}).get("result", [])
-        assert results, \
-            "api-gateway-test 로그가 Loki에 수집되어야 합니다. Observability 스택 기동 후 충분한 대기 시간이 필요할 수 있습니다."
+            assert response.status_code == 200, \
+                f"Loki query_range should return 200 for {service} (Got {response.status_code}): {response.text}"
+
+            data = response.json()
+            assert data.get("status") == "success", \
+                f"Loki query for {service} should succeed"
+            results = data.get("data", {}).get("result", [])
+            assert results, \
+                f"{service} 로그가 Loki에 수집되어야 합니다. Observability 스택 기동 후 충분한 대기 시간이 필요할 수 있습니다."
 
     def test_loki_structured_metadata_stored(self, loki_url: str):
         """traceId/requestId가 structured_metadata로 저장되는지 통계로 검증.
@@ -131,7 +139,7 @@ class TestLoki:
         """
         response = requests.get(
             f"{loki_url}/loki/api/v1/query_range",
-            params={"query": '{service="api-gateway-test"}', "limit": 1},
+            params={"query": '{service="api-gateway"}', "limit": 1},
             timeout=10,
         )
 
@@ -150,7 +158,7 @@ class TestLoki:
         """
         response = requests.get(
             f"{loki_url}/loki/api/v1/query_range",
-            params={"query": '{service="api-gateway-test"}', "limit": 5},
+            params={"query": '{service="api-gateway"}', "limit": 5},
             timeout=10,
         )
 

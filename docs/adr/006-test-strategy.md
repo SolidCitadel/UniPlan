@@ -43,7 +43,7 @@
 4. **Infra 테스트 범위**:
    - Observability 도구 동작 검증 (Loki 로그 수집, Prometheus scrape, Tempo 트레이스)
    - docker-compose.test.yml의 observability 프로파일 기동 필요
-   - 실행: `docker compose -f docker-compose.test.yml --profile observability up -d && cd tests/infra && uv run pytest -v`
+   - 실행: `docker compose -f docker-compose.yml -f docker-compose.test.yml --profile observability up -d && cd tests/infra && uv run pytest -v`
 
 ## 근거 (Rationale)
 

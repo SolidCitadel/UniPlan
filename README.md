@@ -115,8 +115,9 @@ UniPlan/
 │   ├── loki/
 │   ├── tempo/
 │   └── promtail/
-├── docker-compose.yml     # 개발용 Docker Compose
-└── docker-compose.test.yml # 테스트용 Docker Compose
+├── docker-compose.yml          # base: 모든 환경 공통 설정
+├── docker-compose.override.yml # dev 전용 (자동 적용: named volumes, 포트)
+└── docker-compose.test.yml     # test 전용 override (tmpfs, JWT secret)
 ```
 
 ## 빠른 시작
@@ -188,16 +189,16 @@ npm run build
 npm run lint
 ```
 
-**Integration 테스트** (애플리케이션 로직, docker-compose.test.yml 필요):
+**Integration 테스트** (애플리케이션 로직):
 ```bash
-docker compose -f docker-compose.test.yml up -d --build
+docker compose -f docker-compose.yml -f docker-compose.test.yml up -d --build
 cd tests/integration
 uv sync && uv run pytest -v
 ```
 
-**Infra 테스트** (Observability 동작 검증, observability 프로파일 필요):
+**Infra 테스트** (Observability 동작 검증):
 ```bash
-docker compose -f docker-compose.test.yml --profile observability up -d --build
+docker compose -f docker-compose.yml -f docker-compose.test.yml --profile observability up -d --build
 cd tests/infra
 uv sync && uv run pytest -v
 ```

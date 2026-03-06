@@ -11,7 +11,7 @@ pytest 기반의 **통합 테스트**입니다.
 | Component | `app/backend/**/component/` | 단일 서비스, TestContainers MySQL |
 | Contract | `app/backend/**/contract/` | 서비스 간 API 계약 |
 | **Integration** | `tests/integration/` | **전체 시스템 (여기)** |
-| E2E | (향후) | 사용자 여정 + UI |
+| E2E | `tests/e2e/` | 사용자 여정 + UI (Playwright) |
 
 ## 설치 (uv 사용)
 
@@ -30,7 +30,7 @@ uv sync
 
 ```bash
 # docker-compose 환경 시작
-docker compose -f docker-compose.test.yml up -d --build
+docker compose -f docker-compose.yml -f docker-compose.test.yml up -d --build
 sleep 30
 
 # 전체 테스트
@@ -51,7 +51,7 @@ uv run pytest -n auto
 uv run pytest --html=report.html
 
 # 종료
-docker compose -f docker-compose.test.yml down
+docker compose -f docker-compose.yml -f docker-compose.test.yml down
 ```
 
 ## 환경 변수
@@ -67,7 +67,7 @@ API_BASE_URL=http://localhost:8080
 도메인별로 파일을 분리하고, 테스트 범위를 구분합니다:
 
 - **도메인 테스트**: Happy Path 중심
-- **인프라/보안 테스트 (`infra/`)**: Cross-Cutting Concerns (Gateway 보안, 인증 전파 등)
+- **Cross-Cutting 테스트**: Gateway 보안, Observability (Correlation ID 전파 등)
 
 > **Note:** 엣지 케이스와 비즈니스 로직은 Unit/Component Test에서 검증합니다.
 
@@ -81,8 +81,8 @@ tests/integration/
 ├── test_scenario.py         # 시나리오 트리
 ├── test_university.py       # 대학 정보
 ├── test_registration.py     # 수강신청
-└── infra/                   # 인프라/보안 테스트
-    └── test_gateway_security.py  # Gateway 보안
+├── test_gateway_security.py # Gateway 보안 (Cross-Cutting)
+└── test_observability.py    # Correlation ID 전파 (Cross-Cutting)
 ```
 
 ## 도메인별 테스트

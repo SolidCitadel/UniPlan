@@ -10,9 +10,9 @@ services:
   mysql:
     image: mysql:8.4
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD를 .env에 설정하세요 (.env.example 참고)}
-      MYSQL_USER: ${DB_USER:?DB_USER를 .env에 설정하세요}
-      MYSQL_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD를 .env에 설정하세요}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?}
+      MYSQL_USER: ${DB_USER:?}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?}
     command:
       - "--character-set-server=utf8mb4"
       - "--collation-server=utf8mb4_unicode_ci"
@@ -34,12 +34,12 @@ services:
     environment:
       SERVER_PORT: 8081
       DB_URL: jdbc:mysql://mysql:3306/uniplan_user?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-      DB_USER: ${DB_USER:?DB_USER를 .env에 설정하세요}
-      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD를 .env에 설정하세요}
-      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET를 .env에 설정하세요}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?GOOGLE_CLIENT_ID를 .env에 설정하세요}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:?GOOGLE_CLIENT_SECRET를 .env에 설정하세요}
-      OAUTH2_REDIRECT_URL: ${OAUTH2_REDIRECT_URL:?OAUTH2_REDIRECT_URL를 .env에 설정하세요}
+      DB_USER: ${DB_USER:?}
+      DB_PASSWORD: ${DB_PASSWORD:?}
+      JWT_SECRET: ${JWT_SECRET:?}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:?}
+      OAUTH2_REDIRECT_URL: ${OAUTH2_REDIRECT_URL:?}
       TRACING_SAMPLING_PROBABILITY: "1.0"
       OTLP_TRACING_ENDPOINT: http://tempo:4318/v1/traces
     healthcheck:
@@ -61,8 +61,8 @@ services:
     environment:
       SERVER_PORT: 8083
       DB_URL: jdbc:mysql://mysql:3306/uniplan_catalog?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-      DB_USER: ${DB_USER:?DB_USER를 .env에 설정하세요}
-      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD를 .env에 설정하세요}
+      DB_USER: ${DB_USER:?}
+      DB_PASSWORD: ${DB_PASSWORD:?}
       TRACING_SAMPLING_PROBABILITY: "1.0"
       OTLP_TRACING_ENDPOINT: http://tempo:4318/v1/traces
     ports:
@@ -86,8 +86,8 @@ services:
     environment:
       SERVER_PORT: 8082
       DB_URL: jdbc:mysql://mysql:3306/uniplan_planner?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-      DB_USER: ${DB_USER:?DB_USER를 .env에 설정하세요}
-      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD를 .env에 설정하세요}
+      DB_USER: ${DB_USER:?}
+      DB_PASSWORD: ${DB_PASSWORD:?}
       CATALOG_SERVICE_URL: http://catalog-service:8083
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -118,8 +118,8 @@ services:
       USER_SERVICE_URI: http://user-service:8081
       PLANNER_SERVICE_URI: http://planner-service:8082
       CATALOG_SERVICE_URI: http://catalog-service:8083
-      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET를 .env에 설정하세요}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS를 .env에 설정하세요}
+      JWT_SECRET: ${JWT_SECRET:?}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?}
       TRACING_SAMPLING_PROBABILITY: "1.0"
       OTLP_TRACING_ENDPOINT: http://tempo:4318/v1/traces
     ports:
@@ -193,7 +193,7 @@ services:
     profiles: [observability]
     environment:
       GF_USERS_ALLOW_SIGN_UP: "false"
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD를 .env에 설정하세요}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?}
     volumes:
       - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
     ports:

@@ -1,5 +1,7 @@
 # dev 전용 additions. docker compose up 시 자동 적용됨.
 # test 환경: docker compose -f docker-compose.yml -f docker-compose.test.yml up
+# 이 파일은 인프라 구조(container_name, ports, volumes)만 정의한다.
+# 환경변수 값은 .env 파일에서 관리한다 (cp .env.example .env).
 services:
   redis:
     container_name: uniplan-redis
@@ -13,18 +15,8 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
 
-  catalog-service:
-    ports:
-      - "8083:8083"
-
-  user-service:
-    environment:
-      JWT_SECRET: local-dev-jwt-secret-32bytes-long-123456
-
   api-gateway:
     container_name: uniplan-api-gateway
-    environment:
-      JWT_SECRET: local-dev-jwt-secret-32bytes-long-123456
 
   prometheus:
     container_name: uniplan-prometheus
@@ -46,8 +38,6 @@ services:
 
   grafana:
     container_name: uniplan-grafana
-    environment:
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
     volumes:
       - grafana-data:/var/lib/grafana
 

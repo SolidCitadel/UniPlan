@@ -31,10 +31,12 @@ base + override 패턴을 채택하여 환경별 차이점만 override 파일에
 | 프로덕션 (계획) | `docker-compose.yml` + `docker-compose.prod.yml` | `docker compose -f docker-compose.yml -f docker-compose.prod.yml up` |
 
 **파일별 역할:**
-- `docker-compose.yml`: 모든 환경 공통 서비스 정의 (스토리지·시크릿 제외)
-- `docker-compose.override.yml`: dev 전용 additions (named volumes, 포트 노출, container_name, JWT secret)
-- `docker-compose.test.yml`: test 전용 override (tmpfs, JWT secret)
-- `docker-compose.prod.yml`: prod 전용 override (외부 secrets, resource limits 등, 미구현)
+- `docker-compose.yml`: 모든 환경 공통 서비스 정의. 환경변수는 `${VAR:?error}` 참조만 포함하며, 실제 값은 `.env`에서 주입
+- `docker-compose.override.yml`: dev 전용 additions (named volumes, 포트 노출, container_name)
+- `docker-compose.test.yml`: test 전용 override (tmpfs)
+- `docker-compose.prod.yml`: prod 전용 override (resource limits 등, 미구현)
+
+> 모든 환경변수 값은 프로젝트 루트의 `.env` 파일에서 관리한다. Docker Compose 실행 전 `cp .env.example .env`가 필수 선행 조건이다.
 
 ## 근거 (Rationale)
 
@@ -47,7 +49,7 @@ base + override 패턴을 채택하여 환경별 차이점만 override 파일에
 
 ### 긍정적 영향
 - 개발 환경과 배포 환경의 구성이 동일하여 "내 로컬에서는 됐는데" 문제 최소화
-- 신규 개발자 온보딩 시 `docker compose up` 한 줄로 전체 환경 구성 가능
+- 신규 개발자 온보딩 시 `cp .env.example .env && docker compose up` 두 단계로 전체 환경 구성 가능
 - 테스트 환경 격리가 용이 (별도 Compose 파일)
 
 ### 부정적 영향 / 트레이드오프

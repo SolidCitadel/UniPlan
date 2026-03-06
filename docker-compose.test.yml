@@ -1,6 +1,8 @@
 # test 전용 override. base와 함께 사용:
 #   docker compose -f docker-compose.yml -f docker-compose.test.yml up
 #   docker compose -f docker-compose.yml -f docker-compose.test.yml --profile observability up
+# 이 파일은 인프라 override(tmpfs, ports)만 정의한다.
+# 환경변수 값은 .env 파일에서 관리한다 (cp .env.example .env).
 services:
   redis:
     tmpfs:
@@ -9,18 +11,6 @@ services:
   mysql:
     tmpfs:
       - /var/lib/mysql
-
-  catalog-service:
-    ports:
-      - "8083:8083"
-
-  user-service:
-    environment:
-      JWT_SECRET: test-jwt-secret-32bytes-long-1234567
-
-  api-gateway:
-    environment:
-      JWT_SECRET: test-jwt-secret-32bytes-long-1234567
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Observability 스택: 테스트 격리를 위해 데이터 디렉터리를 tmpfs로 교체
@@ -48,8 +38,6 @@ services:
           mode: 0777
 
   grafana:
-    environment:
-      GF_SECURITY_ADMIN_PASSWORD: admin
     volumes:
       - type: tmpfs
         target: /var/lib/grafana

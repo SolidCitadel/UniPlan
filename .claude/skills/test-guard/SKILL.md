@@ -128,16 +128,19 @@ API 계약뿐 아니라 인프라, 비즈니스 로직, 설정 변경 등 어디
 # 1. 개발 컨테이너가 떠있다면 중지
 docker compose down
 
-# 2. 테스트용 컨테이너 실행 (tmpfs로 매번 깨끗한 DB)
+# 2. .env 준비 (없는 경우)
+cp .env.example .env
+
+# 3. 테스트용 컨테이너 실행 (tmpfs로 매번 깨끗한 DB)
 docker compose -f docker-compose.yml -f docker-compose.test.yml up -d --build
 
-# 3. 서비스 준비 대기
+# 4. 서비스 준비 대기
 sleep 30
 
-# 4. Integration 테스트 실행
+# 5. Integration 테스트 실행
 cd tests/integration && uv sync && uv run pytest -v
 
-# 5. 정리
+# 6. 정리
 docker compose -f docker-compose.yml -f docker-compose.test.yml down
 ```
 

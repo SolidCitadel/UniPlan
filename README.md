@@ -133,6 +133,9 @@ UniPlan/
 ### 1. Docker Compose (권장)
 
 ```bash
+# 환경변수 설정 (최초 1회)
+cp .env.example .env
+
 # 개발용 (API: :8080, Frontend: :3000)
 docker compose up --build
 

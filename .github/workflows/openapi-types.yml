@@ -21,6 +21,9 @@ jobs:
           cache: 'npm'
           cache-dependency-path: app/frontend/package-lock.json
 
+      - name: Setup .env
+        run: cp .env.example .env
+
       - name: Start backend
         run: |
           docker compose -f docker-compose.yml -f docker-compose.test.yml up -d --build

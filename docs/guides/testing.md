@@ -51,7 +51,8 @@ Python(`pytest`)을 사용하여 실제 실행 중인 컨테이너 환경을 블
 ### 실행 방법
 ```bash
 # 0. 최초 1회: 환경변수 설정
-cp tests/integration/.env.example tests/integration/.env
+cp .env.example .env                                          # 프로젝트 루트 .env (Docker Compose 필수)
+cp tests/integration/.env.example tests/integration/.env     # Integration 테스트 설정
 
 # 1. 테스트 환경 구동 (tmpfs DB 사용으로 빠름)
 docker compose -f docker-compose.yml -f docker-compose.test.yml up -d --build
@@ -104,6 +105,9 @@ Python(`pytest`)을 사용하여 Observability 스택(Loki, Prometheus, Tempo, G
 ### 실행 방법
 
 ```bash
+# 0. 최초 1회: 프로젝트 루트 .env 설정 (Docker Compose 필수)
+cp .env.example .env
+
 # 1. Observability 프로파일 포함 테스트 환경 기동
 docker compose -f docker-compose.yml -f docker-compose.test.yml --profile observability up -d --build
 

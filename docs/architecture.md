@@ -163,11 +163,16 @@ Spring 내부에서는 프로파일 분리를 하지 않고(local 제외), Docke
 
 ### Docker Compose 환경 구분
 
+base + override 패턴을 사용한다. 모든 환경변수 값은 프로젝트 루트의 `.env` 파일에서 주입되며, compose 파일은 `${VAR:?error}` 참조만 포함한다.
+
 | 파일 | 용도 |
 |------|------|
-| `docker-compose.yml` | 개발 환경 |
-| `docker-compose.test.yml` | Integration 테스트 환경 |
-| `docker-compose.prod.yml` | 운영 환경 (`.env`로 시크릿 주입) |
+| `docker-compose.yml` | base: 모든 환경 공통 서비스 정의 |
+| `docker-compose.override.yml` | dev 전용 additions (named volumes, 포트 노출, container_name) |
+| `docker-compose.test.yml` | test 전용 override (tmpfs) |
+| `docker-compose.prod.yml` | prod 전용 override (resource limits 등, 미구현) |
+
+**사전 조건**: Docker Compose 실행 전 반드시 `cp .env.example .env` 후 값을 설정해야 한다.
 
 > 상세 배경은 [ADR-005](adr/005-centralized-config.md) 참조.
 

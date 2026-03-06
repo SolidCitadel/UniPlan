@@ -76,9 +76,10 @@ Phase 1~4 완료 후에만 커밋 수행.
 
 ### 환경변수 원칙 (ADR-005)
 - **기본값 금지**: `${VAR:default}` 또는 `?? 'default'` 패턴 사용 금지
-- **즉시 실패**: 누락된 환경변수는 명확한 에러와 함께 즉시 실패해야 함
+- **즉시 실패**: 누락된 환경변수는 명확한 에러와 함께 즉시 실패해야 함 (Docker Compose: `${VAR:?error}`)
 - **예외**: `application-local.yml`에서는 값을 직접 하드코딩 허용
-- **온보딩**: 각 모듈 디렉터리의 `.env.example`을 `.env`로 복사하는 것이 필수 절차
+- **값의 출처**: Docker Compose 환경변수 값은 `.env` 파일에서만 관리. compose 파일은 `${VAR:?error}` 참조만 포함
+- **온보딩**: 프로젝트 루트 `cp .env.example .env` 후 docker compose 실행
 
 ## 주요 명령어
 

@@ -20,7 +20,9 @@
       "Bash(git branch:*)",
       "Bash(git remote:*)",
       "Bash(git stash list:*)",
-      "Bash(git stash show:*)"
+      "Bash(git stash show:*)",
+      "Bash(docker ps:*)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ],
     "deny": [],
     "ask": []

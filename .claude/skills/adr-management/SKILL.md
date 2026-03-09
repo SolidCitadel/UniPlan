@@ -6,11 +6,11 @@ description: |
   docs/adr/ 폴더에 새 ADR 추가 시 docs/README.md 인덱스도 업데이트.
 ---
 
-# ADR 관리 워크플로우
+# ADR 관리 지식
 
-중요한 아키텍처 또는 기술 결정이 이루어졌습니다. ADR을 작성하고 관련 문서를 업데이트해야 합니다.
+/adr command가 참조하는 ADR 템플릿, 판단 기준, 관련 문서 매핑.
 
-## 1. ADR 작성 여부 판단
+## ADR 작성 여부 판단 기준
 
 다음 중 하나에 해당하면 ADR 작성:
 
@@ -19,18 +19,16 @@ description: |
 - [ ] 중요한 설계 원칙 확립
 - [ ] 기존 아키텍처 결정 변경
 
-## 2. ADR 파일 생성
-
-### 파일명 규칙
+## ADR 파일명 규칙
 
 ```
 docs/adr/NNN-kebab-case-title.md
 ```
 
 - `NNN`: 순번 (001, 002, ...)
-- 예: `004-centralized-config.md`
+- 예: `006-ecc-3tier-architecture.md`
 
-### ADR 템플릿
+## ADR 템플릿
 
 ```markdown
 # ADR-NNN: [제목]
@@ -67,7 +65,7 @@ docs/adr/NNN-kebab-case-title.md
 - 반영된 문서: [architecture.md](../architecture.md#섹션)
 ```
 
-## 3. 관련 문서 업데이트
+## 관련 문서 업데이트 매핑
 
 ADR 생성/수정 후 반드시 업데이트:
 
@@ -77,23 +75,20 @@ ADR 생성/수정 후 반드시 업데이트:
 | `docs/architecture.md` | 결정 사항을 아키텍처에 반영 (해당 시) |
 | `.claude/CLAUDE.md` | 핵심 규칙 변경 시 반영 |
 
-## 4. 완료 조건
+## 기존 ADR 목록 참고
+
+```
+docs/adr/
+├── 001-test-strategy.md
+├── 002-msa-ddd-strategy.md
+├── 003-api-gateway-strategy.md
+├── 004-centralized-config.md
+└── 005-env-variables.md
+```
+
+## 완료 조건
 
 - [ ] ADR 파일 생성/수정 완료
 - [ ] `docs/README.md` ADR 인덱스 업데이트
 - [ ] `docs/architecture.md`에 결정 사항 반영 (해당 시)
-- [ ] **이 조건 충족 전까지 결정 작업 미완료로 간주**
-
-## ADR 위치 참고
-
-```
-UniPlan/
-├── docs/
-│   ├── README.md              # ADR 인덱스 포함
-│   ├── architecture.md        # ADR 내용 반영
-│   └── adr/
-│       ├── 001-test-strategy.md
-│       ├── 002-msa-ddd-strategy.md
-│       ├── 003-api-gateway-strategy.md
-│       └── 004-centralized-config.md
-```
+- [ ] `.claude/CLAUDE.md` 핵심 규칙 변경 시 반영

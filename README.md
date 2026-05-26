@@ -43,6 +43,7 @@ UniPlan은 대학 수강신청의 불확실성을 해결하기 위한 웹 애플
 - `planner-service` (8082): 시간표, 시나리오, 수강신청 로직
 
 ### 프론트엔드
+- 기존 Flutter기반에서 Next.js로 마이그레이션 중입니다.
 - **프레임워크**: Next.js 16 (App Router)
 - **언어**: TypeScript
 - **상태관리**: React Query (@tanstack/react-query)
